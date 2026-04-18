@@ -2,8 +2,13 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post Takvimi - Pro V31_Final_Fix</title>
+    <title>Post Prodüksiyon Takvimi</title>
+    
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+    
+</head>
+<body>
     <style>
         :root {
             --bg-dark: #0F1115;
@@ -286,11 +291,6 @@
                 break-before: page;
             }
         }
-
-
-    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
-
 
     </style>
 </head>
@@ -913,7 +913,9 @@ function handleRename() {
     };
     document.addEventListener('mousedown', (e) => { if(menu.style.display === 'block' && !menu.contains(e.target)) closeMenu(); if(summaryPop.style.display === 'block' && !summaryPop.contains(e.target)) summaryPop.style.display = "none"; }, true);
 
-    // --- Google Drive API Ayarları ---
+
+
+ // --- Google Drive API Ayarları (GÜNCEL VERSİYON) ---
 const CLIENT_ID = '564427018589-st3887p57t76vnjc0o5t8guu8impgc6l.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyB6SPczIjafimzULi1ud7eXR7y1rCx_kEc';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
@@ -925,59 +927,56 @@ let accessToken = null;
 // 1. Google Kütüphanelerini Başlat
 function gapiLoaded() {
     gapi.load('client', async () => {
-        await gapi.client.init({ apiKey: API_KEY, discoveryDocs: [DISCOVERY_DOC] });
+        await gapi.client.init({
+            apiKey: API_KEY,
+            discoveryDocs: [DISCOVERY_DOC],
+        });
     });
 }
 
-function handleCloudSave() {
-    // Eğer google kütüphanesi yüklendiyse ama henüz tokenClient oluşmadıysa tekrar dene
-    if (typeof google !== 'undefined' && google.accounts && !tokenClient) {
-        gisLoaded(); 
-    }
-
-    if (!tokenClient) {
-        alert("Google servisleri henüz hazır değil. Lütfen sayfayı yenileyip 2 saniye bekleyin.");
-        return;
-    }
-
-    if (accessToken === null) {
-        tokenClient.requestAccessToken({prompt: 'consent'});
-    } else {
-        saveToDrive();
-    }
-}
-
+// 2. Kimlik Doğrulama Sistemini Kur
 function gisLoaded() {
     try {
-        if (typeof google !== 'undefined' && google.accounts) {
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: CLIENT_ID,
-                scope: SCOPES,
-                callback: (resp) => {
-                    if (resp.error !== undefined) {
-                        console.error("Giriş hatası:", resp);
-                        return;
-                    }
-                    accessToken = resp.access_token;
-                    // Giriş başarılı olunca "Getir" butonunu göster
-                    document.getElementById("loadCloudBtn").style.display = "inline-block";
-                    saveToDrive();
-                }
-            });
-            console.log("SİSTEM: Google Token Client başarıyla kuruldu.");
-        }
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: (resp) => {
+                if (resp.error !== undefined) throw (resp);
+                accessToken = resp.access_token;
+                document.getElementById("loadCloudBtn").style.display = "inline-block";
+                saveToDrive(); 
+            },
+        });
     } catch (err) {
-        console.error("Google Başlatma Hatası:", err);
+        console.error("Başlatma hatası:", err);
     }
 }
 
-// 3. Drive'a Kaydetme Fonksiyonu
+// 3. Mavi Butona Basınca Çalışan Fonksiyon
+function handleCloudSave() {
+    // Eğer kütüphane yüklendiyse ama sistem kurulmadıysa manuel tetikle
+    if (!tokenClient && typeof google !== 'undefined') {
+        gisLoaded();
+    }
+
+    if (tokenClient) {
+        if (accessToken === null) {
+            tokenClient.requestAccessToken({prompt: 'consent'});
+        } else {
+            saveToDrive();
+        }
+    } else {
+        alert("Google servisleri hala yükleniyor, lütfen 3 saniye bekleyip tekrar deneyin.");
+    }
+}
+
+// 4. Drive'a Veriyi Gönderen Fonksiyon
 async function saveToDrive() {
     const projName = document.getElementById("projectName").value || "adsiz_proje";
     const dateStr = new Date().toISOString().split('T')[0];
     const fileName = `${projName}_${dateStr}.json`;
 
-    // Mevcut hücre verilerini topla
+    // Tablo verilerini topla
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
         col: c.dataset.col,
         ep: c.dataset.ep,
@@ -1013,29 +1012,33 @@ async function saveToDrive() {
         });
 
         if (resp.ok) {
-            alert("Buluta başarıyla kaydedildi: " + fileName);
+            alert("Harika! Veriler Google Drive'a başarıyla yedeklendi.");
         } else {
-            alert("Kayıt sırasında bir hata oluştu.");
+            alert("Yedekleme sırasında bir hata oluştu.");
         }
     } catch (err) {
         console.error("Drive Hatası:", err);
     }
 }
 
-// 4. Drive'daki Dosyaları Listeleme (Gelecek Adım İçin Hazırlık)
+// 5. Dosyaları Listeleme (Yeşil Buton)
 async function listCloudFiles() {
+    if (accessToken === null) {
+        tokenClient.requestAccessToken({prompt: 'consent'});
+        return;
+    }
     try {
         const response = await gapi.client.drive.files.list({
-            q: "mimeType='application/json'",
+            q: "mimeType='application/json' and trashed = false",
             fields: 'files(id, name, createdTime)'
         });
         const files = response.result.files;
         if (files && files.length > 0) {
-            let msg = "Kayıtlı dosyalar:\n";
-            files.forEach(f => msg += `- ${f.name} (${f.createdTime})\n`);
-            alert(msg + "\n(Geri yükleme özelliği bir sonraki adımda eklenecek)");
+            let msg = "Buluttaki Kayıtların:\n\n";
+            files.forEach((f, i) => msg += `${i+1}. ${f.name}\n`);
+            alert(msg);
         } else {
-            alert("Bulutta kayıtlı dosya bulunamadı.");
+            alert("Hiç kayıt bulunamadı.");
         }
     } catch (err) {
         console.error(err);
