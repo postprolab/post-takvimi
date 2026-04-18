@@ -935,12 +935,10 @@ function saveProjectAsPost() {
         
         if (!projName) {
             const simdi = new Date();
-            const tarihEtiketi = simdi.toLocaleDateString('tr-TR').replace(/\./g, '-') + "_" + 
-                               simdi.getHours() + "-" + simdi.getMinutes();
-            projName = "Post_Takvim_" + tarihEtiketi;
+            projName = "Post_Takvim_" + simdi.toLocaleDateString('tr-TR').replace(/\./g, '-') + "_" + simdi.getHours() + "-" + simdi.getMinutes();
         }
 
-        // 1. Hücre Verilerini Topla
+        // 1. Hücreleri Topla
         const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
             col: c.dataset.col,
             ep: c.dataset.ep,
@@ -949,19 +947,26 @@ function saveProjectAsPost() {
             bg: c.style.backgroundColor
         }));
 
-        // 2. Notları Topla (Senin sistemindeki .note-item yapısına göre)
-        const notes = Array.from(document.querySelectorAll('.note-item')).map(n => ({
-            text: n.querySelector('.note-text') ? n.querySelector('.note-text').textContent : "",
-            date: n.querySelector('.note-date') ? n.querySelector('.note-date').textContent : "",
-            status: n.dataset.status || "default"
-        }));
+        // 2. Notları Topla (En Garanti Yöntem)
+        const notes = [];
+        document.querySelectorAll('.note-item').forEach(n => {
+            const noteText = n.querySelector('.note-text') ? n.querySelector('.note-text').textContent : "";
+            const noteDate = n.querySelector('.note-date') ? n.querySelector('.note-date').textContent : "";
+            // Eğer boş değilse listeye ekle
+            if(noteText) {
+                notes.push({
+                    text: noteText,
+                    date: noteDate,
+                    status: n.dataset.status || "pending"
+                });
+            }
+        });
 
         const data = {
             projectName: projName,
             startDate: dateEl ? dateEl.value : "",
             cells: cells,
-            notes: notes, // Notlar buraya eklendi
-            timestamp: new Date().getTime()
+            notes: notes
         };
 
         const blob = new Blob([JSON.stringify(data)], { type: 'application/octet-stream' });
@@ -974,8 +979,7 @@ function saveProjectAsPost() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     } catch (e) {
-        console.error("Kaydetme Hatası:", e);
-        alert("Kaydetme sırasında bir hata oluştu!");
+        alert("Kaydetme hatası: " + e.message);
     }
 }
 
