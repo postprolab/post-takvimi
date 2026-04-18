@@ -926,57 +926,215 @@ function handleRename() {
     };
     document.addEventListener('mousedown', (e) => { if(menu.style.display === 'block' && !menu.contains(e.target)) closeMenu(); if(summaryPop.style.display === 'block' && !summaryPop.contains(e.target)) summaryPop.style.display = "none"; }, true);
 
-// --- .POST KAYDETME (NOTLAR VE TAKVİM DAHİL) ---
+// --- .POST KAYDETME (V33 TAM UYUMLU) ---
 function saveProjectAsPost() {
     try {
         const projName = document.getElementById("projectName").value || "proje";
         const startDate = document.getElementById("startDate").value;
 
-        // 1. Takvim Hücrelerini Topla
+        // 1. Takvim hücrelerini topla
         const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
-            col: c.dataset.col,
-            ep: c.dataset.ep,
-            procType: c.dataset.proc_type,
-            text: c.textContent,
-            bg: c.style.backgroundColor
+            col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type,
+            text: c.textContent, bg: c.style.backgroundColor
         }));
 
-        // 2. Notları (To-Do List) Topla - Senin orijinal yapındaki sınıflara göre
-        const notes = Array.from(document.querySelectorAll('.note-item')).map(n => ({
-            text: n.querySelector('.note-text') ? n.querySelector('.note-text').textContent : "",
-            date: n.querySelector('.note-date') ? n.querySelector('.note-date').textContent : "",
-            status: n.dataset.status || "pending"
-        }));
+        // 2. NOTLARI TOPLA (ID: noteList - Dosyandaki orijinal ID)
+        const notes = [];
+        const container = document.getElementById("noteList"); 
+        
+        if (container) {
+            const items = container.querySelectorAll(".note-item");
+            items.forEach(item => {
+                const textEl = item.querySelector(".note-text");
+                const dateEl = item.querySelector(".note-date");
+                if (textEl) {
+                    notes.push({
+                        text: textEl.innerText.trim(),
+                        date: dateEl ? dateEl.innerText.trim() : "",
+                        status: item.dataset.status || "waiting"
+                    });
+                }
+            });
+        }
 
-        const data = {
-            projectName: projName,
-            startDate: startDate,
-            cells: cells,
-            notes: notes
+        const data = { 
+            projectName: projName, 
+            startDate: startDate, 
+            cells: cells, 
+            notes: notes 
         };
 
         const blob = new Blob([JSON.stringify(data)], { type: 'application/octet-stream' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        
-        // Tarihli otomatik dosya ismi
         const simdi = new Date();
         const tarih = simdi.toLocaleDateString('tr-TR').replace(/\./g, '-');
-        const dosyaAdi = projName === "proje" ? `Post_Takvim_${tarih}` : projName;
-
+        
         a.href = url;
-        a.download = dosyaAdi + ".post";
+        a.download = (projName === "proje" ? `Post_Takvim_${tarih}` : projName) + ".post";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-    } catch (e) {
-        console.error("Kaydetme hatası:", e);
-        alert("Kaydetme sırasında bir hata oluştu!");
-    }
+    } catch (e) { alert("Kaydetme hatası: " + e.message); }
 }
 
-// --- .POST YÜKLEME (NOTLAR VE TAKVİM DAHİL) ---
+// --- .POST YÜKLEME (V33 TAM UYUMLU) ---
+// --- .POST KAYDETME ---
+function saveProjectAsPost() {
+    try {
+        const projName = document.getElementById("projectName").value || "proje";
+        const startDate = document.getElementById("startDate").value;
+
+        // 1. Takvim hücrelerini topla
+        const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
+            col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type,
+            text: c.textContent, bg: c.style.backgroundColor
+        }));
+
+        // 2. NOTLARI TOPLA (İçerik Fix)
+        const notes = [];
+        const noteItems = document.querySelectorAll('.note-item');
+        noteItems.forEach(item => {
+            const textEl = item.querySelector('.note-text');
+            const dateEl = item.querySelector('.note-date');
+            if (textEl) {
+                notes.push({
+                    text: textEl.innerText.trim(), // İçeriği buradan alıyoruz
+                    date: dateEl ? dateEl.innerText.trim() : "",
+                    status: item.dataset.status || 'waiting'
+                });
+            }
+        });
+
+        const data = { projectName: projName, startDate: startDate, cells: cells, notes: notes };
+        const blob = new Blob([JSON.stringify(data)], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const simdi = new Date();
+        const tarih = simdi.toLocaleDateString('tr-TR').replace(/\./g, '-');
+        
+        a.href = url;
+        a.download = (projName === "proje" ? `Post_Takvim_${tarih}` : projName) + ".post";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (e) { alert("Kaydetme hatası: " + e.message); }
+}
+
+// --- .POST YÜKLEME ---
+// --- .POST KAYDETME (V33 İÇERİK FİX) ---
+function saveProjectAsPost() {
+    try {
+        const projName = document.getElementById("projectName").value || "proje";
+        const startDate = document.getElementById("startDate").value;
+
+        // 1. Takvim hücrelerini topla
+        const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
+            col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type,
+            text: c.textContent, bg: c.style.backgroundColor
+        }));
+
+        // 2. NOTLARI TOPLA (Metni .note-text içinden zorla alır)
+        const notes = [];
+        const container = document.getElementById("noteList");
+        if (container) {
+            const items = container.querySelectorAll(".note-item");
+            items.forEach(item => {
+                // Not metni senin kodunda .note-text sınıfında duruyor
+                const textEl = item.querySelector(".note-text");
+                const dateEl = item.querySelector(".note-date");
+                
+                if (textEl) {
+                    notes.push({
+                        text: textEl.innerText.trim(), // Burası metni yakalar
+                        date: dateEl ? dateEl.innerText.trim() : "",
+                        status: item.dataset.status || "waiting"
+                    });
+                }
+            });
+        }
+
+        const data = { 
+            projectName: projName, 
+            startDate: startDate, 
+            cells: cells, 
+            notes: notes 
+        };
+
+        const blob = new Blob([JSON.stringify(data)], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const simdi = new Date();
+        const tarih = simdi.toLocaleDateString('tr-TR').replace(/\./g, '-');
+        
+        a.href = url;
+        a.download = (projName === "proje" ? `Post_Takvim_${tarih}` : projName) + ".post";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (e) { alert("Kaydetme hatası: " + e.message); }
+}
+
+// --- .POST KAYDETME (V33 İÇERİK OKUMA FİX) ---
+function saveProjectAsPost() {
+    try {
+        const projName = document.getElementById("projectName").value || "proje";
+        const startDate = document.getElementById("startDate").value;
+
+        // 1. Takvim hücrelerini topla
+        const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
+            col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type,
+            text: c.textContent, bg: c.style.backgroundColor
+        }));
+
+        // 2. NOTLARI TOPLA (Metni temizleyerek alma)
+        const notes = [];
+        const noteItems = document.querySelectorAll('.note-item');
+        
+        noteItems.forEach(item => {
+            // Notun kopyasını alıyoruz ki üzerinde işlem yaparken orijinali bozulmasın
+            const clone = item.cloneNode(true);
+            
+            // Tarih span'ını ve varsa butonları kopyadan siliyoruz (sadece saf metin kalsın diye)
+            const dateSpan = clone.querySelector('.note-date');
+            if (dateSpan) dateSpan.remove();
+            
+            const actionBtn = clone.querySelector('button');
+            if (actionBtn) actionBtn.remove();
+
+            // Kalan metni alıyoruz
+            const pureText = clone.innerText.trim();
+            const pureDate = item.querySelector('.note-date') ? item.querySelector('.note-date').innerText.trim() : "";
+
+            if (pureText) {
+                notes.push({
+                    text: pureText,
+                    date: pureDate,
+                    status: item.dataset.status || 'waiting'
+                });
+            }
+        });
+
+        const data = { projectName: projName, startDate: startDate, cells: cells, notes: notes };
+        const blob = new Blob([JSON.stringify(data)], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const simdi = new Date();
+        const tarih = simdi.toLocaleDateString('tr-TR').replace(/\./g, '-');
+        
+        a.href = url;
+        a.download = (projName === "proje" ? `Post_Takvim_${tarih}` : projName) + ".post";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (e) { alert("Kaydetme hatası: " + e.message); }
+}
+
+// --- .POST YÜKLEME (V33 SİSTEMİNE TAM ENTEGRE) ---
 function handleManualLoad(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -985,29 +1143,46 @@ function handleManualLoad(event) {
     reader.onload = function(e) {
         try {
             const data = JSON.parse(e.target.result);
+            document.getElementById("projectName").value = data.projectName || "";
+            document.getElementById("startDate").value = data.startDate || "";
             
-            // 1. Proje Adı ve Tarihi Yükle
-            if (data.projectName) document.getElementById("projectName").value = data.projectName;
-            if (data.startDate) {
-                document.getElementById("startDate").value = data.startDate;
-                createCalendarAction(data.startDate); // Takvimi yeniden çiz
+            if (typeof createCalendarAction === "function") {
+                createCalendarAction(data.startDate);
             }
 
-            // 2. Notları (To-Do List) Yükle
-            const notesList = document.getElementById("notesList");
-            if (notesList) {
-                notesList.innerHTML = ""; // Mevcut listeyi temizle
+            // NOTLARI YÜKLE (ID: noteList)
+            const noteListContainer = document.getElementById("noteList");
+            if (noteListContainer) {
+                noteListContainer.innerHTML = ""; 
                 if (data.notes && data.notes.length > 0) {
                     data.notes.forEach(n => {
-                        // Senin orijinal dosendaki fonksiyon: addNoteAction(text, date, status)
-                        if (typeof addNoteAction === "function") {
-                            addNoteAction(n.text, n.date, n.status);
-                        }
+                        // SENİN addNote() FONKSİYONUNUN ÜRETTİĞİ YAPININ AYNISI:
+                        const noteDiv = document.createElement('div');
+                        noteDiv.className = `note-item ${n.status}`;
+                        noteDiv.dataset.status = n.status;
+                        
+                        // Metin düğümü ve tarih span'ı
+                        const textNode = document.createTextNode(n.text + " ");
+                        noteDiv.appendChild(textNode);
+                        
+                        const dateSpan = document.createElement('span');
+                        dateSpan.className = 'note-date';
+                        dateSpan.textContent = n.date;
+                        noteDiv.appendChild(dateSpan);
+                        
+                        // Sağ tık menüsünü senin sistemine bağla
+                        noteDiv.oncontextmenu = (ev) => { 
+                            ev.preventDefault(); 
+                            contextTarget = noteDiv; 
+                            if(typeof showNoteMenu === "function") showNoteMenu(ev.pageX, ev.pageY); 
+                        };
+                        
+                        noteListContainer.appendChild(noteDiv);
                     });
                 }
             }
 
-            // 3. Hücreleri Yerleştir (Takvim çizildikten biraz sonra)
+            // Takvim Hücrelerini Boya
             setTimeout(() => {
                 data.cells.forEach(c => {
                     const target = document.querySelector(`.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`);
@@ -1017,21 +1192,13 @@ function handleManualLoad(event) {
                         target.classList.add('filled');
                     }
                 });
-                alert("Proje, takvim ve To-Do listesi başarıyla yüklendi!");
+                alert("Yükleme başarılı! " + (data.notes ? data.notes.length : 0) + " not getirildi.");
             }, 500);
-
             event.target.value = ""; 
-        } catch (err) {
-            console.error("Yükleme Hatası:", err);
-            alert("Dosya yüklenirken bir hata oluştu!");
-        }
+        } catch (err) { alert("Hata: Dosya okunamadı."); }
     };
     reader.readAsText(file);
 }
-
-
-
-
     
     
 </script>
