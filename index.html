@@ -1044,18 +1044,28 @@ async function saveToDrive() {
 
 // 5. Otomatik Giriş Destekli Listeleme Fonksiyonu
 async function listCloudFiles() {
-    // Giriş yapılmadıysa önce giriş penceresini aç
+    // 1. Google kütüphanesi yüklü mü kontrol et
+    if (typeof gapi === 'undefined' || !gapi.client) {
+        alert("Sistem hazırlanıyor, lütfen 2 saniye sonra tekrar deneyin.");
+        return;
+    }
+
+    // 2. Oturum yoksa giriş yap
     if (accessToken === null) {
         tokenClient.callback = async (resp) => {
-            if (resp.error !== undefined) return;
+            if (resp.error !== undefined) {
+                console.error("Giriş hatası:", resp);
+                return;
+            }
             accessToken = resp.access_token;
-            // Girişten sonra sisteme 1 saniye nefes payı verip listeyi getir
-            setTimeout(listCloudFiles, 1000); 
+            // Giriş başarılı! Şimdi dosyaları getirmek için 1.5 saniye bekle (en güvenli süre)
+            setTimeout(() => { listCloudFiles(); }, 1500);
         };
         tokenClient.requestAccessToken({prompt: ''});
         return;
     }
 
+    // 3. Dosyaları listele
     try {
         const response = await gapi.client.drive.files.list({
             q: "mimeType='application/json' and trashed = false",
@@ -1065,6 +1075,12 @@ async function listCloudFiles() {
 
         const files = response.result.files;
         const container = document.getElementById("fileListContainer");
+        
+        if (!container) {
+            console.error("fileListContainer bulunamadı! HTML kodunu eklediğinizden emin olun.");
+            return;
+        }
+
         container.innerHTML = ""; // İçini temizle
 
         if (files && files.length > 0) {
@@ -1072,14 +1088,13 @@ async function listCloudFiles() {
                 const date = new Date(f.createdTime).toLocaleString('tr-TR');
                 const row = document.createElement("div");
                 
-                // Her bir dosya satırının tasarımı
-                row.style = "padding:15px; background:#2d2d2d; border-radius:8px; cursor:pointer; border-left:5px solid #27ae60; transition: 0.3s ease;";
+                row.style = "padding:15px; background:#2d2d2d; border-radius:8px; cursor:pointer; border-left:5px solid #27ae60; transition: 0.3s; margin-bottom:10px;";
                 row.onmouseover = () => row.style.background = "#3d3d3d";
                 row.onmouseout = () => row.style.background = "#2d2d2d";
                 
                 row.onclick = () => {
                     document.getElementById('cloudModal').style.display = 'none';
-                    loadCloudFile(f.id); // Dosyayı takvime yükler
+                    loadCloudFile(f.id);
                 };
                 
                 row.innerHTML = `
@@ -1088,15 +1103,16 @@ async function listCloudFiles() {
                 `;
                 container.appendChild(row);
             });
-            // Ekranı göster
+            // Listeyi göster
             document.getElementById("cloudModal").style.display = "flex";
         } else {
-            alert("Bulutta hiç kayıt bulunamadı!");
+            alert("Bulutta henüz hiç kayıt dosyası yok. Önce 'Buluta Yedekle' ile bir kayıt oluşturun.");
         }
     } catch (err) {
-        console.error("Hata:", err);
-        accessToken = null; // Token hatasıysa sıfırla
-        alert("Bağlantı güncelleniyor, lütfen tekrar basın.");
+        console.error("Liste getirme hatası detayları:", err);
+        // Eğer hata "401 Unauthorized" ise token bitmiştir, sıfırla
+        accessToken = null;
+        alert("Bağlantı tazelememiz gerekiyor. Lütfen butona bir kez daha basın.");
     }
 }
     
