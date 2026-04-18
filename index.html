@@ -286,6 +286,12 @@
                 break-before: page;
             }
         }
+
+
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+
+
     </style>
 </head>
 <body>
@@ -297,6 +303,8 @@
     <button style="background:#4a148c; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:11px;" id="toggleViewBtn">🔄 GÖRÜNÜMÜ DEĞİŞTİR</button>
     <div style="flex: 1;"></div>
     <button style="background:#2e7d32; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;" id="saveBtn">💾 Kaydet</button>
+    <button style="background:#4285F4; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="handleCloudSave()">☁️ Buluta Yedekle</button>
+<button id="loadCloudBtn" style="background:#34A853; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold; display:none;" onclick="listCloudFiles()">📂 Buluttan Getir</button>
     <button style="background:#d84315; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;" id="exportVerticalBtn">📄 Dikey Görünüm İndir</button>
     <button style="background:#444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-left:auto;" onclick="toggleSidebar()">📝 Notlar</button>
 </div>
@@ -904,6 +912,116 @@ function handleRename() {
         loadSavedData(); 
     };
     document.addEventListener('mousedown', (e) => { if(menu.style.display === 'block' && !menu.contains(e.target)) closeMenu(); if(summaryPop.style.display === 'block' && !summaryPop.contains(e.target)) summaryPop.style.display = "none"; }, true);
+
+    // --- Google Drive API Ayarları ---
+const CLIENT_ID = '564427018589-st3887p57t76vnjc0o5t8guu8impgc6l.apps.googleusercontent.com';
+const API_KEY = 'AIzaSyB6SPczIjafimzULi1ud7eXR7y1rCx_kEc';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+
+let tokenClient;
+let accessToken = null;
+
+// 1. Google Kütüphanelerini Başlat
+function gapiLoaded() {
+    gapi.load('client', async () => {
+        await gapi.client.init({ apiKey: API_KEY, discoveryDocs: [DISCOVERY_DOC] });
+    });
+}
+
+function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: (resp) => {
+            if (resp.error !== undefined) throw (resp);
+            accessToken = resp.access_token;
+            document.getElementById("loadCloudBtn").style.display = "inline-block";
+            saveToDrive(); // Giriş başarılıysa kaydı başlat
+        }
+    });
+}
+
+// 2. Buton Kontrolü
+function handleCloudSave() {
+    if (accessToken === null) {
+        tokenClient.requestAccessToken({prompt: 'consent'});
+    } else {
+        saveToDrive();
+    }
+}
+
+// 3. Drive'a Kaydetme Fonksiyonu
+async function saveToDrive() {
+    const projName = document.getElementById("projectName").value || "adsiz_proje";
+    const dateStr = new Date().toISOString().split('T')[0];
+    const fileName = `${projName}_${dateStr}.json`;
+
+    // Mevcut hücre verilerini topla
+    const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
+        col: c.dataset.col,
+        ep: c.dataset.ep,
+        type: c.dataset.proc_type,
+        text: c.textContent,
+        bg: c.style.backgroundColor
+    }));
+
+    // Notları topla
+    const notes = Array.from(document.querySelectorAll('.note-item')).map(n => ({
+        text: n.querySelector('.note-text').textContent,
+        date: n.querySelector('.note-date').textContent,
+        status: n.dataset.status
+    }));
+
+    const calendarData = {
+        projectName: projName,
+        startDate: document.getElementById("startDate").value,
+        cells: cells,
+        notes: notes
+    };
+
+    const fileMetadata = { 'name': fileName, 'mimeType': 'application/json' };
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
+    form.append('file', new Blob([JSON.stringify(calendarData)], { type: 'application/json' }));
+
+    try {
+        const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + accessToken },
+            body: form
+        });
+
+        if (resp.ok) {
+            alert("Buluta başarıyla kaydedildi: " + fileName);
+        } else {
+            alert("Kayıt sırasında bir hata oluştu.");
+        }
+    } catch (err) {
+        console.error("Drive Hatası:", err);
+    }
+}
+
+// 4. Drive'daki Dosyaları Listeleme (Gelecek Adım İçin Hazırlık)
+async function listCloudFiles() {
+    try {
+        const response = await gapi.client.drive.files.list({
+            q: "mimeType='application/json'",
+            fields: 'files(id, name, createdTime)'
+        });
+        const files = response.result.files;
+        if (files && files.length > 0) {
+            let msg = "Kayıtlı dosyalar:\n";
+            files.forEach(f => msg += `- ${f.name} (${f.createdTime})\n`);
+            alert(msg + "\n(Geri yükleme özelliği bir sonraki adımda eklenecek)");
+        } else {
+            alert("Bulutta kayıtlı dosya bulunamadı.");
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+    
 
     
 </script>
