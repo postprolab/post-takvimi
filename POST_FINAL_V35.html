@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Takvimi - Pro V31_Final_Fix</title>
+    <style>
+        :root {
+            --bg-dark: #0F1115;
+            --bg-panel: #15171c;
+            --bg-header: #1c1f26;
+            --accent: #FF0000;
+            --neon-green: #39FF14;
+            --border-color: #222; 
+            --timeline-border: #555555;
+            --cell-width: 45px;
+            --sticky-1: 70px;
+            --sticky-2: 140px;
+            --sidebar-width: 320px;
+        }
+
+        body { 
+            margin: 0; background: var(--bg-dark); 
+            font-family: 'Segoe UI', Arial, sans-serif; color: white;
+            overflow: hidden; display: flex; flex-direction: column; height: 100vh;
+        }
+
+        .top-bar {
+            padding: 10px 20px; background: var(--bg-panel);
+            display: flex; gap: 15px; align-items: center;
+            border-bottom: 1px solid #333; flex-shrink: 0; z-index: 5000;
+        }
+
+        .project-input {
+            background: #000; border: 1px solid #444; color: #fff;
+            padding: 5px 10px; border-radius: 4px; font-weight: bold; width: 150px;
+        }
+
+        .filter-bar { 
+            background: #0d0e12; padding: 8px 20px; display: flex; gap: 8px; 
+            border-bottom: 1px solid #222; flex-wrap: wrap; z-index: 4000;
+            align-items: center;
+        }
+        .filter-label { font-size: 11px; color: #555; font-weight: bold; margin-right: 5px; letter-spacing: 1px; }
+        
+        .dept-filter-btn { 
+            padding: 5px 12px; font-size: 11px; border: 1px solid #333; 
+            background: #1a1c23; color: #999; cursor: pointer; border-radius: 20px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .dept-filter-btn:hover { background: #252833; color: #fff; border-color: #555; }
+        .dept-filter-btn.active { 
+            background: rgba(255, 255, 255, 0.1); 
+            color: #fff; 
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.2);
+        }
+
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden; 
+            width: 100%;
+        }
+        .container { flex: 1; overflow: auto; position: relative; box-sizing: border-box; scroll-behavior: smooth; }
+        .header, .grid { display: grid; width: max-content; }
+
+    .cell {
+    border: 1px solid var(--border-color);
+    width: var(--cell-width); 
+    height: 30px; 
+    text-align: center; 
+    font-size: 10px; 
+    box-sizing: border-box;
+    cursor: pointer; 
+    user-select: none; 
+    position: relative;
+    
+    /* EXCEL WRAP TEXT MANTIĞI */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;   /* İçerik sığmazsa dikeyde hizala */
+    white-space: normal;      /* Alt satıra geçişi açar */
+    word-break: break-word;   /* Kelimeyi uygun yerden böler */
+    line-height: 1;           /* Satır arası boşluğu daraltır */
+    padding: 1px 2px;         /* Yazı kenarlara çarpmasın */
+    overflow: hidden;         /* Hücre dışına asla taşırmaz */
+}
+
+  .cell.timeline {
+    border: 1px solid var(--timeline-border) !important;
+    width: var(--cell-width);
+    height: 30px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1px 2px;
+    
+    white-space: normal !important;   /* Satır atlamaya izin ver */
+    word-break: normal !important;    /* KELİMEYİ ASLA BÖLME (N aşağı düşmez) */
+    overflow: hidden;                 /* Yine de sığmazsa dışarı taşırma */
+    line-height: 0.9;
+    font-weight: 800;
+}
+        #grid { will-change: contents; }
+        
+        .focus-mode .cell.timeline, 
+        .focus-mode .cell.sticky-col-2, 
+        .focus-mode .cell.sticky-col-1, 
+        .focus-mode .divider { 
+            opacity: 0.15; 
+        }
+
+        .focus-mode[data-focus="set"] .cell[data-proc_type="set"],
+        .focus-mode[data-focus="edit"] .cell[data-proc_type="edit"],
+        .focus-mode[data-focus="cuts"] .cell[data-proc_type="cuts"],
+        .focus-mode[data-focus="vfx"] .cell[data-proc_type="vfx"],
+        .focus-mode[data-focus="color"] .cell[data-proc_type="color"],
+        .focus-mode[data-focus="sound"] .cell[data-proc_type="sound"],
+        .focus-mode[data-focus="music"] .cell[data-proc_type="music"],
+        .focus-mode[data-focus="send"] .cell[data-proc_type="send"] { 
+            opacity: 1 !important; 
+            z-index: 10; 
+        }
+
+        .sticky-col-1 { position: sticky; left: 0; z-index: 100 !important; width: var(--sticky-1) !important; background: var(--bg-header); }
+        .sticky-col-2 { position: sticky; left: var(--sticky-1); z-index: 100 !important; width: var(--sticky-2) !important; background: var(--bg-header); text-align: left; padding-left: 8px; }
+
+        .header { position: sticky; top: 0; z-index: 2000; }
+        .header .sticky-col-1, .header .sticky-col-2 { z-index: 2500 !important; top: 0; }
+        
+        .month { background: #000 !important; color: #FFFFFF !important; z-index: 1001; position: sticky; top: 0; text-align: center; border-right: 1px solid var(--accent) !important; font-size: 14px; font-weight: bold; width: auto !important; }
+        .date { background: rgba(42, 45, 51, 0.75) !important; color: #FFFFFF !important; z-index: 1001; position: sticky; top: 30px; backdrop-filter: blur(4px); }
+        .active-date { background-color: var(--neon-green) !important; color: #000 !important; font-weight: bold; }
+        .milestone { outline: 2px solid #FFD700 !important; outline-offset: -2px; color: #FFD700 !important; font-weight: bold; }
+
+        .today-line { 
+            position: absolute; top: 0; width: 2px; 
+            background: var(--neon-green); 
+            pointer-events: none; z-index: 1500;
+            box-shadow: 0 0 12px var(--neon-green), 0 0 4px var(--neon-green);
+            display: none; 
+        }
+
+        .highlight-column { position: relative; }
+        .highlight-column::after {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(57, 255, 20, 0.08); pointer-events: none; z-index: 2;
+            border-left: 1px solid var(--neon-green); border-right: 1px solid var(--neon-green);
+            box-shadow: inset 0 0 5px rgba(57, 255, 20, 0.2);
+        }
+
+        .timeline { background: white; color: black; z-index: 1; border: 1px solid var(--timeline-border) !important;}
+        .weekend.timeline { background: #d1d1d1; }
+        .filled { z-index: 5 !important; color: #000000 !important; font-weight: bold; cursor: grab; }
+        .filled:active { cursor: grabbing; }
+        .selected { outline: 2px solid #0078d7 !important; z-index: 10 !important; box-shadow: 0 0 8px rgba(0, 120, 215, 0.5); }
+        
+        .episode-v { background: #6FBF73 !important; color: #000 !important; display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; transform: rotate(180deg); font-size: 12px; height: 100% !important; border-right: 1px solid var(--border-color); }
+        .divider { height: 12px; background: #000; grid-column: 1 / -1; }
+
+        .sidebar { width: var(--sidebar-width); background: #000; border-left: 2px solid #333; display: flex; flex-direction: column; transition: 0.3s ease; flex-shrink: 0; z-index: 3000; }
+        .sidebar.closed { margin-right: calc(var(--sidebar-width) * -1); width: 0; visibility: hidden; }
+        
+        .sidebar-header { padding: 15px; background: var(--bg-header); text-align: center; font-weight: bold; border-bottom: 1px solid #333; }
+        .todo-filter-bar { display: flex; background: #111; border-bottom: 1px solid #333; }
+        .filter-btn { flex: 1; padding: 10px; background: transparent; color: #888; border: none; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .filter-btn.active { color: white; background: #222; border-bottom: 2px solid var(--accent); }
+        .sidebar-content { flex: 1; padding: 15px; overflow-y: auto; }
+        .note-input-area { display: flex; gap: 5px; padding: 15px 15px 5px 15px; }
+        .note-input { flex: 1; background: #111; border: 1px solid #444; color: white; padding: 8px; border-radius: 4px; font-size: 13px; }
+        .note-item { background: #1c1f26; padding: 12px; border-radius: 4px; margin-bottom: 8px; border-left: 4px solid #555; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+        .note-date { font-size: 10px; opacity: 0.4; margin-left: 10px; white-space: nowrap; }
+        .note-item.waiting { border-left-color: #ff9800; }
+        .note-item.done { border-left-color: #4caf50; opacity: 0.6; text-decoration: line-through; }
+        .note-item.canceled { border-left-color: #f44336; opacity: 0.4; }
+
+        #selection-box { position: absolute; border: 1px solid #0078d7; background: rgba(0, 120, 215, 0.2); pointer-events: none; display: none; z-index: 10000; }
+        .context-menu { position: fixed; background: #1c1f26; border: 1px solid #444; color: white; z-index: 10000; display: none; padding: 5px 0; min-width: 140px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .context-menu .item { padding: 8px 15px; cursor: pointer; font-size: 12px; }
+        .context-menu .item:hover { background: #333; }
+
+        .date-summary-pop { position: fixed; background: #222; border: 1px solid #444; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.8); z-index: 11000; display: none; min-width: 200px; max-width: 300px; padding: 10px; color: #eee; font-size: 12px; }
+        .pop-title { font-weight: bold; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 8px; color: var(--accent); }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 20000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--bg-panel); padding: 30px; border-radius: 12px; border: 1px solid var(--accent); text-align: center; min-width: 320px; box-shadow: 0 0 30px rgba(255, 0, 0, 0.2); }
+        .modal-content h3 { margin-top: 0; color: var(--accent); letter-spacing: 1px; }
+        .modal-input { background: #000; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 6px; margin: 20px 0; width: 100%; box-sizing: border-box; font-size: 16px; outline: none; cursor: pointer; text-align: center; font-family: inherit; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; scale: 1.2; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: center; }
+        .modal-btn { padding: 10px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; border: none; transition: 0.2s; }
+        .btn-confirm { background: var(--neon-green); color: #000; }
+        .btn-confirm:hover { background: #32e012; transform: scale(1.05); }
+        .btn-cancel { background: #333; color: #fff; }
+        .btn-cancel:hover { background: #444; }
+
+        #verticalViewContainer, 
+        #verticalViewContainer * {
+            box-sizing: border-box !important;
+        }
+     
+        #verticalViewContainer {
+            display: none; 
+            flex: 1; 
+            width: 100% !important; 
+            max-width: 100vw; 
+            padding: 10px; 
+            background: #0a0b0e; 
+            overflow-x: hidden; 
+            overflow-y: auto; 
+        }
+
+    .calendar-view-grid {
+    display: grid;
+    /* 120px sınırını kaldırıyoruz, 1fr yaparak 7 günü ekrana hapsediyoruz */
+    grid-template-columns: repeat(7, 1fr); 
+    gap: 1px;
+    background: #333;
+    width: 100%;
+    box-sizing: border-box;
+}
+}
+
+        .cal-header-cell {
+            background: var(--bg-header);
+            color: #888;
+            text-align: center;
+            line-height: 40px;
+            font-size: 11px;
+            font-weight: bold;
+            border-bottom: 1px solid #333;
+        }
+
+        .cal-day-cell {
+            background: var(--bg-dark);
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            min-height: 140px; 
+            position: relative;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .cal-day-cell.selected-day {
+            border: 2px solid var(--accent) !important;
+            background: rgba(255, 0, 0, 0.08);
+        }
+
+        .cal-day-cell.other-month { opacity: 0.3; cursor: default; }
+        .cal-day-cell.today-cell { background: #161a21; border: 1px solid rgba(57, 255, 20, 0.3); }
+
+        #verticalViewContainer .day-num {
+            font-size: 8px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: #888; 
+            display: block; 
+            border-bottom: 1px solid #222;
+            padding-bottom: 4px;
+        }
+
+    .cal-item-strip {
+    font-size: 10px; /* Burayı 9px'den 8px veya 7px'e çek */
+    padding: 2px 4px; /* Kutunun iç boşluğunu da biraz daraltalım */
+    margin-bottom: 2px;
+    border-radius: 2px;
+    color: #000;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    line-height: 1;
+}
+        /* PDF Sayfa Sonu Kuralı */
+        @media print {
+            .month-section {
+                page-break-before: always;
+                break-before: page;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <input type="text" id="projectName" class="project-input" placeholder="Proje İsmi...">
+    <button id="openModalBtn" style="background:var(--accent); color:white; border:none; padding:7px 15px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:11px; letter-spacing:0.5px;">📅 TAKVİMİ OLUŞTUR</button>
+    <button id="toggleTodayBtn" style="background:#000; color:var(--neon-green); border:1px solid var(--neon-green); padding:5px 10px; border-radius:4px; cursor:pointer; font-size: 11px; font-weight: bold; opacity: 0.5;">📍 BUGÜN ÇİZGİSİ</button>
+    <button style="background:#4a148c; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:11px;" id="toggleViewBtn">🔄 GÖRÜNÜMÜ DEĞİŞTİR</button>
+    <div style="flex: 1;"></div>
+    <button style="background:#2e7d32; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;" id="saveBtn">💾 Kaydet</button>
+    <button style="background:#d84315; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;" id="exportVerticalBtn">📄 Dikey Görünüm İndir</button>
+    <button style="background:#444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-left:auto;" onclick="toggleSidebar()">📝 Notlar</button>
+</div>
+
+<div id="dateModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>BAŞLANGIÇ TARİHİ SEÇ</h3>
+        <input type="date" id="startDate" class="modal-input" onclick="if(this.showPicker) this.showPicker()">
+        <div class="modal-buttons">
+            <button id="confirmDateBtn" class="modal-btn btn-confirm">OLUŞTUR</button>
+            <button id="closeModalBtn" class="modal-btn btn-cancel">İPTAL</button>
+        </div>
+    </div>
+</div>
+
+<div class="filter-bar" id="deptFilters">
+    <div class="filter-label">ODAK MODU:</div>
+    <button class="dept-filter-btn active" id="btn-all" onclick="filterDept('all', this)"><span>🌐</span> HEPSİ</button>
+    <button class="dept-filter-btn" onclick="filterDept('set', this)"><span>🎬</span> SET</button>
+    <button class="dept-filter-btn" onclick="filterDept('edit', this)"><span>✂️</span> EDIT</button>
+    <button class="dept-filter-btn" onclick="filterDept('cuts', this)"><span>🎞️</span> CUTS</button>
+    <button class="dept-filter-btn" onclick="filterDept('vfx', this)"><span>🎆</span> VFX</button>
+    <button class="dept-filter-btn" onclick="filterDept('color', this)"><span>🎨</span> COLOR</button>
+    <button class="dept-filter-btn" onclick="filterDept('sound', this)"><span>🔊</span> SOUND</button>
+    <button class="dept-filter-btn" onclick="filterDept('music', this)"><span>🎵</span> MUSIC</button>
+    <button class="dept-filter-btn" onclick="filterDept('send', this)"><span>📦</span> SEND</button>
+</div>
+
+<div id="dateSummaryPop" class="date-summary-pop"></div>
+
+<div class="main-layout">
+    <div class="container" id="mainContainer">
+        <div id="selection-box"></div>
+        <div id="todayLine" class="today-line"></div>
+        <div class="header" id="header"></div>
+        <div class="grid" id="grid"></div>
+    </div>
+
+    <div id="verticalViewContainer"></div>
+
+    <div class="sidebar closed" id="sidebar">
+        <div class="sidebar-header">TO DO LIST</div>
+        <div class="note-input-area">
+            <input type="text" id="noteInput" class="note-input" placeholder="Yeni not...">
+            <button onclick="addNote()" style="background:var(--accent); color:white; border:none; padding:0 12px; border-radius:4px; cursor:pointer; font-weight:bold;">EKLE</button>
+        </div>
+        <div class="todo-filter-bar">
+            <button class="filter-btn active" onclick="filterNotes('all', this)">Hepsi</button>
+            <button class="filter-btn" onclick="filterNotes('waiting', this)">Beklenenler</button>
+            <button class="filter-btn" onclick="filterNotes('done', this)">Yapılanlar</button>
+        </div>
+        <div class="sidebar-content" id="noteList"></div>
+    </div>
+</div>
+
+<div id="contextMenu" class="context-menu"></div>
+
+<script>
+    const SAVED_DATA = null;
+    let TOTAL_DAYS = 365, TOTAL_EPISODES = 16, dates = [], selectedCells = new Set(), dragSource = null, contextTarget = null, isSelecting = false, startX, startY;
+    let currentActiveDept = 'all'; 
+
+    let historyStack = [];
+    function saveHistory() {
+        const state = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
+            col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type, text: c.textContent, bg: c.style.backgroundColor
+        }));
+        historyStack.push(JSON.stringify(state));
+        if (historyStack.length > 50) historyStack.shift(); 
+    }
+
+    function undo() {
+        if (historyStack.length <= 1) return; 
+        historyStack.pop(); 
+        const prevState = JSON.parse(historyStack[historyStack.length - 1]);
+        document.querySelectorAll('.cell.timeline').forEach(c => {
+            c.dataset.proc = ""; c.textContent = ""; c.style.backgroundColor = ""; c.classList.remove("filled", "selected");
+        });
+        prevState.forEach(c => {
+            const target = document.querySelector(`.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`);
+            if (target) { target.dataset.proc = c.procType; target.textContent = c.text; target.style.backgroundColor = c.bg; target.classList.add('filled'); }
+        });
+    }
+
+    const deptColors = { "edit": "#E57373", "cuts": "#F4C7C3", "vfx": "#FFF2CC", "color": "#B39DDB", "sound": "#F8BBD0", "music": "#CFE2F3", "send": "#D9EAD3", "set": "#FFD54F" };
+    const container = document.getElementById('mainContainer');
+    const selBox = document.getElementById('selection-box');
+    const menu = document.getElementById("contextMenu");
+    const summaryPop = document.getElementById("dateSummaryPop");
+    const vContainer = document.getElementById('verticalViewContainer');
+
+    const dateModal = document.getElementById('dateModal');
+    const openModalBtn = document.getElementById('openModalBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const confirmDateBtn = document.getElementById('confirmDateBtn');
+
+    openModalBtn.onclick = () => { 
+        dateModal.style.display = 'flex'; 
+        setTimeout(() => {
+            const dateInput = document.getElementById("startDate");
+            dateInput.focus(); if (dateInput.showPicker) dateInput.showPicker();
+        }, 150);
+    };
+
+    closeModalBtn.onclick = () => { dateModal.style.display = 'none'; };
+    confirmDateBtn.onclick = () => {
+        const val = document.getElementById("startDate").value;
+        if (!val) return alert("Lütfen tarih seçin!");
+        createCalendarAction(val); dateModal.style.display = 'none';
+    };
+
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('closed'); }
+    function closeMenu() { menu.style.display = "none"; summaryPop.style.display = "none"; }
+    function isWeekend(d) { return d.getDay() === 0 || d.getDay() === 6; }
+    
+    function clearActiveSelection() { 
+        document.querySelectorAll('.active-date, .highlight-column').forEach(el => el.classList.remove('active-date', 'highlight-column')); 
+        selectedCells.forEach(c => c.classList.remove("selected")); selectedCells.clear(); 
+    }
+
+    function filterDept(dept, btn) {
+        if (dept === currentActiveDept && dept !== 'all') {
+            dept = 'all'; btn = document.getElementById('btn-all');
+        }
+        currentActiveDept = dept;
+        document.querySelectorAll('.dept-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const gridElement = document.getElementById('grid');
+        
+        if (dept === 'all') { 
+            gridElement.classList.remove('focus-mode'); 
+            gridElement.removeAttribute('data-focus');
+        } else { 
+            gridElement.classList.add('focus-mode'); 
+            gridElement.setAttribute('data-focus', dept);
+        }
+        
+        if(isVerticalActive) renderVerticalDashboard();
+    }
+
+    function updateTodayLine() {
+        const today = new Date(); today.setHours(0,0,0,0);
+        let todayIdx = -1;
+        dates.forEach((d, i) => { let temp = new Date(d); temp.setHours(0,0,0,0); if(temp.getTime() === today.getTime()) todayIdx = i; });
+        if(todayIdx !== -1) {
+            const xPos = 70 + 140 + (todayIdx * 45);
+            const line = document.getElementById('todayLine');
+            line.style.left = xPos + "px";
+            line.style.height = document.getElementById('grid').scrollHeight + "px";
+            container.scrollLeft = xPos - (container.offsetWidth / 2);
+        }
+    }
+
+    document.getElementById('toggleTodayBtn').onclick = function() {
+        const line = document.getElementById('todayLine');
+        if(line.style.display === "none" || line.style.display === "") {
+            line.style.display = "block"; this.style.background = "#1a1c23"; this.style.opacity = "1";
+        } else {
+            line.style.display = "none"; this.style.background = "#000"; this.style.opacity = "0.5";
+        }
+    };
+
+    window.addEventListener('keydown', (e) => { 
+        if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
+        if ((e.key === "Delete" || e.key === "Backspace") && selectedCells.size > 0 && document.activeElement.tagName !== 'INPUT') { 
+            selectedCells.forEach(cell => { cell.dataset.proc = ""; cell.textContent = ""; cell.style.backgroundColor = ""; cell.classList.remove("filled", "selected"); }); 
+            selectedCells.clear(); saveHistory();
+        } 
+    });
+
+    function addNote() {
+        const input = document.getElementById('noteInput'); if (!input.value.trim()) return;
+        const now = new Date();
+        const dateStr = `${now.getDate()}/${now.getMonth() + 1} ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+        const note = document.createElement('div');
+        note.className = 'note-item waiting'; note.dataset.status = 'waiting';
+        note.innerHTML = `<span class="note-text">${input.value}</span><span class="note-date">${dateStr}</span>`;
+        note.oncontextmenu = (e) => { e.preventDefault(); contextTarget = note; showNoteMenu(e.pageX, e.pageY); };
+        document.getElementById('noteList').prepend(note); input.value = '';
+    }
+
+    function showNoteMenu(x, y) {
+        menu.innerHTML = `<div class="item" onclick="updateNoteStatus('waiting')">🟠 Bekleniyor</div><div class="item" onclick="updateNoteStatus('done')">🟢 Yapıldı</div><div class="item" onclick="updateNoteStatus('canceled')">🔴 İptal</div><hr style="border:0; border-top:1px solid #333; margin:5px 0;"><div class="item" style="color:#ff5555" onclick="contextTarget.remove(); closeMenu();">🗑 Sil</div>`;
+        menu.style.display = "block"; menu.style.left = x + "px"; menu.style.top = y + "px";
+    }
+
+    function updateNoteStatus(status) { contextTarget.className = `note-item ${status}`; contextTarget.dataset.status = status; closeMenu(); }
+    function filterNotes(status, btn) { document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.querySelectorAll('.note-item').forEach(note => note.style.display = (status === 'all' || note.dataset.status === status) ? 'flex' : 'none'); }
+
+    function showDateSummary(colIdx, x, y) {
+        const dateObj = dates[colIdx];
+        const filledCells = document.querySelectorAll(`.cell.timeline.filled[data-col="${colIdx}"]`);
+        let html = `<div class="pop-title">${dateObj.toLocaleDateString('tr-TR', {day:'numeric', month:'long', weekday:'long'})}</div>`;
+        if(filledCells.length === 0) html += `<div style="opacity:0.5;font-style:italic;">Plan yok.</div>`;
+        else filledCells.forEach(cell => { const ep = cell.dataset.ep == 0 ? "SET" : "BÖLÜM " + cell.dataset.ep; html += `<div style="display:flex;gap:8px;margin-bottom:4px;align-items:center;"><div style="width:8px;height:8px;border-radius:50%;background:${cell.style.backgroundColor}"></div><b>${ep}:</b><span>${cell.textContent}</span></div>`; });
+        summaryPop.innerHTML = html; summaryPop.style.display = "block"; summaryPop.style.left = x + "px"; summaryPop.style.top = (y + 30) + "px";
+    }
+
+function buildHeader() {
+    const header = document.getElementById("header"); header.innerHTML = "";
+    header.style.gridTemplateColumns = `var(--sticky-1) var(--sticky-2) repeat(${TOTAL_DAYS}, var(--cell-width))`;
+    header.innerHTML += `<div class="cell sticky-col-1 month" style="height:60px; grid-row: span 2">BÖLÜM</div><div class="cell sticky-col-2 month" style="height:60px; grid-row: span 2">DEPARTMANLAR</div>`;
+    
+    let currentMonth = -1, months = [], span = 0;
+    dates.forEach((d, i) => { 
+        if (d.getMonth() !== currentMonth) { 
+            if (currentMonth !== -1) months.push(span); 
+            currentMonth = d.getMonth(); span = 1; 
+        } else span++; 
+        if (i === dates.length - 1) months.push(span); 
+    });
+
+    let dIdx = 0;
+    months.forEach(mSpan => { 
+        header.innerHTML += `<div class="cell month" style="grid-column: span ${mSpan}">${dates[dIdx].toLocaleDateString("tr-TR", { month: "long", year: "numeric" }).toUpperCase()}</div>`; 
+        dIdx += mSpan; 
+    });
+
+    dates.forEach((d, i) => { 
+        let dCell = document.createElement("div"); 
+        dCell.className = "cell date"; 
+        // Gün ismini kısa formatta ekliyoruz (Pzt, Sal...)
+        const dayName = d.toLocaleDateString('tr-TR', { weekday: 'short' }).toUpperCase();
+        dCell.innerHTML = `<div style="line-height:1.2; padding-top:2px;">${d.getDate()}/${d.getMonth()+1}<br><span style="font-size:8px; opacity:0.7;">${dayName}</span></div>`; 
+        
+        dCell.dataset.col = i;
+        dCell.onclick = (e) => { 
+            e.stopPropagation(); if (!e.shiftKey) clearActiveSelection(); 
+            dCell.classList.add('active-date'); 
+            document.querySelectorAll(`.cell.timeline[data-col="${i}"]`).forEach(c => { 
+                c.classList.add('highlight-column'); 
+                if (c.classList.contains('filled')) { c.classList.add('selected'); selectedCells.add(c); } 
+            }); 
+            showDateSummary(i, e.pageX, e.pageY); 
+        };
+        dCell.oncontextmenu = (e) => { e.preventDefault(); dCell.classList.toggle('milestone'); };
+        header.appendChild(dCell); 
+    });
+}
+
+    function rebuildGrid() {
+        const grid = document.getElementById("grid"); grid.innerHTML = "";
+        grid.style.gridTemplateColumns = `var(--sticky-1) var(--sticky-2) repeat(${TOTAL_DAYS}, var(--cell-width))`;
+        let s1 = document.createElement("div"); s1.className="cell sticky-col-1"; s1.dataset.proc_type="set"; s1.style.backgroundColor=deptColors["set"]; s1.textContent="SET"; s1.style.color="#000"; grid.appendChild(s1);
+        let s2 = document.createElement("div"); s2.className="cell sticky-col-2"; s2.dataset.proc_type="set"; s2.style.backgroundColor=deptColors["set"]; s2.textContent="SET DAYS"; s2.style.color="#000"; grid.appendChild(s2);
+        for (let d = 0; d < TOTAL_DAYS; d++) { let c = document.createElement("div"); c.className = "cell timeline " + (isWeekend(dates[d]) ? "weekend" : ""); attachGridEvents(c, "set", d, 0); grid.appendChild(c); }
+        for (let i = 1; i <= TOTAL_EPISODES; i++) {
+            const procs = ["edit", "cuts", "vfx", "color", "sound", "music", "send"];
+            procs.forEach((p, idx) => {
+                if (idx === 0) { let e = document.createElement("div"); e.className = "cell sticky-col-1 episode-v"; e.style.gridRow = `span ${procs.length}`; e.textContent = "EPISODE " + (i < 10 ? "0" + i : i); grid.appendChild(e); }
+                let pc = document.createElement("div"); pc.className = "cell sticky-col-2"; pc.dataset.proc_type = p; pc.style.backgroundColor = deptColors[p]; pc.textContent = p.toUpperCase(); pc.style.color = "#000"; grid.appendChild(pc);
+                for (let d = 0; d < TOTAL_DAYS; d++) { let c = document.createElement("div"); c.className = "cell timeline " + (isWeekend(dates[d]) ? "weekend" : ""); attachGridEvents(c, p, d, i); grid.appendChild(c); }
+            });
+            let div = document.createElement("div"); div.className = "divider"; grid.appendChild(div);
+        }
+        updateTodayLine(); saveHistory(); 
+    }
+
+    function attachGridEvents(cell, proc, colIndex, episodeNum) {
+        cell.dataset.col = colIndex; cell.dataset.ep = episodeNum; cell.dataset.proc_type = proc; 
+        cell.ondblclick = (e) => { e.stopPropagation(); if (cell.classList.contains('filled')) { contextTarget = cell; showGridMenu(e.pageX, e.pageY); } else { cell.dataset.proc = proc; cell.textContent = proc.toUpperCase(); cell.style.backgroundColor = deptColors[proc]; cell.classList.add("filled"); saveHistory(); } };
+        
+        cell.onmousedown = (e) => {
+            if (e.button !== 0) return;
+            if (cell.classList.contains('filled')) {
+                dragSource = cell;
+                if (!cell.classList.contains('selected')) {
+                    if (!e.shiftKey) clearActiveSelection();
+                    cell.classList.add('selected');
+                    selectedCells.add(cell);
+                }
+            }
+        };
+
+    cell.onclick = (e) => { 
+    if (e.shiftKey) {
+        // 1. En son seçilen (ve içi dolu olan) başlangıç hücresini bul
+        let lastFilled = null;
+        selectedCells.forEach(c => {
+            if (c.classList.contains('filled')) lastFilled = c;
+        });
+
+        if (lastFilled) {
+            const startCol = parseInt(lastFilled.dataset.col);
+            const targetCol = parseInt(cell.dataset.col);
+            const ep = lastFilled.dataset.ep;
+            const proc = lastFilled.dataset.proc_type;
+            const content = lastFilled.textContent;
+            const bgColor = lastFilled.style.backgroundColor;
+
+            // Sadece aynı satırda ve ileriye doğruysa doldur
+            if (cell.dataset.ep === ep && cell.dataset.proc_type === proc && targetCol > startCol) {
+                for (let c = startCol + 1; c <= targetCol; c++) {
+                    const target = document.querySelector(`.cell.timeline[data-col="${c}"][data-ep="${ep}"][data-proc_type="${proc}"]`);
+                    if (target) {
+                        target.textContent = content;
+                        target.style.backgroundColor = bgColor;
+                        target.dataset.proc = proc;
+                        target.classList.add('filled');
+                    }
+                }
+                saveHistory();
+                clearActiveSelection();
+                return; // İşlem tamam, seçim moduna girme
+            }
+        }
+        
+        // Eğer doldurma şartları oluşmadıysa normal seçime devam et
+        cell.classList.toggle('selected'); 
+        if (cell.classList.contains('selected')) selectedCells.add(cell); 
+        else selectedCells.delete(cell);
+        
+    } else if (cell.classList.contains('filled')) {
+        clearActiveSelection();
+        cell.classList.add('selected');
+        selectedCells.add(cell);
+    }
+};
+
+        cell.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); if (!cell.classList.contains('filled')) return; contextTarget = cell; showGridMenu(e.pageX, e.pageY); };
+    }
+
+    function showGridMenu(x, y) { menu.innerHTML = `<div class="item" onclick="handleRename()">✏️ Ad Değiştir</div><div class="item" onclick="handleChangeColor()">🎨 Renk Seç</div><hr style="border:0; border-top:1px solid #333; margin:5px 0;"><div class="item" style="color:#ff5555" onclick="handleDelete()">🗑 Sil</div>`; menu.style.display = "block"; menu.style.left = x + "px"; menu.style.top = y + "px"; }
+function handleRename() { 
+    let n = prompt("Yeni isim:", contextTarget.textContent); 
+    if (n) { 
+        let newText = n.toUpperCase();
+        contextTarget.textContent = newText; 
+
+        // Karakter sayısına göre fontu ayarla (Hücreye sığdırma motoru)
+        let len = newText.length;
+        if (len > 12) contextTarget.style.fontSize = "6.5px";
+        else if (len > 9) contextTarget.style.fontSize = "7.5px";
+        else if (len > 6) contextTarget.style.fontSize = "9px";
+        else contextTarget.style.fontSize = "10px";
+        
+        saveHistory(); 
+    } 
+    closeMenu(); 
+}
+    function handleChangeColor() { 
+        let ci = document.createElement("input"); ci.type = "color"; 
+        ci.oninput = () => { 
+            if(selectedCells.has(contextTarget)) selectedCells.forEach(c => c.style.backgroundColor = ci.value);
+            else contextTarget.style.backgroundColor = ci.value; 
+        }; 
+        ci.onchange = () => { saveHistory(); }; ci.click(); 
+    }
+
+    container.addEventListener('mousedown', (e) => { 
+        if (e.button !== 0 || e.target.closest('#contextMenu') || e.target.classList.contains('filled') || e.target.classList.contains('date')) return; 
+        closeMenu(); 
+        const rect = container.getBoundingClientRect(); 
+        if (!e.shiftKey) clearActiveSelection(); 
+        isSelecting = true; 
+        startX = e.clientX - rect.left + container.scrollLeft; 
+        startY = e.clientY - rect.top + container.scrollTop; 
+        selBox.style.left = startX + 'px'; selBox.style.top = startY + 'px'; 
+        selBox.style.width = '0px'; selBox.style.height = '0px'; 
+        selBox.style.display = 'block'; 
+    });
+
+    window.addEventListener('mousemove', (e) => { 
+        if (!isSelecting) return; 
+        const rect = container.getBoundingClientRect(); 
+        let curX = e.clientX - rect.left + container.scrollLeft, curY = e.clientY - rect.top + container.scrollTop; 
+        let left = Math.min(startX, curX), top = Math.min(startY, curY), width = Math.abs(curX - startX), height = Math.abs(curY - startY); 
+        selBox.style.left = left + 'px'; selBox.style.top = top + 'px'; 
+        selBox.style.width = width + 'px'; selBox.style.height = height + 'px'; 
+        
+        const rectSel = selBox.getBoundingClientRect(); 
+        document.querySelectorAll('.timeline.filled').forEach(cell => { 
+            const rC = cell.getBoundingClientRect(); 
+            if (!(rectSel.right < rC.left || rectSel.left > rC.right || rectSel.bottom < rC.top || rectSel.top > rC.bottom)) { 
+                cell.classList.add('selected'); selectedCells.add(cell); 
+            } 
+        }); 
+    });
+
+    window.addEventListener('mouseup', (e) => { 
+        if (isSelecting) { isSelecting = false; selBox.style.display = 'none'; } 
+        if (dragSource && e.target.classList.contains('timeline') && e.target !== dragSource) { 
+            const colDiff = parseInt(e.target.dataset.col) - parseInt(dragSource.dataset.col); 
+            const epDiff = parseInt(e.target.dataset.ep) - parseInt(dragSource.dataset.ep);
+            
+            const moveData = []; 
+            let canMove = true;
+
+            selectedCells.forEach(src => { 
+                const targetCol = parseInt(src.dataset.col) + colDiff; 
+                const targetEp = parseInt(src.dataset.ep) + epDiff;
+                const tCell = document.querySelector(`.cell.timeline[data-col="${targetCol}"][data-ep="${targetEp}"][data-proc_type="${src.dataset.proc_type}"]`); 
+                if (tCell) {
+                    moveData.push({ from: src, to: tCell, text: src.textContent, bg: src.style.backgroundColor, proc: src.dataset.proc_type }); 
+                } else {
+                    canMove = false;
+                }
+            }); 
+
+            if(canMove) {
+                const oldStates = moveData.map(m => ({ cell: m.from, text: m.from.textContent, bg: m.from.style.backgroundColor, filled: m.from.classList.contains('filled') }));
+                
+                moveData.forEach(d => { d.from.textContent = ""; d.from.style.backgroundColor = ""; d.from.classList.remove("filled", "selected"); }); 
+                moveData.forEach(d => { d.to.textContent = d.text; d.to.style.backgroundColor = d.bg; d.to.classList.add("filled", "selected"); }); 
+                
+                selectedCells.clear();
+                moveData.forEach(d => selectedCells.add(d.to));
+                saveHistory(); 
+            }
+        } 
+        dragSource = null; 
+    });
+
+    document.getElementById('saveBtn').onclick = () => {
+        const projName = document.getElementById("projectName").value || "proje";
+        const data = { projectName: projName, startDate: document.getElementById("startDate").value, cells: Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({ col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type, text: c.textContent, bg: c.style.backgroundColor })), notes: Array.from(document.querySelectorAll('.note-item')).map(n => ({ text: n.querySelector('.note-text').textContent, date: n.querySelector('.note-date').textContent, status: n.dataset.status })), milestones: Array.from(document.querySelectorAll('.cell.date.milestone')).map(m => m.dataset.col) };
+        let currentHtml = document.documentElement.outerHTML;
+        const fullSaveHtml = `<!DOCTYPE html>\n${currentHtml.replace(/const SAVED_DATA = {[\s\S]*?}|const SAVED_DATA = null;/, `const SAVED_DATA = ${JSON.stringify(data)};`)}`;
+        const a = document.createElement('a'); 
+        const blob = new Blob([fullSaveHtml], { type: 'text/html;charset=utf-8' });
+        a.href = URL.createObjectURL(blob); 
+        a.download = `${projName}_takvim.html`; 
+        a.click();
+    };
+
+    function loadSavedData() {
+        if (SAVED_DATA) {
+            document.getElementById("projectName").value = SAVED_DATA.projectName || ""; 
+            document.getElementById("startDate").value = SAVED_DATA.startDate; 
+            createCalendarAction(SAVED_DATA.startDate); 
+            setTimeout(() => {
+                SAVED_DATA.cells.forEach(c => { const target = document.querySelector(`.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`); if (target) { target.dataset.proc = c.procType; target.textContent = c.text; target.style.backgroundColor = c.bg; target.classList.add('filled'); } });
+                if(SAVED_DATA.notes) { document.getElementById('noteList').innerHTML = ''; SAVED_DATA.notes.reverse().forEach(n => { const div = document.createElement('div'); div.className = `note-item ${n.status}`; div.dataset.status = n.status; div.innerHTML = `<span class="note-text">${n.text}</span><span class="note-date">${n.date}</span>`; div.oncontextmenu = (e) => { e.preventDefault(); contextTarget = div; showNoteMenu(e.pageX, e.pageY); }; document.getElementById('noteList').prepend(div); }); }
+                if(SAVED_DATA.milestones) SAVED_DATA.milestones.forEach(col => { const m = document.querySelector(`.cell.date[data-col="${col}"]`); if(m) m.classList.add('milestone'); });
+                saveHistory(); 
+            }, 300);
+        }
+    }
+
+    function createCalendarAction(val) {
+        if (!val) return; 
+        let start = new Date(val); dates = []; 
+        for (let i = 0; i < TOTAL_DAYS; i++) { let d = new Date(start); d.setDate(start.getDate() + i); dates.push(d); } 
+        buildHeader(); rebuildGrid();
+    }
+
+    let isVerticalActive = false;
+    let lastSelectedDayIdx = null; // Dikey seçim referansı
+
+    document.getElementById('toggleViewBtn').onclick = function() {
+        isVerticalActive = !isVerticalActive;
+        if (isVerticalActive) {
+            container.style.display = 'none';
+            vContainer.style.display = 'block';
+            this.textContent = "📊 TABLO GÖRÜNÜMÜ";
+            this.style.background = "#006064";
+            renderVerticalDashboard();
+        } else {
+            container.style.display = 'block';
+            vContainer.style.display = 'none';
+            this.textContent = "🔄 GÖRÜNÜMÜ DEĞİŞTİR";
+            this.style.background = "#4a148c";
+        }
+    };
+
+    // Dikey modda gün seçme (Shift desteği ile)
+    function toggleDaySelection(element, event) {
+        event.stopPropagation();
+        const currentIdx = parseInt(element.dataset.colIdx);
+        
+        if (event.shiftKey && lastSelectedDayIdx !== null) {
+            const start = Math.min(lastSelectedDayIdx, currentIdx);
+            const end = Math.max(lastSelectedDayIdx, currentIdx);
+            document.querySelectorAll('.cal-day-cell').forEach(el => {
+                const idx = parseInt(el.dataset.colIdx);
+                if (idx >= start && idx <= end) el.classList.add('selected-day');
+            });
+        } else {
+            // Shift yoksa önceki seçimleri temizle ve bunu seç
+            document.querySelectorAll('.cal-day-cell.selected-day').forEach(el => el.classList.remove('selected-day'));
+            element.classList.add('selected-day');
+        }
+        lastSelectedDayIdx = currentIdx;
+    }
+
+    // Boşluğa tıklayınca dikey seçimleri temizle
+    vContainer.addEventListener('click', () => {
+        document.querySelectorAll('.cal-day-cell.selected-day').forEach(el => el.classList.remove('selected-day'));
+        lastSelectedDayIdx = null;
+    });
+
+    // Dikey Görünüm İndirme (Seçili Gün Odaklı)
+    document.getElementById('exportVerticalBtn').onclick = () => {
+        const projName = document.getElementById("projectName").value || "PROJE";
+        const selectedDays = document.querySelectorAll('.cal-day-cell.selected-day');
+        
+        let mainContent = "";
+        
+        if (selectedDays.length > 0) {
+            // Sadece seçili günlerden PDF oluştur
+            const sortedSelected = Array.from(selectedDays).sort((a,b) => a.dataset.colIdx - b.dataset.colIdx);
+            sortedSelected.forEach(el => {
+                const dateLabel = el.querySelector('.day-num').textContent;
+                const items = el.querySelectorAll('.cal-item-strip');
+                mainContent += `
+                <div style="page-break-inside: avoid; border: 1px solid #eee; margin-bottom: 10px; border-radius: 4px; overflow: hidden;">
+                    <div style="background: #f8f8f8; padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">${dateLabel}</div>
+                    <div style="padding: 10px;">
+                        ${Array.from(items).map(item => `
+                            <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                                <span style="width: 10px; height: 10px; border-radius: 50%; background: ${item.style.backgroundColor}; display: inline-block; margin-right: 10px; border:1px solid #ccc;"></span>
+                                <span style="font-size: 13px;">${item.textContent}</span>
+                            </div>
+                        `).join('') || '<i style="color:#999; font-size:12px;">Görev yok.</i>'}
+                    </div>
+                </div>`;
+            });
+        } else {
+            // Hiçbir şey seçili değilse, tüm takvimi (odak moduna göre) indir (Eski Mantık)
+            const filled = Array.from(document.querySelectorAll('.cell.timeline.filled')).filter(c => {
+                return currentActiveDept === 'all' || c.dataset.proc_type === currentActiveDept;
+            });
+            if (filled.length === 0) return alert("İndirilecek veri bulunamadı!");
+            
+            const plansByDate = {};
+            filled.forEach(c => { const col = c.dataset.col; if (!plansByDate[col]) plansByDate[col] = []; plansByDate[col].push({ ep: c.dataset.ep, text: c.textContent, color: c.style.backgroundColor }); });
+            
+            Object.keys(plansByDate).sort((a,b) => a - b).forEach(col => { 
+                let d = new Date(document.getElementById("startDate").value); d.setDate(d.getDate() + parseInt(col)); 
+                mainContent += `<div class="month-section" style="border:1px solid #ccc;margin-bottom:15px;border-radius:6px;overflow:hidden"><div style="background:#f0f0f0;padding:8px 15px;font-weight:bold">${d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' })}</div>`; 
+                plansByDate[col].sort((a,b) => a.ep - b.ep).forEach(item => { mainContent += `<div style="display:flex;align-items:center;padding:8px 15px;border-bottom:1px solid #eee"><div style="width:12px;height:12px;border-radius:50%;margin-right:12px;background:${item.color}"></div><b>${item.ep == 0 ? 'SET' : 'BÖLÜM ' + item.ep}:</b>&nbsp;${item.text}</div>`; }); mainContent += `</div>`; 
+            });
+        }
+
+        const finalHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${projName}</title>
+        <style>body { font-family: sans-serif; padding: 40px; } .month-section { page-break-before: always; }</style></head>
+        <body><h2 style="border-bottom: 2px solid #000; padding-bottom: 10px;">${projName.toUpperCase()} TAKVİM ÇIKTISI</h2>${mainContent}</body></html>`;
+        
+        const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${projName}_Plan.html`; a.click();
+    };
+
+    function renderVerticalDashboard() {
+        const startVal = document.getElementById("startDate").value;
+        if (!startVal) return;
+
+        const filled = Array.from(document.querySelectorAll('.cell.timeline.filled'));
+        const groups = {};
+        let maxColIdx = 0;
+
+        filled.forEach(c => {
+            const col = parseInt(c.dataset.col);
+            if (col > maxColIdx) maxColIdx = col;
+            if (currentActiveDept !== 'all' && c.dataset.proc_type !== currentActiveDept) return;
+            if (!groups[col]) groups[col] = [];
+            groups[col].push({ ep: c.dataset.ep, text: c.textContent, bg: c.style.backgroundColor });
+        });
+
+        const baseDate = new Date(startVal);
+        const lastDate = new Date(baseDate);
+        lastDate.setDate(baseDate.getDate() + Math.max(maxColIdx, 30)); 
+
+        let html = "";
+        let tempDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+
+        while (tempDate <= lastDate) {
+            let monthTitle = tempDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+            html += `<div class="month-section">`;
+            html += `<div style="background: #1c1f26; color: var(--accent); padding: 10px; font-weight: bold; border-bottom: 2px solid var(--accent); margin-top: 20px; text-transform: uppercase; letter-spacing: 1px;">${monthTitle}</div>`;
+            html += `<div class="calendar-view-grid" style="margin-bottom: 20px;">`;
+            
+            let firstDayPos = tempDate.getDay();
+            firstDayPos = (firstDayPos === 0 ? 6 : firstDayPos - 1);
+
+            for (let i = 0; i < firstDayPos; i++) { html += `<div class="cal-day-cell other-month"></div>`; }
+
+            let daysInMonth = new Date(tempDate.getFullYear(), tempDate.getMonth() + 1, 0).getDate();
+            for (let day = 1; day <= daysInMonth; day++) {
+                let cur = new Date(tempDate.getFullYear(), tempDate.getMonth(), day);
+                const colIdx = Math.round((cur - baseDate) / (1000 * 3600 * 24));
+                const isToday = cur.toDateString() === new Date().toDateString();
+                const fullDateLabel = cur.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
+
+                html += `<div class="cal-day-cell ${isToday ? 'today-cell' : ''}" data-col-idx="${colIdx}" onclick="toggleDaySelection(this, event)">
+                            <div class="day-num">${fullDateLabel}</div>`;
+                
+                if (groups[colIdx]) {
+                    groups[colIdx].sort((a,b) => a.ep - b.ep).forEach(item => {
+                        const tag = item.ep == 0 ? "SET" : "E" + item.ep;
+                        html += `<div class="cal-item-strip" style="background:${item.bg}" title="${item.text}">${tag}: ${item.text}</div>`;
+                    });
+                }
+                html += `</div>`;
+            }
+            html += `</div></div>`;
+            tempDate.setMonth(tempDate.getMonth() + 1);
+        }
+        vContainer.innerHTML = html;
+    }
+
+    window.onload = () => { 
+        document.getElementById("startDate").valueAsDate = new Date(); 
+        if (!SAVED_DATA) createCalendarAction(document.getElementById("startDate").value); 
+        loadSavedData(); 
+    };
+    document.addEventListener('mousedown', (e) => { if(menu.style.display === 'block' && !menu.contains(e.target)) closeMenu(); if(summaryPop.style.display === 'block' && !summaryPop.contains(e.target)) summaryPop.style.display = "none"; }, true);
+
+    
+</script>
+</body>
+</html>
