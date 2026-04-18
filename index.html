@@ -303,8 +303,15 @@
     <button style="background:#4a148c; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:11px;" id="toggleViewBtn">🔄 GÖRÜNÜMÜ DEĞİŞTİR</button>
     <div style="flex: 1;"></div>
     <button style="background:#2e7d32; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;" id="saveBtn">💾 Kaydet</button>
-    <button style="background:#4285F4; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="handleCloudSave()">☁️ Buluta Yedekle</button>
-<button id="loadCloudBtn" style="background:#34A853; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold; display:none;" onclick="listCloudFiles()">📂 Buluttan Getir</button>
+    <button onclick="handleCloudSave()" class="nav-btn" style="background: #4285F4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 100px; height: 60px; border: none; border-radius: 5px; color: white; cursor: pointer; box-shadow: 0 4px #2c5ba0; transition: all 0.2s;">
+    <i class="fas fa-cloud-upload-alt" style="font-size: 20px;"></i>
+    <span style="font-size: 11px; font-weight: bold; text-transform: uppercase;">Buluta Yedekle</span>
+</button>
+
+<button id="loadCloudBtn" onclick="listCloudFiles()" class="nav-btn" style="background: #27ae60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 100px; height: 60px; border: none; border-radius: 5px; color: white; cursor: pointer; box-shadow: 0 4px #1e8449; transition: all 0.2s;">
+    <i class="fas fa-cloud-download-alt" style="font-size: 20px;"></i>
+    <span style="font-size: 11px; font-weight: bold; text-transform: uppercase;">Buluttan Getir</span>
+</button>
     <button style="background:#d84315; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;" id="exportVerticalBtn">📄 Dikey Görünüm İndir</button>
     <button style="background:#444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-left:auto;" onclick="toggleSidebar()">📝 Notlar</button>
 </div>
@@ -1021,27 +1028,60 @@ async function saveToDrive() {
     }
 }
 
-// 5. Dosyaları Listeleme (Yeşil Buton)
+// 5. Otomatik Giriş Destekli Listeleme Fonksiyonu
 async function listCloudFiles() {
-    if (accessToken === null) {
-        tokenClient.requestAccessToken({prompt: 'consent'});
+    // 1. Google Kütüphanesi yüklü mü kontrol et
+    if (typeof google === 'undefined' || typeof gapi === 'undefined') {
+        alert("Google servisleri henüz yüklenemedi. Lütfen 2-3 saniye bekleyip tekrar deneyin.");
         return;
     }
+
+    // 2. Eğer giriş yapılmamışsa (accessToken yoksa) otomatik giriş penceresini aç
+    if (accessToken === null) {
+        console.log("Oturum açılmamış, giriş yapılıyor...");
+        
+        tokenClient.callback = async (resp) => {
+            if (resp.error !== undefined) {
+                console.error("Giriş Hatası:", resp);
+                return;
+            }
+            accessToken = resp.access_token;
+            // Giriş biter bitmez dosyaları listeleme kısmına devam et
+            listCloudFiles(); 
+        };
+        
+        tokenClient.requestAccessToken({prompt: ''});
+        return; 
+    }
+
+    // 3. Giriş yapılmışsa Drive'daki dosyaları listele
     try {
         const response = await gapi.client.drive.files.list({
             q: "mimeType='application/json' and trashed = false",
-            fields: 'files(id, name, createdTime)'
+            fields: 'files(id, name, createdTime)',
+            orderBy: 'createdTime desc' // En güncel olan her zaman 1 numarada
         });
+
         const files = response.result.files;
         if (files && files.length > 0) {
-            let msg = "Buluttaki Kayıtların:\n\n";
-            files.forEach((f, i) => msg += `${i+1}. ${f.name}\n`);
-            alert(msg);
+            let msg = "Yüklemek istediğiniz kayıt numarasını yazın (1 numara en günceldir):\n\n";
+            files.forEach((f, i) => {
+                const date = new Date(f.createdTime).toLocaleString('tr-TR');
+                msg += `${i + 1}. ${f.name} (${date})\n`;
+            });
+            
+            const choice = prompt(msg);
+            if (choice && files[choice - 1]) {
+                loadCloudFile(files[choice - 1].id);
+            }
         } else {
-            alert("Hiç kayıt bulunamadı.");
+            alert("Bulutta henüz bir kayıt bulunamadı.");
         }
     } catch (err) {
-        console.error(err);
+        console.error("Hata:", err);
+        // Hata durumunda (oturum düşmesi vb.) anahtarı sıfırla
+        accessToken = null;
+        alert("Bağlantı hatası oluştu, lütfen tekrar basın.");
     }
 }
     
