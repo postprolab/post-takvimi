@@ -979,7 +979,7 @@ function saveProjectAsPost() {
     }
 }
 
-// --- .POST YÜKLEME (NOTLAR DAHİL) ---
+// --- .POST YÜKLEME (NOTLAR VE DURUMLAR DAHİL) ---
 function handleManualLoad(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -989,15 +989,16 @@ function handleManualLoad(event) {
         try {
             const data = JSON.parse(e.target.result);
             
+            // 1. Temel Bilgileri Yükle
             if(data.projectName) document.getElementById("projectName").value = data.projectName;
             if(data.startDate) {
                 document.getElementById("startDate").value = data.startDate;
-                createCalendarAction(data.startDate);
+                createCalendarAction(data.startDate); // Takvimi çiz
             }
 
-            // Takvim ve Notların yüklenmesi için kısa bir bekleme
+            // Takvim çizildikten sonra verileri yerleştir
             setTimeout(() => {
-                // Hücreleri Doldur
+                // 2. Hücreleri Doldur
                 data.cells.forEach(c => {
                     const target = document.querySelector(`.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`);
                     if (target) {
@@ -1007,30 +1008,55 @@ function handleManualLoad(event) {
                     }
                 });
 
-                // NOTLARI YÜKLE
+                // 3. NOTLARI (TO-DO LIST) YÜKLE
                 const notesList = document.getElementById("notesList");
                 if (notesList && data.notes) {
                     notesList.innerHTML = ""; // Mevcut listeyi temizle
+                    
                     data.notes.forEach(n => {
-                        // Senin orijinal addNote fonksiyonun yoksa manuel oluşturuyoruz:
                         const noteDiv = document.createElement('div');
                         noteDiv.className = 'note-item';
-                        noteDiv.dataset.status = n.status;
+                        
+                        // Notun durumunu (Status) geri yükle (completed, pending vb.)
+                        if (n.status) {
+                            noteDiv.dataset.status = n.status;
+                            if (n.status === 'completed') {
+                                noteDiv.style.opacity = '0.5';
+                                noteDiv.style.textDecoration = 'line-through';
+                            }
+                        }
+
                         noteDiv.innerHTML = `
-                            <div class="note-text">${n.text}</div>
-                            <div class="note-date">${n.date}</div>
-                            <button class="delete-note" onclick="this.parentElement.remove()">×</button>
+                            <div class="note-text" style="flex:1;">${n.text}</div>
+                            <div class="note-date" style="font-size:10px; color:#888; margin-right:10px;">${n.date}</div>
+                            <button class="delete-note" onclick="this.parentElement.remove()" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">×</button>
                         `;
+
+                        // Tıklandığında tamamlandı/yapılacak durumunu değiştirmesi için (opsiyonel)
+                        noteDiv.onclick = function(e) {
+                            if (e.target.className !== 'delete-note') {
+                                if (this.dataset.status === 'completed') {
+                                    this.dataset.status = 'pending';
+                                    this.style.opacity = '1';
+                                    this.style.textDecoration = 'none';
+                                } else {
+                                    this.dataset.status = 'completed';
+                                    this.style.opacity = '0.5';
+                                    this.style.textDecoration = 'line-through';
+                                }
+                            }
+                        };
+
                         notesList.appendChild(noteDiv);
                     });
                 }
-                alert("Proje ve notlar başarıyla yüklendi!");
-            }, 400);
+                alert("Proje ve To-Do listesi başarıyla yüklendi!");
+            }, 500);
 
             event.target.value = ""; 
         } catch (err) {
             console.error("Yükleme Hatası:", err);
-            alert("Dosya yüklenirken hata oluştu!");
+            alert("Dosya yüklenirken bir hata oluştu!");
         }
     };
     reader.readAsText(file);
