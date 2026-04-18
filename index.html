@@ -929,25 +929,45 @@ function gapiLoaded() {
     });
 }
 
-function gisLoaded() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: (resp) => {
-            if (resp.error !== undefined) throw (resp);
-            accessToken = resp.access_token;
-            document.getElementById("loadCloudBtn").style.display = "inline-block";
-            saveToDrive(); // Giriş başarılıysa kaydı başlat
-        }
-    });
-}
-
-// 2. Buton Kontrolü
 function handleCloudSave() {
+    // Eğer google kütüphanesi yüklendiyse ama henüz tokenClient oluşmadıysa tekrar dene
+    if (typeof google !== 'undefined' && google.accounts && !tokenClient) {
+        gisLoaded(); 
+    }
+
+    if (!tokenClient) {
+        alert("Google servisleri henüz hazır değil. Lütfen sayfayı yenileyip 2 saniye bekleyin.");
+        return;
+    }
+
     if (accessToken === null) {
         tokenClient.requestAccessToken({prompt: 'consent'});
     } else {
         saveToDrive();
+    }
+}
+
+function gisLoaded() {
+    try {
+        if (typeof google !== 'undefined' && google.accounts) {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: (resp) => {
+                    if (resp.error !== undefined) {
+                        console.error("Giriş hatası:", resp);
+                        return;
+                    }
+                    accessToken = resp.access_token;
+                    // Giriş başarılı olunca "Getir" butonunu göster
+                    document.getElementById("loadCloudBtn").style.display = "inline-block";
+                    saveToDrive();
+                }
+            });
+            console.log("SİSTEM: Google Token Client başarıyla kuruldu.");
+        }
+    } catch (err) {
+        console.error("Google Başlatma Hatası:", err);
     }
 }
 
