@@ -849,7 +849,21 @@ function handleRename() {
 
         const finalHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${projName}</title>
         <style>body { font-family: sans-serif; padding: 40px; } .month-section { page-break-before: always; }</style></head>
-        <body><h2 style="border-bottom: 2px solid #000; padding-bottom: 10px;">${projName.toUpperCase()} TAKVİM ÇIKTISI</h2>${mainContent}</body></html>`;
+        <body><h2 style="border-bottom: 2px solid #000; padding-bottom: 10px;">${projName.toUpperCase()} TAKVİM ÇIKTISI</h2>${mainContent}
+        
+        <div id="cloudModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:99999; justify-content:center; align-items:center; font-family: sans-serif;">
+    <div style="background:#1e1e1e; padding:25px; border-radius:12px; width:450px; max-height:80vh; overflow-y:auto; border:1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:15px;">
+            <h2 style="color:#27ae60; margin:0; font-size:18px;">☁️ Buluttaki Kayıtların</h2>
+            <button onclick="document.getElementById('cloudModal').style.display='none'" style="background:none; border:none; color:#666; cursor:pointer; font-size:24px;">&times;</button>
+        </div>
+        <div id="fileListContainer" style="display: flex; flex-direction: column; gap: 10px;">
+            </div>
+    </div>
+</div>
+        
+        
+        </body></html>`;
         
         const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${projName}_Plan.html`; a.click();
@@ -1030,58 +1044,59 @@ async function saveToDrive() {
 
 // 5. Otomatik Giriş Destekli Listeleme Fonksiyonu
 async function listCloudFiles() {
-    // 1. Google Kütüphanesi yüklü mü kontrol et
-    if (typeof google === 'undefined' || typeof gapi === 'undefined') {
-        alert("Google servisleri henüz yüklenemedi. Lütfen 2-3 saniye bekleyip tekrar deneyin.");
+    // Giriş yapılmadıysa önce giriş penceresini aç
+    if (accessToken === null) {
+        tokenClient.callback = async (resp) => {
+            if (resp.error !== undefined) return;
+            accessToken = resp.access_token;
+            // Girişten sonra sisteme 1 saniye nefes payı verip listeyi getir
+            setTimeout(listCloudFiles, 1000); 
+        };
+        tokenClient.requestAccessToken({prompt: ''});
         return;
     }
 
-    // 2. Eğer giriş yapılmamışsa (accessToken yoksa) otomatik giriş penceresini aç
-    if (accessToken === null) {
-        console.log("Oturum açılmamış, giriş yapılıyor...");
-        
-        tokenClient.callback = async (resp) => {
-            if (resp.error !== undefined) {
-                console.error("Giriş Hatası:", resp);
-                return;
-            }
-            accessToken = resp.access_token;
-            // Giriş biter bitmez dosyaları listeleme kısmına devam et
-            listCloudFiles(); 
-        };
-        
-        tokenClient.requestAccessToken({prompt: ''});
-        return; 
-    }
-
-    // 3. Giriş yapılmışsa Drive'daki dosyaları listele
     try {
         const response = await gapi.client.drive.files.list({
             q: "mimeType='application/json' and trashed = false",
             fields: 'files(id, name, createdTime)',
-            orderBy: 'createdTime desc' // En güncel olan her zaman 1 numarada
+            orderBy: 'createdTime desc'
         });
 
         const files = response.result.files;
+        const container = document.getElementById("fileListContainer");
+        container.innerHTML = ""; // İçini temizle
+
         if (files && files.length > 0) {
-            let msg = "Yüklemek istediğiniz kayıt numarasını yazın (1 numara en günceldir):\n\n";
-            files.forEach((f, i) => {
+            files.forEach((f) => {
                 const date = new Date(f.createdTime).toLocaleString('tr-TR');
-                msg += `${i + 1}. ${f.name} (${date})\n`;
+                const row = document.createElement("div");
+                
+                // Her bir dosya satırının tasarımı
+                row.style = "padding:15px; background:#2d2d2d; border-radius:8px; cursor:pointer; border-left:5px solid #27ae60; transition: 0.3s ease;";
+                row.onmouseover = () => row.style.background = "#3d3d3d";
+                row.onmouseout = () => row.style.background = "#2d2d2d";
+                
+                row.onclick = () => {
+                    document.getElementById('cloudModal').style.display = 'none';
+                    loadCloudFile(f.id); // Dosyayı takvime yükler
+                };
+                
+                row.innerHTML = `
+                    <div style="color:white; font-weight:bold; font-size:14px; margin-bottom:5px;">📁 ${f.name}</div>
+                    <div style="color:#888; font-size:11px;">📅 Kayıt: ${date}</div>
+                `;
+                container.appendChild(row);
             });
-            
-            const choice = prompt(msg);
-            if (choice && files[choice - 1]) {
-                loadCloudFile(files[choice - 1].id);
-            }
+            // Ekranı göster
+            document.getElementById("cloudModal").style.display = "flex";
         } else {
-            alert("Bulutta henüz bir kayıt bulunamadı.");
+            alert("Bulutta hiç kayıt bulunamadı!");
         }
     } catch (err) {
         console.error("Hata:", err);
-        // Hata durumunda (oturum düşmesi vb.) anahtarı sıfırla
-        accessToken = null;
-        alert("Bağlantı hatası oluştu, lütfen tekrar basın.");
+        accessToken = null; // Token hatasıysa sıfırla
+        alert("Bağlantı güncelleniyor, lütfen tekrar basın.");
     }
 }
     
