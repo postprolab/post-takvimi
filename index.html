@@ -30,16 +30,71 @@
             overflow: hidden; display: flex; flex-direction: column; height: 100vh;
         }
 
-        .top-bar {
-            padding: 10px 20px; background: var(--bg-panel);
-            display: flex; gap: 15px; align-items: center;
-            border-bottom: 1px solid #333; flex-shrink: 0; z-index: 5000;
-        }
+   
+/* Üst Bar Tasarımı */
+.top-bar {
+    padding: 8px 15px;
+    background: #111318; 
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid #2a2d35;
+    flex-shrink: 0;
+    z-index: 5000;
+}
 
-        .project-input {
-            background: #000; border: 1px solid #444; color: #fff;
-            padding: 5px 10px; border-radius: 4px; font-weight: bold; width: 150px;
-        }
+/* Proje İsmi Kutusu */
+.project-input {
+    background: #000;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    width: 150px;
+    transition: all 0.3s ease;
+}
+
+.project-input:focus {
+    border-color: var(--accent);
+    outline: none;
+}
+
+/* Üst Bar Butonları */
+.nav-btn {
+    background: #1c1f26; 
+    color: #ccc;
+    border: 1px solid #333;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.nav-btn:hover {
+    background: #252932;
+    border-color: #555;
+    color: #fff;
+}
+
+/* Ana Vurgu Butonu */
+.nav-btn-primary {
+    background: var(--accent) !important;
+    color: white !important;
+    border: none !important;
+}
+
+/* Orta Boşluk */
+.nav-spacer {
+    flex: 1;
+}
 
         .filter-bar { 
             background: #0d0e12; padding: 8px 20px; display: flex; gap: 8px; 
@@ -297,26 +352,46 @@
 <body>
 
 <div class="top-bar">
-    <input type="text" id="projectName" class="project-input" placeholder="Proje İsmi...">
-    <button id="openModalBtn" style="background:var(--accent); color:white; border:none; padding:7px 15px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:11px; letter-spacing:0.5px;">📅 TAKVİMİ OLUŞTUR</button>
-    <button id="toggleTodayBtn" style="background:#000; color:var(--neon-green); border:1px solid var(--neon-green); padding:5px 10px; border-radius:4px; cursor:pointer; font-size: 11px; font-weight: bold; opacity: 0.5;">📍 BUGÜN ÇİZGİSİ</button>
-    <button style="background:#4a148c; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:11px;" id="toggleViewBtn">🔄 GÖRÜNÜMÜ DEĞİŞTİR</button>
-    <div style="flex: 1;"></div>
+    <input type="text" id="projectName" class="project-input" placeholder="PROJE İSMİ...">
+    
+    <button id="openModalBtn" class="nav-btn nav-btn-primary">
+        <span>📅</span> TAKVİMİ OLUŞTUR
+    </button>
+
+    <div style="width: 1px; height: 16px; background: #333; margin: 0 4px;"></div>
+
+    <button id="toggleTodayBtn" class="nav-btn">
+        <span>📍</span> BUGÜN
+    </button>
+
+    <button id="toggleViewBtn" class="nav-btn">
+        <span>🔄</span> Takvim Görünümü
+    </button>
+
+    <div class="nav-spacer"></div>
+
+    <button onclick="saveProjectAsPost()" class="nav-btn">
+        <span>💾</span> KAYDET
+    </button>
+
+    <button onclick="document.getElementById('manualFileInput').click()" class="nav-btn">
+        <span>📂</span> YÜKLE
+    </button>
+
+    <button id="exportVerticalBtn" class="nav-btn">
+        <span>📄</span> DİKEY ÇIKTI
+    </button>
+
+    <button onclick="toggleSidebar()" class="nav-btn" style="background: #222; border-color: #444;">
+        <span>📝</span> NOTLAR
+    </button>
+
+    <input type="file" id="manualFileInput" style="display: none;" accept=".post" onchange="handleManualLoad(event)">
+
     
     
 </button>
 
-<button onclick="saveProjectAsPost()" class="nav-btn" style="background: #e67e22; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px;">
-    💾 Kaydet
-</button>
-
-<button onclick="document.getElementById('manualFileInput').click()" class="nav-btn" style="background: #9b59b6; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px;">
-    📂 Yükle
-</button>
-
-<input type="file" id="manualFileInput" style="display: none;" accept=".post" onchange="handleManualLoad(event)">
-    <button style="background:#d84315; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;" id="exportVerticalBtn">📄 Dikey Görünüm İndir</button>
-    <button style="background:#444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-left:auto;" onclick="toggleSidebar()">📝 Notlar</button>
 </div>
 
 <div id="dateModal" class="modal-overlay">
@@ -765,7 +840,7 @@ function handleRename() {
         } else {
             container.style.display = 'block';
             vContainer.style.display = 'none';
-            this.textContent = "🔄 GÖRÜNÜMÜ DEĞİŞTİR";
+            this.textContent = "🔄 TAKVİM GÖRÜNÜMÜ";
             this.style.background = "#4a148c";
         }
     };
@@ -1078,41 +1153,29 @@ function saveProjectAsPost() {
     } catch (e) { alert("Kaydetme hatası: " + e.message); }
 }
 
-// --- .POST KAYDETME (V33 İÇERİK OKUMA FİX) ---
+// --- .POST YÜKLEME (V33 İÇERİK FİX) ---
+// --- .POST KAYDETME (YAZI İÇERİĞİ GARANTİLİ) ---
 function saveProjectAsPost() {
     try {
         const projName = document.getElementById("projectName").value || "proje";
         const startDate = document.getElementById("startDate").value;
 
-        // 1. Takvim hücrelerini topla
         const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
             col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type,
             text: c.textContent, bg: c.style.backgroundColor
         }));
 
-        // 2. NOTLARI TOPLA (Metni temizleyerek alma)
         const notes = [];
         const noteItems = document.querySelectorAll('.note-item');
-        
         noteItems.forEach(item => {
-            // Notun kopyasını alıyoruz ki üzerinde işlem yaparken orijinali bozulmasın
-            const clone = item.cloneNode(true);
+            // Yazıyı bulmak için en garantili yol: .note-text sınıfı veya doğrudan ilk span
+            const textEl = item.querySelector('.note-text') || item.querySelector('span:first-child');
+            const dateEl = item.querySelector('.note-date');
             
-            // Tarih span'ını ve varsa butonları kopyadan siliyoruz (sadece saf metin kalsın diye)
-            const dateSpan = clone.querySelector('.note-date');
-            if (dateSpan) dateSpan.remove();
-            
-            const actionBtn = clone.querySelector('button');
-            if (actionBtn) actionBtn.remove();
-
-            // Kalan metni alıyoruz
-            const pureText = clone.innerText.trim();
-            const pureDate = item.querySelector('.note-date') ? item.querySelector('.note-date').innerText.trim() : "";
-
-            if (pureText) {
+            if (textEl) {
                 notes.push({
-                    text: pureText,
-                    date: pureDate,
+                    text: textEl.innerText.trim(), // Yazıyı buradan al
+                    date: dateEl ? dateEl.innerText.trim() : "",
                     status: item.dataset.status || 'waiting'
                 });
             }
@@ -1134,7 +1197,7 @@ function saveProjectAsPost() {
     } catch (e) { alert("Kaydetme hatası: " + e.message); }
 }
 
-// --- .POST YÜKLEME (V33 SİSTEMİNE TAM ENTEGRE) ---
+// --- .POST YÜKLEME (YAZI İÇERİĞİ GARANTİLİ) ---
 function handleManualLoad(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1143,59 +1206,66 @@ function handleManualLoad(event) {
     reader.onload = function(e) {
         try {
             const data = JSON.parse(e.target.result);
+            
+            // Temel Bilgileri Yükle
             document.getElementById("projectName").value = data.projectName || "";
             document.getElementById("startDate").value = data.startDate || "";
             
+            // Takvimi Yeniden Oluştur
             if (typeof createCalendarAction === "function") {
                 createCalendarAction(data.startDate);
             }
 
-            // NOTLARI YÜKLE (ID: noteList)
-            const noteListContainer = document.getElementById("noteList");
-            if (noteListContainer) {
-                noteListContainer.innerHTML = ""; 
+            // --- NOTLARI YÜKLEME KISMI (BURASI KRİTİK) ---
+            // Dosyandaki not listesi kapsayıcısının ID'sinin "noteList" olduğundan emin ol
+            const noteList = document.getElementById("noteList");
+            if (noteList) {
+                noteList.innerHTML = ""; // Mevcut listeyi temizle
                 if (data.notes && data.notes.length > 0) {
                     data.notes.forEach(n => {
-                        // SENİN addNote() FONKSİYONUNUN ÜRETTİĞİ YAPININ AYNISI:
-                        const noteDiv = document.createElement('div');
-                        noteDiv.className = `note-item ${n.status}`;
-                        noteDiv.dataset.status = n.status;
+                        const note = document.createElement('div');
+                        // Durum sınıfını (waiting, done, canceled) ekle
+                        note.className = `note-item ${n.status || 'waiting'}`;
+                        note.dataset.status = n.status || 'waiting';
                         
-                        // Metin düğümü ve tarih span'ı
-                        const textNode = document.createTextNode(n.text + " ");
-                        noteDiv.appendChild(textNode);
+                        // Notun içeriğini oluştur
+                        note.innerHTML = `
+                            <span class="note-text">${n.text}</span>
+                            <span class="note-date">${n.date}</span>
+                        `;
                         
-                        const dateSpan = document.createElement('span');
-                        dateSpan.className = 'note-date';
-                        dateSpan.textContent = n.date;
-                        noteDiv.appendChild(dateSpan);
-                        
-                        // Sağ tık menüsünü senin sistemine bağla
-                        noteDiv.oncontextmenu = (ev) => { 
+                        // Sağ tık menüsünü tekrar bağla
+                        note.oncontextmenu = (ev) => { 
                             ev.preventDefault(); 
-                            contextTarget = noteDiv; 
+                            contextTarget = note; 
                             if(typeof showNoteMenu === "function") showNoteMenu(ev.pageX, ev.pageY); 
                         };
                         
-                        noteListContainer.appendChild(noteDiv);
+                        noteList.appendChild(note);
                     });
                 }
             }
 
-            // Takvim Hücrelerini Boya
+            // Takvim Hücrelerini Boya (Gecikmeli çalıştırıyoruz ki takvim önce çizilsin)
             setTimeout(() => {
-                data.cells.forEach(c => {
-                    const target = document.querySelector(`.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`);
-                    if (target) {
-                        target.textContent = c.text;
-                        target.style.backgroundColor = c.bg;
-                        target.classList.add('filled');
-                    }
-                });
+                if (data.cells && data.cells.length > 0) {
+                    data.cells.forEach(c => {
+                        const target = document.querySelector(`.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`);
+                        if (target) {
+                            target.textContent = c.text;
+                            target.style.backgroundColor = c.bg;
+                            target.classList.add('filled');
+                        }
+                    });
+                }
                 alert("Yükleme başarılı! " + (data.notes ? data.notes.length : 0) + " not getirildi.");
-            }, 500);
+            }, 600); // 500ms'yi 600ms yaptım, render işleminin bitmesi için daha güvenli
+            
             event.target.value = ""; 
-        } catch (err) { alert("Hata: Dosya okunamadı."); }
+        } catch (err) { 
+            console.error(err);
+            alert("Dosya yüklenirken bir hata oluştu!"); 
+        }
     };
     reader.readAsText(file);
 }
