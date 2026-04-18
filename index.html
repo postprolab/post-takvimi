@@ -929,14 +929,23 @@ function handleRename() {
 // --- .POST KAYDETME FONKSİYONU ---
 function saveProjectAsPost() {
     try {
-        // Senin projendeki ID "projectName" olarak geçiyor
         const nameEl = document.getElementById("projectName");
         const dateEl = document.getElementById("startDate");
         
-        const projName = nameEl ? nameEl.value : "proje";
+        // --- İSİMLENDİRME MANTIĞI ---
+        let projName = nameEl ? nameEl.value.trim() : "";
+        
+        if (!projName) {
+            // Eğer isim verilmediyse: Gün_Ay_Yıl_Saat-Dakika formatı
+            const simdi = new Date();
+            const tarihEtiketi = simdi.toLocaleDateString('tr-TR').replace(/\./g, '-') + "_" + 
+                               simdi.getHours() + "-" + simdi.getMinutes();
+            projName = "Post_Takvim_" + tarihEtiketi;
+        }
+
         const startDate = dateEl ? dateEl.value : "";
 
-        // Hücreleri topla (Senin dosyadaki class yapısına uygun)
+        // Hücreleri topla
         const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
             col: c.dataset.col,
             ep: c.dataset.ep,
@@ -956,7 +965,11 @@ function saveProjectAsPost() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = projName + ".post";
+        
+        // --- UZANTI GARANTİSİ ---
+        // Dosya isminin sonunda .post olduğundan emin oluyoruz
+        a.download = projName.endsWith(".post") ? projName : projName + ".post";
+        
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
