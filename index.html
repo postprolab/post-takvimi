@@ -302,16 +302,19 @@
     <button id="toggleTodayBtn" style="background:#000; color:var(--neon-green); border:1px solid var(--neon-green); padding:5px 10px; border-radius:4px; cursor:pointer; font-size: 11px; font-weight: bold; opacity: 0.5;">📍 BUGÜN ÇİZGİSİ</button>
     <button style="background:#4a148c; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:11px;" id="toggleViewBtn">🔄 GÖRÜNÜMÜ DEĞİŞTİR</button>
     <div style="flex: 1;"></div>
-    <button style="background:#2e7d32; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;" id="saveBtn">💾 Kaydet</button>
-    <button onclick="handleCloudSave()" class="nav-btn" style="background: #4285F4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 100px; height: 60px; border: none; border-radius: 5px; color: white; cursor: pointer; box-shadow: 0 4px #2c5ba0; transition: all 0.2s;">
-    <i class="fas fa-cloud-upload-alt" style="font-size: 20px;"></i>
-    <span style="font-size: 11px; font-weight: bold; text-transform: uppercase;">Buluta Yedekle</span>
+    
+    
 </button>
 
-<button id="loadCloudBtn" onclick="listCloudFiles()" class="nav-btn" style="background: #27ae60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 100px; height: 60px; border: none; border-radius: 5px; color: white; cursor: pointer; box-shadow: 0 4px #1e8449; transition: all 0.2s;">
-    <i class="fas fa-cloud-download-alt" style="font-size: 20px;"></i>
-    <span style="font-size: 11px; font-weight: bold; text-transform: uppercase;">Buluttan Getir</span>
+<button onclick="saveProjectAsPost()" class="nav-btn" style="background: #e67e22; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px;">
+    💾 Kaydet
 </button>
+
+<button onclick="document.getElementById('manualFileInput').click()" class="nav-btn" style="background: #9b59b6; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px;">
+    📂 Yükle
+</button>
+
+<input type="file" id="manualFileInput" style="display: none;" accept=".post" onchange="handleManualLoad(event)">
     <button style="background:#d84315; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;" id="exportVerticalBtn">📄 Dikey Görünüm İndir</button>
     <button style="background:#444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-left:auto;" onclick="toggleSidebar()">📝 Notlar</button>
 </div>
@@ -726,17 +729,6 @@ function handleRename() {
         dragSource = null; 
     });
 
-    document.getElementById('saveBtn').onclick = () => {
-        const projName = document.getElementById("projectName").value || "proje";
-        const data = { projectName: projName, startDate: document.getElementById("startDate").value, cells: Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({ col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type, text: c.textContent, bg: c.style.backgroundColor })), notes: Array.from(document.querySelectorAll('.note-item')).map(n => ({ text: n.querySelector('.note-text').textContent, date: n.querySelector('.note-date').textContent, status: n.dataset.status })), milestones: Array.from(document.querySelectorAll('.cell.date.milestone')).map(m => m.dataset.col) };
-        let currentHtml = document.documentElement.outerHTML;
-        const fullSaveHtml = `<!DOCTYPE html>\n${currentHtml.replace(/const SAVED_DATA = {[\s\S]*?}|const SAVED_DATA = null;/, `const SAVED_DATA = ${JSON.stringify(data)};`)}`;
-        const a = document.createElement('a'); 
-        const blob = new Blob([fullSaveHtml], { type: 'text/html;charset=utf-8' });
-        a.href = URL.createObjectURL(blob); 
-        a.download = `${projName}_takvim.html`; 
-        a.click();
-    };
 
     function loadSavedData() {
         if (SAVED_DATA) {
@@ -934,187 +926,90 @@ function handleRename() {
     };
     document.addEventListener('mousedown', (e) => { if(menu.style.display === 'block' && !menu.contains(e.target)) closeMenu(); if(summaryPop.style.display === 'block' && !summaryPop.contains(e.target)) summaryPop.style.display = "none"; }, true);
 
-
-
- // --- Google Drive API Ayarları (GÜNCEL VERSİYON) ---
-const CLIENT_ID = '564427018589-st3887p57t76vnjc0o5t8guu8impgc6l.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyB6SPczIjafimzULi1ud7eXR7y1rCx_kEc';
-const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-
-let tokenClient;
-let accessToken = null;
-
-// 1. Google Kütüphanelerini Başlat
-function gapiLoaded() {
-    gapi.load('client', async () => {
-        await gapi.client.init({
-            apiKey: API_KEY,
-            discoveryDocs: [DISCOVERY_DOC],
-        });
-    });
-}
-
-// 2. Kimlik Doğrulama Sistemini Kur
-function gisLoaded() {
+// --- .POST KAYDETME FONKSİYONU ---
+function saveProjectAsPost() {
     try {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID,
-            scope: SCOPES,
-            callback: (resp) => {
-                if (resp.error !== undefined) throw (resp);
-                accessToken = resp.access_token;
-                document.getElementById("loadCloudBtn").style.display = "inline-block";
-                saveToDrive(); 
-            },
-        });
-    } catch (err) {
-        console.error("Başlatma hatası:", err);
-    }
-}
-
-// 3. Mavi Butona Basınca Çalışan Fonksiyon
-function handleCloudSave() {
-    // Eğer kütüphane yüklendiyse ama sistem kurulmadıysa manuel tetikle
-    if (!tokenClient && typeof google !== 'undefined') {
-        gisLoaded();
-    }
-
-    if (tokenClient) {
-        if (accessToken === null) {
-            tokenClient.requestAccessToken({prompt: 'consent'});
-        } else {
-            saveToDrive();
-        }
-    } else {
-        alert("Google servisleri hala yükleniyor, lütfen 3 saniye bekleyip tekrar deneyin.");
-    }
-}
-
-// 4. Drive'a Veriyi Gönderen Fonksiyon
-async function saveToDrive() {
-    const projName = document.getElementById("projectName").value || "adsiz_proje";
-    const dateStr = new Date().toISOString().split('T')[0];
-    const fileName = `${projName}_${dateStr}.json`;
-
-    // Tablo verilerini topla
-    const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
-        col: c.dataset.col,
-        ep: c.dataset.ep,
-        type: c.dataset.proc_type,
-        text: c.textContent,
-        bg: c.style.backgroundColor
-    }));
-
-    // Notları topla
-    const notes = Array.from(document.querySelectorAll('.note-item')).map(n => ({
-        text: n.querySelector('.note-text').textContent,
-        date: n.querySelector('.note-date').textContent,
-        status: n.dataset.status
-    }));
-
-    const calendarData = {
-        projectName: projName,
-        startDate: document.getElementById("startDate").value,
-        cells: cells,
-        notes: notes
-    };
-
-    const fileMetadata = { 'name': fileName, 'mimeType': 'application/json' };
-    const form = new FormData();
-    form.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
-    form.append('file', new Blob([JSON.stringify(calendarData)], { type: 'application/json' }));
-
-    try {
-        const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + accessToken },
-            body: form
-        });
-
-        if (resp.ok) {
-            alert("Harika! Veriler Google Drive'a başarıyla yedeklendi.");
-        } else {
-            alert("Yedekleme sırasında bir hata oluştu.");
-        }
-    } catch (err) {
-        console.error("Drive Hatası:", err);
-    }
-}
-
-// 5. Otomatik Giriş Destekli Listeleme Fonksiyonu
-async function listCloudFiles() {
-    // 1. Google kütüphanesi yüklü mü kontrol et
-    if (typeof gapi === 'undefined' || !gapi.client) {
-        alert("Sistem hazırlanıyor, lütfen 2 saniye sonra tekrar deneyin.");
-        return;
-    }
-
-    // 2. Oturum yoksa giriş yap
-    if (accessToken === null) {
-        tokenClient.callback = async (resp) => {
-            if (resp.error !== undefined) {
-                console.error("Giriş hatası:", resp);
-                return;
-            }
-            accessToken = resp.access_token;
-            // Giriş başarılı! Şimdi dosyaları getirmek için 1.5 saniye bekle (en güvenli süre)
-            setTimeout(() => { listCloudFiles(); }, 1500);
-        };
-        tokenClient.requestAccessToken({prompt: ''});
-        return;
-    }
-
-    // 3. Dosyaları listele
-    try {
-        const response = await gapi.client.drive.files.list({
-            q: "mimeType='application/json' and trashed = false",
-            fields: 'files(id, name, createdTime)',
-            orderBy: 'createdTime desc'
-        });
-
-        const files = response.result.files;
-        const container = document.getElementById("fileListContainer");
+        // Senin projendeki ID "projectName" olarak geçiyor
+        const nameEl = document.getElementById("projectName");
+        const dateEl = document.getElementById("startDate");
         
-        if (!container) {
-            console.error("fileListContainer bulunamadı! HTML kodunu eklediğinizden emin olun.");
-            return;
-        }
+        const projName = nameEl ? nameEl.value : "proje";
+        const startDate = dateEl ? dateEl.value : "";
 
-        container.innerHTML = ""; // İçini temizle
+        // Hücreleri topla (Senin dosyadaki class yapısına uygun)
+        const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
+            col: c.dataset.col,
+            ep: c.dataset.ep,
+            procType: c.dataset.proc_type,
+            text: c.textContent,
+            bg: c.style.backgroundColor
+        }));
 
-        if (files && files.length > 0) {
-            files.forEach((f) => {
-                const date = new Date(f.createdTime).toLocaleString('tr-TR');
-                const row = document.createElement("div");
-                
-                row.style = "padding:15px; background:#2d2d2d; border-radius:8px; cursor:pointer; border-left:5px solid #27ae60; transition: 0.3s; margin-bottom:10px;";
-                row.onmouseover = () => row.style.background = "#3d3d3d";
-                row.onmouseout = () => row.style.background = "#2d2d2d";
-                
-                row.onclick = () => {
-                    document.getElementById('cloudModal').style.display = 'none';
-                    loadCloudFile(f.id);
-                };
-                
-                row.innerHTML = `
-                    <div style="color:white; font-weight:bold; font-size:14px; margin-bottom:5px;">📁 ${f.name}</div>
-                    <div style="color:#888; font-size:11px;">📅 Kayıt: ${date}</div>
-                `;
-                container.appendChild(row);
-            });
-            // Listeyi göster
-            document.getElementById("cloudModal").style.display = "flex";
-        } else {
-            alert("Bulutta henüz hiç kayıt dosyası yok. Önce 'Buluta Yedekle' ile bir kayıt oluşturun.");
-        }
-    } catch (err) {
-        console.error("Liste getirme hatası detayları:", err);
-        // Eğer hata "401 Unauthorized" ise token bitmiştir, sıfırla
-        accessToken = null;
-        alert("Bağlantı tazelememiz gerekiyor. Lütfen butona bir kez daha basın.");
+        const data = {
+            projectName: projName,
+            startDate: startDate,
+            cells: cells,
+            timestamp: new Date().getTime()
+        };
+
+        const blob = new Blob([JSON.stringify(data)], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = projName + ".post";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        console.error("Kaydetme Hatası:", e);
+        alert("Kaydetme başarısız: " + e.message);
     }
 }
+
+// --- .POST YÜKLEME FONKSİYONU ---
+function handleManualLoad(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            // Proje adı ve Tarihi güncelle
+            if(data.projectName) document.getElementById("projectName").value = data.projectName;
+            if(data.startDate) document.getElementById("startDate").value = data.startDate;
+
+            // Önce takvimi çiz (Tarih değişmiş olabilir)
+            if (typeof createCalendarAction === "function") {
+                createCalendarAction(data.startDate);
+            }
+
+            // Takvim çizildikten sonra (0.3 saniye sonra) hücreleri doldur
+            setTimeout(() => {
+                data.cells.forEach(c => {
+                    const target = document.querySelector(`.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`);
+                    if (target) {
+                        target.textContent = c.text;
+                        target.style.backgroundColor = c.bg;
+                        target.classList.add('filled');
+                    }
+                });
+                alert("Proje yüklendi!");
+            }, 300);
+
+            event.target.value = ""; // Aynı dosyayı tekrar seçebilmek için temizle
+        } catch (err) {
+            alert("Dosya yüklenemedi! Geçersiz format.");
+        }
+    };
+    reader.readAsText(file);
+}
+
+
+
+
     
 
     
