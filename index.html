@@ -3,11 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Post Prodüksiyon Takvimi</title>
+
     
-    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
-    
-</head>
 <body>
     <style>
         :root {
@@ -347,6 +344,156 @@
             }
         }
 
+/* Takvimi Oluştur Butonu İçin Özel Stil */
+/* Modal İçerik Alanı */
+
+.modal {
+    display: none; /* SAYFA AÇILDIĞINDA GİZLİ OLACAK */
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+    /* Flex ayarlarını burada tutma, JavaScript ile ekleyeceğiz */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #121417;
+    border: 1px solid #2a2d32;
+    border-radius: 16px;
+    padding: 40px;
+    width: 90%; /* Mobil uyum için */
+    max-width: 600px; /* Maksimum genişlik */
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+    animation: modalFadeIn 0.3s ease-out; /* Açılış efekti */
+
+}
+
+/* Açılış Efekti */
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-content {
+    background-color: #121417; /* Biraz daha derin siyah */
+    border: 1px solid #2a2d32;
+    border-radius: 16px;
+    padding: 40px; /* İç boşluğu artırdık */
+    width: 550px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+    position: relative;
+}
+
+.modal-title {
+    color: #00ff00;
+    text-align: left; /* Sola yaslı daha modern durur */
+    font-size: 24px;
+    font-weight: 900;
+    margin-bottom: 10px;
+}
+
+.modal-divider {
+    height: 3px;
+    background: linear-gradient(90deg, #00ff00, transparent);
+    margin-bottom: 30px;
+}
+
+/* Grid ve Input Ayarları */
+.setup-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.section-subtitle {
+    grid-column: span 2;
+    color: #555;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    margin-top: 15px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 8px;
+}
+
+/* Giriş Alanları */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.input-group label {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+}
+
+.input-group input {
+    background: #1d1f23;
+    border: 1px solid #333;
+    color: #00ff00; /* Yazılan rakamlar yeşil görünsün */
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+}
+
+.input-group input:focus {
+    border-color: #00ff00;
+    background: #000;
+}
+
+/* Alt Bölüm ve Butonlar */
+.modal-footer {
+    margin-top: 50px; /* Yukarıdaki her şeyden iyice uzaklaştırdık */
+    display: flex;
+    justify-content: space-between; /* İki uca yaslar */
+    align-items: center;
+}
+
+.main-btn {
+    background: #00ff00;
+    color: #000;
+    border: none;
+    padding: 16px 40px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(0,255,0,0.2);
+}
+
+.main-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,255,0,0.4);
+}
+
+.cancel-btn {
+    background: transparent;
+    color: #ff4d4d; /* İptal butonu hafif kırmızımsı/gri */
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    text-decoration: underline;
+}
+
+/* İptal butonuyla yan yana durmalarını istiyorsanız kapsayıcı ekleyelim */
+.modal-footer {
+    display: flex;
+    justify-content: center; /* Ortalar */
+    gap: 20px;              /* İki buton arasındaki boşluk */
+    margin-top: 40px;       /* Üstteki inputlardan olan mesafe (Aşağı aldık) */
+    width: 100%;
+}
+
     </style>
 </head>
 <body>
@@ -368,6 +515,8 @@
         <span>🔄</span> Takvim Görünümü
     </button>
 
+    <button id="openAutoModalBtn" class="nav-btn" style="background: #2a2d35 !important; border-color: var(--neon-green) !important;"><span>🤖</span> OTO TAKVİM KURULUMU</button>
+
     <div class="nav-spacer"></div>
 
     <button onclick="saveProjectAsPost()" class="nav-btn">
@@ -388,11 +537,15 @@
 
     <input type="file" id="manualFileInput" style="display: none;" accept=".post" onchange="handleManualLoad(event)">
 
+</div>
+
     
     
 </button>
 
 </div>
+
+
 
 <div id="dateModal" class="modal-overlay">
     <div class="modal-content">
@@ -446,6 +599,66 @@
 </div>
 
 <div id="contextMenu" class="context-menu"></div>
+
+<div id="autoSetupModal" class="modal">
+    <div class="modal-content">
+        <h2 class="modal-title">PRODÜKSİYON SİHİRBAZI</h2>
+        <div class="modal-divider"></div>
+
+        <div class="setup-grid">
+            <div class="input-group full-width">
+                <label>SET BAŞLANGIÇ</label>
+                <input type="date" id="autoSetStart">
+            </div>
+            <div class="input-group full-width">
+                <label>TOPLAM BÖLÜM</label>
+                <input type="number" id="autoEpCount" placeholder="Örn: 13">
+            </div>
+
+            <div class="section-subtitle">SÜREÇ GÜN SAYILARI (BÖLÜM BAZLI)</div>
+
+            <div class="input-group">
+                <label>SET GÜNÜ</label>
+                <input type="number" id="dSet" placeholder="0">
+            </div>
+            <div class="input-group">
+                <label>EDIT GÜNÜ</label>
+                <input type="number" id="dEdit" placeholder="0">
+            </div>
+            <div class="input-group">
+                <label>CUTS GÜNÜ</label>
+                <input type="number" id="dCuts" placeholder="0">
+            </div>
+            <div class="input-group">
+                <label>VFX GÜNÜ</label>
+                <input type="number" id="dVfx" placeholder="0">
+            </div>
+            <div class="input-group">
+                <label>COLOR GÜNÜ</label>
+                <input type="number" id="dColor" placeholder="0">
+            </div>
+            <div class="input-group">
+                <label>MÜZİK GÜNÜ</label>
+                <input type="number" id="dMusic" placeholder="0">
+            </div>
+            <div class="input-group">
+                <label>MIX GÜNÜ</label>
+                <input type="number" id="dMix" placeholder="0">
+            </div>
+            <div class="input-group">
+                <label>SEND OFSET</label>
+                <input type="number" id="offsetSend" placeholder="0">
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button id="runAutoSetupBtn" class="main-btn">TAKVİMİ OLUŞTUR</button>
+            <button id="closeAutoModalBtn" class="cancel-btn">İPTAL</button>
+        </div>
+    </div>
+</div>
+
+
 
 <script>
     const SAVED_DATA = null;
@@ -917,15 +1130,7 @@ function handleRename() {
         const finalHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${projName}</title>
         <style>body { font-family: sans-serif; padding: 40px; } .month-section { page-break-before: always; }</style></head>
         <body><h2 style="border-bottom: 2px solid #000; padding-bottom: 10px;">${projName.toUpperCase()} TAKVİM ÇIKTISI</h2>${mainContent}
-        
-        <div id="cloudModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:99999; justify-content:center; align-items:center; font-family: sans-serif;">
-    <div style="background:#1e1e1e; padding:25px; border-radius:12px; width:450px; max-height:80vh; overflow-y:auto; border:1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:15px;">
-            <h2 style="color:#27ae60; margin:0; font-size:18px;">☁️ Buluttaki Kayıtların</h2>
-            <button onclick="document.getElementById('cloudModal').style.display='none'" style="background:none; border:none; color:#666; cursor:pointer; font-size:24px;">&times;</button>
-        </div>
-        <div id="fileListContainer" style="display: flex; flex-direction: column; gap: 10px;">
-            </div>
+    
     </div>
 </div>
         
@@ -1001,145 +1206,63 @@ function handleRename() {
     };
     document.addEventListener('mousedown', (e) => { if(menu.style.display === 'block' && !menu.contains(e.target)) closeMenu(); if(summaryPop.style.display === 'block' && !summaryPop.contains(e.target)) summaryPop.style.display = "none"; }, true);
 
-// --- .POST KAYDETME (V33 TAM UYUMLU) ---
+
 function saveProjectAsPost() {
     try {
         const projName = document.getElementById("projectName").value || "proje";
         const startDate = document.getElementById("startDate").value;
 
-        // 1. Takvim hücrelerini topla
-        const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
-            col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type,
-            text: c.textContent, bg: c.style.backgroundColor
-        }));
+        // --- TAKVİM HÜCRELERİNİ KAYDET ---
+        // Sadece 'filled' olanları değil, tüm hücreleri tarayıp içi dolu olanları alıyoruz
+        const cells = Array.from(document.querySelectorAll('.cell.timeline')).map(c => {
+            // Yazıyı bulmak için: textContent, innerText veya varsa input değerini dene
+            let cellText = c.textContent.trim();
+            
+            // Eğer hücre içinde bir input varsa onun değerini al
+            const inputInside = c.querySelector('input');
+            if (inputInside) cellText = inputInside.value;
 
-        // 2. NOTLARI TOPLA (ID: noteList - Dosyandaki orijinal ID)
-        const notes = [];
-        const container = document.getElementById("noteList"); 
-        
-        if (container) {
-            const items = container.querySelectorAll(".note-item");
-            items.forEach(item => {
-                const textEl = item.querySelector(".note-text");
-                const dateEl = item.querySelector(".note-date");
-                if (textEl) {
-                    notes.push({
-                        text: textEl.innerText.trim(),
-                        date: dateEl ? dateEl.innerText.trim() : "",
-                        status: item.dataset.status || "waiting"
-                    });
-                }
-            });
-        }
+            // Eğer hücrede yazı veya arka plan rengi varsa kaydet
+            if (cellText !== "" || (c.style.backgroundColor && c.style.backgroundColor !== "")) {
+                return {
+                    col: c.dataset.col,
+                    ep: c.dataset.ep,
+                    procType: c.dataset.proc_type,
+                    text: cellText,
+                    bg: c.style.backgroundColor
+                };
+            }
+            return null;
+        }).filter(item => item !== null); // Boş hücreleri listeye ekleme
 
-        const data = { 
-            projectName: projName, 
-            startDate: startDate, 
-            cells: cells, 
-            notes: notes 
-        };
-
-        const blob = new Blob([JSON.stringify(data)], { type: 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        const simdi = new Date();
-        const tarih = simdi.toLocaleDateString('tr-TR').replace(/\./g, '-');
-        
-        a.href = url;
-        a.download = (projName === "proje" ? `Post_Takvim_${tarih}` : projName) + ".post";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    } catch (e) { alert("Kaydetme hatası: " + e.message); }
-}
-
-// --- .POST YÜKLEME (V33 TAM UYUMLU) ---
-// --- .POST KAYDETME ---
-function saveProjectAsPost() {
-    try {
-        const projName = document.getElementById("projectName").value || "proje";
-        const startDate = document.getElementById("startDate").value;
-
-        // 1. Takvim hücrelerini topla
-        const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
-            col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type,
-            text: c.textContent, bg: c.style.backgroundColor
-        }));
-
-        // 2. NOTLARI TOPLA (İçerik Fix)
+        // --- NOTLARI KAYDET ---
         const notes = [];
         const noteItems = document.querySelectorAll('.note-item');
         noteItems.forEach(item => {
-            const textEl = item.querySelector('.note-text');
+            // Yazıyı bulmak için sınıf ismini ve span'ı garantiye alıyoruz
+            const textEl = item.querySelector('.note-text') || item.querySelector('span');
             const dateEl = item.querySelector('.note-date');
+            
             if (textEl) {
                 notes.push({
-                    text: textEl.innerText.trim(), // İçeriği buradan alıyoruz
+                    text: textEl.innerText.replace(/\n/g, " ").trim(), // Satır atlamalarını temizle
                     date: dateEl ? dateEl.innerText.trim() : "",
                     status: item.dataset.status || 'waiting'
                 });
             }
         });
 
-        const data = { projectName: projName, startDate: startDate, cells: cells, notes: notes };
-        const blob = new Blob([JSON.stringify(data)], { type: 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        const simdi = new Date();
-        const tarih = simdi.toLocaleDateString('tr-TR').replace(/\./g, '-');
-        
-        a.href = url;
-        a.download = (projName === "proje" ? `Post_Takvim_${tarih}` : projName) + ".post";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    } catch (e) { alert("Kaydetme hatası: " + e.message); }
-}
-
-// --- .POST YÜKLEME ---
-// --- .POST KAYDETME (V33 İÇERİK FİX) ---
-function saveProjectAsPost() {
-    try {
-        const projName = document.getElementById("projectName").value || "proje";
-        const startDate = document.getElementById("startDate").value;
-
-        // 1. Takvim hücrelerini topla
-        const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
-            col: c.dataset.col, 
-            ep: c.dataset.ep, 
-            procType: c.dataset.proc_type, 
-            text: c.textContent, 
-            bg: c.style.backgroundColor
-        }));
-
-        // 2. NOTLARI TOPLA (Metni garantiye alan kısım)
-        const notes = [];
-        const noteItems = document.querySelectorAll('.note-item');
-        
-        noteItems.forEach(item => {
-            // Senin HTML yapında metin ya .note-text içinde ya da doğrudan span içinde
-            const textEl = item.querySelector('.note-text');
-            const dateEl = item.querySelector('.note-date');
-            
-            if (textEl) {
-                notes.push({
-                    text: textEl.textContent.trim(), // 'innerText' yerine 'textContent' daha garantidir
-                    date: dateEl ? dateEl.textContent.trim() : "",
-                    status: item.dataset.status || 'waiting'
-                });
-            }
-        });
-
+        // Veriyi topla
         const data = { 
             projectName: projName, 
             startDate: startDate, 
             cells: cells, 
-            notes: notes 
+            notes: notes,
+            saveTime: new Date().toISOString() // Kayıt zamanını da ekleyelim (takip için)
         };
 
-        const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+        // Dosyayı oluştur ve indir
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         const simdi = new Date();
@@ -1151,53 +1274,12 @@ function saveProjectAsPost() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+
+        console.log("Kaydedilen hücre sayısı:", cells.length);
     } catch (e) { 
-        console.error("Hata detayı:", e);
         alert("Kaydetme hatası: " + e.message); 
+        console.error(e);
     }
-}
-// --- .POST YÜKLEME (V33 İÇERİK FİX) ---
-// --- .POST KAYDETME (YAZI İÇERİĞİ GARANTİLİ) ---
-function saveProjectAsPost() {
-    try {
-        const projName = document.getElementById("projectName").value || "proje";
-        const startDate = document.getElementById("startDate").value;
-
-        const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
-            col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type,
-            text: c.textContent, bg: c.style.backgroundColor
-        }));
-
-        const notes = [];
-        const noteItems = document.querySelectorAll('.note-item');
-        noteItems.forEach(item => {
-            // Yazıyı bulmak için en garantili yol: .note-text sınıfı veya doğrudan ilk span
-            const textEl = item.querySelector('.note-text') || item.querySelector('span:first-child');
-            const dateEl = item.querySelector('.note-date');
-            
-            if (textEl) {
-                notes.push({
-                    text: textEl.innerText.trim(), // Yazıyı buradan al
-                    date: dateEl ? dateEl.innerText.trim() : "",
-                    status: item.dataset.status || 'waiting'
-                });
-            }
-        });
-
-        const data = { projectName: projName, startDate: startDate, cells: cells, notes: notes };
-        const blob = new Blob([JSON.stringify(data)], { type: 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        const simdi = new Date();
-        const tarih = simdi.toLocaleDateString('tr-TR').replace(/\./g, '-');
-        
-        a.href = url;
-        a.download = (projName === "proje" ? `Post_Takvim_${tarih}` : projName) + ".post";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    } catch (e) { alert("Kaydetme hatası: " + e.message); }
 }
 
 // --- .POST YÜKLEME (YAZI İÇERİĞİ GARANTİLİ) ---
@@ -1272,6 +1354,172 @@ function handleManualLoad(event) {
     };
     reader.readAsText(file);
 }
+
+
+// --- YENİLENMİŞ PROFESYONEL PRODÜKSİYON MOTORU ---
+
+document.getElementById('openAutoModalBtn').onclick = () => {
+    document.getElementById('autoSetupModal').style.display = 'flex';
+};
+
+// --- TÜM HATALARI GİDERİLMİŞ NİHAİ OTO-KURULUM ---
+
+document.getElementById('runAutoSetupBtn').onclick = function() {
+    const setStart = document.getElementById('autoSetStart').value;
+    const epCount = parseInt(document.getElementById('autoEpCount').value);
+    
+    if (!setStart) return alert("Başlangıç tarihi seçin!");
+
+    if (isNaN(epCount) || epCount <= 0) {
+        alert("Lütfen geçerli bir TOPLAM BÖLÜM sayısı girin!");
+        epCountInput.focus(); // Kutuyu otomatik seçer ki hemen yazabilesin
+        return; // İşlemi durdur
+    }
+
+    const getVal = (id, def) => {
+        const el = document.getElementById(id);
+        return el ? parseInt(el.value) : def;
+    };
+
+    // --- ORANLARI SABİTLEYEN GÜN DEĞERLERİ ---
+    const days = {
+        setTotal: getVal('dSet', 15), // Buraya 15 girersen tam 15 gün boyayacak
+        edit: getVal('dEdit', 10),
+        cuts: getVal('dCuts', 4),
+        vfx: getVal('dVfx', 5),
+        color: getVal('dColor', 2),
+        music: getVal('dMusic', 5),
+        mix: getVal('dMix', 2),
+        offSend: getVal('offsetSend', 2)
+    };
+
+    TOTAL_EPISODES = epCount;
+    // Takvim boyunu dinamik tutalım (Set bittikten sonraki post süreci kadar)
+    TOTAL_DAYS = days.setTotal + (epCount * 5) + 60; 
+
+    if (typeof createCalendarAction === "function") {
+        createCalendarAction(setStart);
+    }
+
+    setTimeout(() => {
+        // --- 1. SET BOYAMA (TAM OLARAK GİRİLEN GÜN KADAR) ---
+        // Sadece set satırını bulup, 0'dan başlayarak tam setTotal kadar boyarız
+        for (let s = 0; s < days.setTotal; s++) {
+            smartSetPaint(s, "SET");
+        }
+
+        let lastMasterLockCol = 0;
+        for (let i = 1; i <= epCount; i++) {
+            // --- 2. POST PRODÜKSİYON AKIŞI ---
+            // İlk bölüm kurgusu, SET bittikten 2 gün sonra başlar (veya set devam ederken de başlatabiliriz)
+            // Ama senin istediğin oran için setin bitişini baz alıyoruz:
+            let cutsStart;
+            if (i === 1) {
+                cutsStart = days.setTotal + 2; 
+            } else {
+                cutsStart = lastMasterLockCol + 2; // Master Lock + 1 gün tatil + 1 gün başlama
+            }
+
+            // EDİT (Kurgu): Cuts'tan geriye doğru yaslanır
+            let editStart = Math.max(0, cutsStart - days.edit);
+            fillWithSundays(editStart, days.edit, i, "edit", "EDIT");
+
+            // CUTS (Yönetmen Kurgusu)
+            let masterLockCol = fillWithSundays(cutsStart, days.cuts, i, "cuts", "CUT");
+            lastMasterLockCol = masterLockCol; 
+
+            // MASTER LOCK İŞARETİ
+            markML(masterLockCol, i);
+
+            // EXPORT & TEKNİK POST
+            forcePaint(masterLockCol + 1, i, "vfx", "EXPORT");
+            let techStart = masterLockCol + 2;
+            simpleFill(techStart, days.vfx, i, "vfx", "VFX");
+            simpleFill(techStart, days.color, i, "color", "COLOR");
+            simpleFill(techStart, days.music, i, "music", "MUSIC");
+
+            // MIX & SEND
+            let mixStart = techStart + days.music + 1;
+            simpleFill(mixStart, days.mix, i, "sound", "MIX");
+            let sendStart = mixStart + days.mix + days.offSend;
+            simpleFill(sendStart, 3, i, "send", "SEND");
+        }
+        
+        document.getElementById('autoSetupModal').style.display = 'none';
+        alert(`Takvim oluşturuldu: ${days.setTotal} gün set ve ${epCount} bölüm post akışı.`);
+    }, 1200);
+};
+
+// --- YARDIMCI FONKSİYONLAR (HÜCRE BULUCULAR) ---
+
+function smartSetPaint(col, text) {
+    // Sadece proc_type="set" veya "production" olan hücreleri hedefle
+    let target = document.querySelector(`.cell.timeline[data-col="${col}"][data-proc_type="set"]`) || 
+                 document.querySelector(`.cell.timeline[data-col="${col}"][data-proc_type="production"]`);
+
+    if (target) {
+        target.textContent = text;
+        target.style.backgroundColor = (typeof deptColors !== "undefined" && deptColors["set"]) ? deptColors["set"] : "#2ecc71";
+        target.classList.add('filled');
+    }
+}
+
+function forcePaint(col, ep, type, text) {
+    const target = document.querySelector(`.cell.timeline[data-col="${col}"][data-ep="${ep}"][data-proc_type="${type}"]`);
+    if (target) {
+        target.textContent = text;
+        target.style.backgroundColor = (typeof deptColors !== "undefined") ? deptColors[type] : "#444";
+        target.classList.add('filled');
+    }
+}
+
+function simpleFill(start, dur, ep, type, text) {
+    for (let i = 0; i < dur; i++) forcePaint(start + i, ep, type, text);
+}
+
+function fillWithSundays(start, dur, ep, type, text) {
+    let placed = 0, curr = start;
+    while (placed < dur) {
+        if (typeof dates !== "undefined" && dates[curr]) {
+            if (dates[curr].getDay() !== 0) { forcePaint(curr, ep, type, text); placed++; }
+            curr++;
+        } else { forcePaint(curr, ep, type, text); placed++; curr++; }
+        if (curr > 3000) break;
+    }
+    return curr - 1;
+}
+
+function markML(col, ep) {
+    const target = document.querySelector(`.cell.timeline[data-col="${col}"][data-ep="${ep}"][data-proc_type="cuts"]`);
+    if (target) {
+        target.style.backgroundColor = "#FF0000";
+        target.style.color = "white";
+        target.textContent = "MASTER LOCK";
+    }
+}
+
+// Sayfa tamamen yüklendiğinde butonları bağla
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- KAPATMA (İPTAL) BUTONU ---
+    const closeBtn = document.getElementById('closeAutoModalBtn');
+    const modal = document.getElementById('autoSetupModal');
+
+    if (closeBtn) {
+        closeBtn.onclick = function(e) {
+            e.preventDefault(); // Sayfanın yenilenmesini engelle
+            modal.style.display = 'none';
+        };
+    }
+
+    // --- DIŞARI TIKLAYINCA KAPATMA ---
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
+});
+
     
     
 </script>
