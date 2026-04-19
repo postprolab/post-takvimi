@@ -1107,29 +1107,30 @@ function saveProjectAsPost() {
 
         // 1. Takvim hücrelerini topla
         const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
-            col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type,
-            text: c.textContent, bg: c.style.backgroundColor
+            col: c.dataset.col, 
+            ep: c.dataset.ep, 
+            procType: c.dataset.proc_type, 
+            text: c.textContent, 
+            bg: c.style.backgroundColor
         }));
 
-        // 2. NOTLARI TOPLA (Metni .note-text içinden zorla alır)
+        // 2. NOTLARI TOPLA (Metni garantiye alan kısım)
         const notes = [];
-        const container = document.getElementById("noteList");
-        if (container) {
-            const items = container.querySelectorAll(".note-item");
-            items.forEach(item => {
-                // Not metni senin kodunda .note-text sınıfında duruyor
-                const textEl = item.querySelector(".note-text");
-                const dateEl = item.querySelector(".note-date");
-                
-                if (textEl) {
-                    notes.push({
-                        text: textEl.innerText.trim(), // Burası metni yakalar
-                        date: dateEl ? dateEl.innerText.trim() : "",
-                        status: item.dataset.status || "waiting"
-                    });
-                }
-            });
-        }
+        const noteItems = document.querySelectorAll('.note-item');
+        
+        noteItems.forEach(item => {
+            // Senin HTML yapında metin ya .note-text içinde ya da doğrudan span içinde
+            const textEl = item.querySelector('.note-text');
+            const dateEl = item.querySelector('.note-date');
+            
+            if (textEl) {
+                notes.push({
+                    text: textEl.textContent.trim(), // 'innerText' yerine 'textContent' daha garantidir
+                    date: dateEl ? dateEl.textContent.trim() : "",
+                    status: item.dataset.status || 'waiting'
+                });
+            }
+        });
 
         const data = { 
             projectName: projName, 
@@ -1138,7 +1139,7 @@ function saveProjectAsPost() {
             notes: notes 
         };
 
-        const blob = new Blob([JSON.stringify(data)], { type: 'application/octet-stream' });
+        const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         const simdi = new Date();
@@ -1150,9 +1151,11 @@ function saveProjectAsPost() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-    } catch (e) { alert("Kaydetme hatası: " + e.message); }
+    } catch (e) { 
+        console.error("Hata detayı:", e);
+        alert("Kaydetme hatası: " + e.message); 
+    }
 }
-
 // --- .POST YÜKLEME (V33 İÇERİK FİX) ---
 // --- .POST KAYDETME (YAZI İÇERİĞİ GARANTİLİ) ---
 function saveProjectAsPost() {
