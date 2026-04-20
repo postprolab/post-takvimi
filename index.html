@@ -602,6 +602,28 @@
   <div id="projectsList"></div>
 </div>
 
+<div id="userMenuWrapper" style="position:relative; display:none;">
+  <div id="userBox" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+    <img id="userPhoto" style="width:26px;height:26px;border-radius:50%;">
+    <span id="userName" style="font-size:12px;"></span>
+  </div>
+
+  <div id="userDropdown" style="
+    display:none;
+    position:absolute;
+    top:35px;
+    right:0;
+    background:#1c1f26;
+    border:1px solid #333;
+    border-radius:6px;
+    min-width:160px;
+    z-index:9999;
+  ">
+    <div class="item" onclick="switchAccount()">🔄 Farklı hesap</div>
+    <div class="item" onclick="logout()">🚪 Çıkış</div>
+  </div>
+</div>
+
 
     <div class="sidebar closed" id="sidebar">
         <div class="sidebar-header">TO DO LIST</div>
@@ -733,39 +755,42 @@ function logout() {
   signOut(auth);
 }
 
+document.getElementById("userBox").onclick = () => {
+  const dd = document.getElementById("userDropdown");
+  dd.style.display = dd.style.display === "block" ? "none" : "block";
+};
+
+window.onclick = (e) => {
+  if (!e.target.closest("#userMenuWrapper")) {
+    document.getElementById("userDropdown").style.display = "none";
+  }
+};
+
+function switchAccount() {
+  logout().then(() => loginWithGoogle());
+}
+
 // LOGIN STATE
 onAuthStateChanged(auth, (user) => {
+  const wrapper = document.getElementById("userMenuWrapper");
   const panel = document.getElementById("projectsPanel");
-  const userBox = document.getElementById("userBox");
 
   if (user) {
-    console.log("Giriş OK:", user);
+    wrapper.style.display = "block";
 
-    // PANEL AÇ
+    document.getElementById("userName").textContent =
+      user.displayName || user.email;
+
+    document.getElementById("userPhoto").src = user.photoURL || "";
+
     if (panel) panel.style.display = "block";
-
-    // USER UI
-    if (userBox) {
-      userBox.style.display = "flex";
-      document.getElementById("userName").textContent = user.displayName || user.email;
-      document.getElementById("userPhoto").src = user.photoURL || "";
-    }
-
-    // LOGIN BUTTON GİZLE
-    const loginBtn = document.querySelector('[onclick="loginWithGoogle()"]');
-    if (loginBtn) loginBtn.style.display = "none";
 
     loadProjects();
 
   } else {
-    console.log("Çıkış");
+    wrapper.style.display = "none";
 
     if (panel) panel.style.display = "none";
-
-    if (userBox) userBox.style.display = "none";
-
-    const loginBtn = document.querySelector('[onclick="loginWithGoogle()"]');
-    if (loginBtn) loginBtn.style.display = "block";
   }
 });
 
@@ -816,7 +841,9 @@ async function loadProjects() {
     div.style.marginBottom = "5px";
     div.style.cursor = "pointer";
 
-    div.innerHTML = `<b>${d.projectName || "İsimsiz"}</b>`;
+    div.innerHTML = `
+  <div style="font-weight:bold">${d.projectName || "İsimsiz"}</div>
+`;
 
     div.onclick = () => openProject(docSnap.id);
 
@@ -837,6 +864,12 @@ async function openProject(projectId) {
 
   document.getElementById("projectName").value = data.projectName;
   createCalendarAction(data.startDate);
+
+  document.querySelectorAll('.cell.timeline').forEach(c => {
+  c.textContent = "";
+  c.style.backgroundColor = "";
+  c.classList.remove("filled");
+});
 
   setTimeout(() => {
     data.cells.forEach(c => {
@@ -1430,6 +1463,12 @@ function saveProjectAsPost() {
                     text: cellText,
                     bg: c.style.backgroundColor
                 };
+                if (!auth.currentUser) {
+  alert("Lütfen önce giriş yap");
+  return;
+}
+
+saveToFirebase(data);
             }
             return null;
         }).filter(item => item !== null); // Boş hücreleri listeye ekleme
@@ -1447,6 +1486,8 @@ function saveProjectAsPost() {
                     text: textEl.innerText.replace(/\n/g, " ").trim(), // Satır atlamalarını temizle
                     date: dateEl ? dateEl.innerText.trim() : "",
                     status: item.dataset.status || 'waiting'
+
+                    
                 });
             }
         });
