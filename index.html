@@ -519,6 +519,11 @@
 
     <div class="nav-spacer"></div>
 
+    <div id="userBox" style="display:none; align-items:center; gap:8px;">
+  <img id="userPhoto" style="width:24px;height:24px;border-radius:50%;">
+  <span id="userName" style="font-size:12px;"></span>
+</div>
+
     <button onclick="loginWithGoogle()" class="nav-btn">
   🔐 Google
 </button>
@@ -730,18 +735,37 @@ function logout() {
 
 // LOGIN STATE
 onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log("Giriş:", user.email);
+  const panel = document.getElementById("projectsPanel");
+  const userBox = document.getElementById("userBox");
 
-    const panel = document.getElementById("projectsPanel");
+  if (user) {
+    console.log("Giriş OK:", user);
+
+    // PANEL AÇ
     if (panel) panel.style.display = "block";
 
+    // USER UI
+    if (userBox) {
+      userBox.style.display = "flex";
+      document.getElementById("userName").textContent = user.displayName || user.email;
+      document.getElementById("userPhoto").src = user.photoURL || "";
+    }
+
+    // LOGIN BUTTON GİZLE
+    const loginBtn = document.querySelector('[onclick="loginWithGoogle()"]');
+    if (loginBtn) loginBtn.style.display = "none";
+
     loadProjects();
+
   } else {
     console.log("Çıkış");
 
-    const panel = document.getElementById("projectsPanel");
     if (panel) panel.style.display = "none";
+
+    if (userBox) userBox.style.display = "none";
+
+    const loginBtn = document.querySelector('[onclick="loginWithGoogle()"]');
+    if (loginBtn) loginBtn.style.display = "block";
   }
 });
 
