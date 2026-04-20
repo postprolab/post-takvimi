@@ -784,57 +784,47 @@ window.handleLoadAction = async () => {
     if (snap.empty) { list.innerHTML = "<p>Henüz kayıtlı projeniz yok.</p>"; return; }
 
     snap.forEach(docSnap => {
-    const d = docSnap.data();
-    const projectId = docSnap.id; // Firebase'deki gerçek doküman ID'si
-    
-    const div = document.createElement("div");
-    div.className = "nav-btn project-item";
-    div.innerHTML = `<span>📂 ${d.projectName || projectId}</span>`;
-    
-    // Sağ tık özelliğini BURADA bağlıyoruz
-    window.setupRightClick(div, projectId);
-    
-    div.onclick = () => {
-        loadProjectToUI(d);
-        panel.style.display = "none";
-    };
-    list.appendChild(div);
-});
+        const d = docSnap.data();
+        const projectId = docSnap.id;
+        const div = document.createElement("div");
+        div.className = "nav-btn project-item"; // Sağ tık için class ekledik
+        div.style = "margin-bottom:10px; width:100%; justify-content: space-between; padding:15px; font-size:14px; cursor:pointer;";
+        div.innerHTML = `<span>📂 ${d.projectName}</span> <small>${d.lastUpdated ? new Date(d.lastUpdated.seconds*1000).toLocaleDateString() : ''}</small>`;
+        
+        // Sol tık: Yükle
+        div.onclick = () => {
+            loadProjectToUI(d);
+            panel.style.display = "none";
+        };
 
-// --- SAĞ TIK AYARI ---
+        // SAĞ TIK: SİLME MENÜSÜNÜ BAĞLA
+        window.setupRightClick(div, projectId);
+
+        list.appendChild(div);
+    });
+};
+
+// --- SAĞ TIK SİLME MANTIĞI ---
 window.setupRightClick = function(element, projectId) {
     element.oncontextmenu = function(e) {
         e.preventDefault();
-        e.stopPropagation(); // Diğer tıklama olaylarını durdurur
-        
-        window.projectToDelete = projectId; // Silinecek ID'yi kaydet
-        
+        window.projectToDelete = projectId; // Global değişkene proje ID'sini ata
         const menu = document.getElementById('projectContextMenu');
         menu.style.display = 'block';
-        menu.style.left = e.clientX + 'px'; // Sayfaya göre değil, ekrana göre konum
-        menu.style.top = e.clientY + 'px';
+        menu.style.left = e.pageX + 'px';
+        menu.style.top = e.pageY + 'px';
     };
 };
 
-// --- SİLME BUTONU AKSİYONU ---
+// SİLME BUTONU AKSİYONU
 document.getElementById('deleteProjectBtn').onclick = async () => {
     if (!window.projectToDelete || !auth.currentUser) return;
-
-    if (confirm(`"${window.projectToDelete}" projesini silmek istediğine emin misin?`)) {
+    if (confirm(`"${window.projectToDelete}" projesini kalıcı olarak silmek istiyor musunuz?`)) {
         try {
-            // Tam yol: users -> [UID] -> projects -> [ProjectID]
-            const docRef = doc(db, "users", auth.currentUser.uid, "projects", window.projectToDelete);
-            await deleteDoc(docRef);
-            
+            await deleteDoc(doc(db, "users", auth.currentUser.uid, "projects", window.projectToDelete));
             alert("Proje başarıyla silindi.");
-            document.getElementById('projectContextMenu').style.display = 'none';
-            
-            // Listeyi yenilemek için yükle butonunu tekrar tetikle
-            window.handleLoadAction(); 
-        } catch (e) {
-            console.error("Silme hatası detay:", e);
-            alert("Silme hatası: " + e.message);
-        }
+            window.handleLoadAction(); // Listeyi yenile
+        } catch (e) { alert("Silme hatası: " + e.message); }
     }
 };
 
