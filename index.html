@@ -588,14 +588,26 @@
   <div id="projectsList"></div>
 </div>
 
-<div id="userMenuWrapper" style="display:none; align-items:center; gap:10px; cursor:pointer;" onclick="window.toggleUserDropdown()">
-    <span id="userName"></span>
-    <img id="userPhoto" style="width:32px; height:32px; border-radius:50%;">
-    
-    <div id="userDropdown" style="display:none; position:absolute; top:45px; right:15px; background:#1c1f26; border:1px solid #444; z-index:6000;">
-        <button onclick="window.switchAccount()" style="display:block; width:100%; padding:10px; color:white; background:none; border:none; text-align:left; cursor:pointer;">🔄 Başka Hesap</button>
-        <button onclick="window.logout()" style="display:block; width:100%; padding:10px; color:red; background:none; border:none; text-align:left; cursor:pointer;">🚪 Çıkış Yap</button>
-    </div>
+<div id="userMenuWrapper" style="position:relative; display:none;">
+  <div id="userBox" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+    <img id="userPhoto" style="width:26px;height:26px;border-radius:50%;">
+    <span id="userName" style="font-size:12px;"></span>
+  </div>
+
+  <div id="userDropdown" style="
+    display:none;
+    position:absolute;
+    top:35px;
+    right:0;
+    background:#1c1f26;
+    border:1px solid #333;
+    border-radius:6px;
+    min-width:160px;
+    z-index:9999;
+  ">
+    <div class="item" onclick="switchAccount()">🔄 Farklı hesap</div>
+    <div class="item" onclick="logout()">🚪 Çıkış</div>
+  </div>
 </div>
 
 
@@ -772,47 +784,57 @@ window.handleLoadAction = async () => {
     if (snap.empty) { list.innerHTML = "<p>Henüz kayıtlı projeniz yok.</p>"; return; }
 
     snap.forEach(docSnap => {
-        const d = docSnap.data();
-        const projectId = docSnap.id;
-        const div = document.createElement("div");
-        div.className = "nav-btn project-item"; // Sağ tık için class ekledik
-        div.style = "margin-bottom:10px; width:100%; justify-content: space-between; padding:15px; font-size:14px; cursor:pointer;";
-        div.innerHTML = `<span>📂 ${d.projectName}</span> <small>${d.lastUpdated ? new Date(d.lastUpdated.seconds*1000).toLocaleDateString() : ''}</small>`;
-        
-        // Sol tık: Yükle
-        div.onclick = () => {
-            loadProjectToUI(d);
-            panel.style.display = "none";
-        };
+    const d = docSnap.data();
+    const projectId = docSnap.id; // Firebase'deki gerçek doküman ID'si
+    
+    const div = document.createElement("div");
+    div.className = "nav-btn project-item";
+    div.innerHTML = `<span>📂 ${d.projectName || projectId}</span>`;
+    
+    // Sağ tık özelliğini BURADA bağlıyoruz
+    window.setupRightClick(div, projectId);
+    
+    div.onclick = () => {
+        loadProjectToUI(d);
+        panel.style.display = "none";
+    };
+    list.appendChild(div);
+});
 
-        // SAĞ TIK: SİLME MENÜSÜNÜ BAĞLA
-        window.setupRightClick(div, projectId);
-
-        list.appendChild(div);
-    });
-};
-
-// --- SAĞ TIK SİLME MANTIĞI ---
+// --- SAĞ TIK AYARI ---
 window.setupRightClick = function(element, projectId) {
     element.oncontextmenu = function(e) {
         e.preventDefault();
-        window.projectToDelete = projectId; // Global değişkene proje ID'sini ata
+        e.stopPropagation(); // Diğer tıklama olaylarını durdurur
+        
+        window.projectToDelete = projectId; // Silinecek ID'yi kaydet
+        
         const menu = document.getElementById('projectContextMenu');
         menu.style.display = 'block';
-        menu.style.left = e.pageX + 'px';
-        menu.style.top = e.pageY + 'px';
+        menu.style.left = e.clientX + 'px'; // Sayfaya göre değil, ekrana göre konum
+        menu.style.top = e.clientY + 'px';
     };
 };
 
-// SİLME BUTONU AKSİYONU
+// --- SİLME BUTONU AKSİYONU ---
 document.getElementById('deleteProjectBtn').onclick = async () => {
     if (!window.projectToDelete || !auth.currentUser) return;
-    if (confirm(`"${window.projectToDelete}" projesini kalıcı olarak silmek istiyor musunuz?`)) {
+
+    if (confirm(`"${window.projectToDelete}" projesini silmek istediğine emin misin?`)) {
         try {
-            await deleteDoc(doc(db, "users", auth.currentUser.uid, "projects", window.projectToDelete));
+            // Tam yol: users -> [UID] -> projects -> [ProjectID]
+            const docRef = doc(db, "users", auth.currentUser.uid, "projects", window.projectToDelete);
+            await deleteDoc(docRef);
+            
             alert("Proje başarıyla silindi.");
-            window.handleLoadAction(); // Listeyi yenile
-        } catch (e) { alert("Silme hatası: " + e.message); }
+            document.getElementById('projectContextMenu').style.display = 'none';
+            
+            // Listeyi yenilemek için yükle butonunu tekrar tetikle
+            window.handleLoadAction(); 
+        } catch (e) {
+            console.error("Silme hatası detay:", e);
+            alert("Silme hatası: " + e.message);
+        }
     }
 };
 
@@ -1738,7 +1760,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
 </script>
 
-<div id="projectContextMenu" style="display: none; position: fixed; background: #1c1f26; border: 1px solid #444; border-radius: 4px; z-index: 11000; box-shadow: 0 4px 15px rgba(0,0,0,0.8); min-width: 140px;">
+<div id="projectContextMenu" style="display: none; position: fixed; background: #1c1f26; border: 1px solid #444; border-radius: 4px; z-index: 12000; box-shadow: 0 4px 15px rgba(0,0,0,0.8); min-width: 140px;">
     <button id="deleteProjectBtn" style="background: none; border: none; color: #ff4d4d; padding: 12px 15px; cursor: pointer; width: 100%; text-align: left; font-size: 14px; font-weight: bold;">
         🗑️ Projeyi Sil
     </button>
