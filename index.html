@@ -519,6 +519,14 @@
 
     <div class="nav-spacer"></div>
 
+    <button onclick="loginWithGoogle()" class="nav-btn">
+  🔐 Google
+</button>
+
+<button onclick="logout()" class="nav-btn">
+  🚪 Çıkış
+</button>
+
     <button onclick="saveProjectAsPost()" class="nav-btn">
         <span>💾</span> KAYDET
     </button>
@@ -582,6 +590,13 @@
     </div>
 
     <div id="verticalViewContainer"></div>
+
+    <!-- PROJELER PANELİ -->
+<div id="projectsPanel" style="display:none; padding:10px; background:#000;">
+  <h3>📁 Projelerim</h3>
+  <div id="projectsList"></div>
+</div>
+
 
     <div class="sidebar closed" id="sidebar">
         <div class="sidebar-header">TO DO LIST</div>
@@ -660,7 +675,167 @@
 
 
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  onAuthStateChanged, 
+  signOut 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import { 
+  getFirestore, 
+  setDoc, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  collection 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyDQI87phz2rIGkWNyn_EYRo0MULCpO_6JI",
+  authDomain: "postprolab-e6275.firebaseapp.com",
+  projectId: "postprolab-e6275",
+  storageBucket: "postprolab-e6275.firebasestorage.app",
+  messagingSenderId: "794443378875",
+  appId: "1:794443378875:web:c4656bf2323613a04bb99e"
+};
+
+// INIT
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// GLOBAL BAĞLANTI (KRİTİK)
+window.auth = auth;
+window.db = db;
+
+// GOOGLE LOGIN
+async function loginWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+// LOGOUT
+function logout() {
+  signOut(auth);
+}
+
+// LOGIN STATE
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log("Giriş:", user.email);
+
+    const panel = document.getElementById("projectsPanel");
+    if (panel) panel.style.display = "block";
+
+    loadProjects();
+  } else {
+    console.log("Çıkış");
+
+    const panel = document.getElementById("projectsPanel");
+    if (panel) panel.style.display = "none";
+  }
+});
+
+// SAVE
+async function saveToFirebase(data) {
+  if (!auth.currentUser) {
+    alert("Önce giriş yap");
+    return;
+  }
+
+  const userId = auth.currentUser.uid;
+  const projectId = Date.now().toString();
+
+  await setDoc(
+    doc(db, "users", userId, "projects", projectId),
+    {
+      ...data,
+      createdAt: new Date()
+    }
+  );
+
+  alert("Projelerime kaydedildi 🚀");
+}
+
+// LOAD PROJECT LIST
+async function loadProjects() {
+  if (!auth.currentUser) return;
+
+  const userId = auth.currentUser.uid;
+  const list = document.getElementById("projectsList");
+
+  if (!list) return;
+
+  list.innerHTML = "Yükleniyor...";
+
+  const snap = await getDocs(
+    collection(db, "users", userId, "projects")
+  );
+
+  list.innerHTML = "";
+
+  snap.forEach(docSnap => {
+    const d = docSnap.data();
+
+    const div = document.createElement("div");
+    div.style.padding = "8px";
+    div.style.border = "1px solid #333";
+    div.style.marginBottom = "5px";
+    div.style.cursor = "pointer";
+
+    div.innerHTML = `<b>${d.projectName || "İsimsiz"}</b>`;
+
+    div.onclick = () => openProject(docSnap.id);
+
+    list.appendChild(div);
+  });
+}
+
+// OPEN PROJECT
+async function openProject(projectId) {
+  const userId = auth.currentUser.uid;
+
+  const ref = doc(db, "users", userId, "projects", projectId);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+
+  document.getElementById("projectName").value = data.projectName;
+  createCalendarAction(data.startDate);
+
+  setTimeout(() => {
+    data.cells.forEach(c => {
+      const t = document.querySelector(
+        `.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`
+      );
+      if (t) {
+        t.textContent = c.text;
+        t.style.backgroundColor = c.bg;
+        t.classList.add("filled");
+      }
+    });
+  }, 500);
+}
+
+// 🔥 GLOBAL EXPORT (EN KRİTİK KISIM)
+window.loginWithGoogle = loginWithGoogle;
+window.logout = logout;
+window.saveToFirebase = saveToFirebase;
+window.openProject = openProject;
+window.loadProjects = loadProjects;
+
+
     const SAVED_DATA = null;
     let TOTAL_DAYS = 365, TOTAL_EPISODES = 16, dates = [], selectedCells = new Set(), dragSource = null, contextTarget = null, isSelecting = false, startX, startY;
     let currentActiveDept = 'all'; 
