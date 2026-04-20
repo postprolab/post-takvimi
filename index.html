@@ -726,69 +726,44 @@ window.switchAccount = () => {
     signInWithPopup(auth, provider);
 };
 
-// GİRİŞ DURUMU TAKİBİ
-onAuthStateChanged(auth, (user) => {
-    const loginBtn = document.getElementById("googleLoginBtn");
-    const userWrapper = document.getElementById("userMenuWrapper");
 
-    if (user) {
-        loginBtn.style.display = "none";
-        userWrapper.style.display = "flex";
-        document.getElementById("userName").textContent = user.displayName;
-        document.getElementById("userPhoto").src = user.photoURL;
-    } else {
-        loginBtn.style.display = "block";
-        userWrapper.style.display = "none";
-    }
-});
 
-// KAYDET BUTONU KONTROLÜ
+window.loginWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    try { await signInWithPopup(auth, provider); } catch (e) { alert("Giriş hatası: " + e.message); }
+};
+window.logout = () => { signOut(auth); window.location.reload(); };
+
+// --- KAYDETME (NOTLAR DAHİL) ---
 window.handleSaveAction = async () => {
-    if (!auth.currentUser) {
-        alert("⚠️ Lütfen önce Google ile giriş yapın.");
-        return;
-    }
+    if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
     
     const projectName = document.getElementById("projectName").value || "İsimsiz Proje";
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
-        col: c.dataset.col,
-        ep: c.dataset.ep,
-        procType: c.dataset.proc_type,
-        text: c.textContent,
-        bg: c.style.backgroundColor
+        col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type, text: c.textContent, bg: c.style.backgroundColor
     }));
+    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => n.textContent);
 
     const data = {
         projectName,
         startDate: document.getElementById("startDate")?.value || "",
         cells,
+        notes: notesArray, // Notları pakete ekledik
         lastUpdated: new Date()
     };
 
-    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => n.textContent);
-
-const data = {
-    cells: state, // Mevcut takvim verileri
-    notes: notesArray, // İŞTE BU YENİ: Notları da pakete ekledik
-    lastSaved: new Date().toISOString()
-};
-
     try {
         const userId = auth.currentUser.uid;
-        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "_" + Date.now();
+        // Proje ID'sini proje adından oluşturuyoruz (sağ tık silme için önemli)
+        const projectId = projectName.replace(/\s+/g, '-').toLowerCase();
         await setDoc(doc(db, "users", userId, "projects", projectId), data);
-        alert("✅ Proje başarıyla buluta kaydedildi!");
-    } catch (e) {
-        alert("Kaydetme hatası: " + e.message);
-    }
+        alert("✅ Proje ve Notlar başarıyla kaydedildi!");
+    } catch (e) { alert("Kaydetme hatası: " + e.message); }
 };
 
-// YÜKLE BUTONU KONTROLÜ
+// --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
 window.handleLoadAction = async () => {
-    if (!auth.currentUser) {
-        alert("⚠️ Lütfen önce Google ile giriş yapın.");
-        return;
-    }
+    if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
     
     const panel = document.getElementById("projectsPanel");
     const list = document.getElementById("projectsList");
@@ -798,46 +773,53 @@ window.handleLoadAction = async () => {
     const snap = await getDocs(collection(db, "users", auth.currentUser.uid, "projects"));
     list.innerHTML = "";
 
-    if (docSnap.exists()) {
-    const data = docSnap.data();
-    // Takvimi geri yükle (zaten yapıyorsun)
-    
-    // NOTLARI GERİ YÜKLE (Bunu ekle):
-    const noteList = document.getElementById('noteList');
-    if (data.notes && noteList) {
-        noteList.innerHTML = ''; // Listeyi temizle
-        data.notes.forEach(noteText => {
-            const div = document.createElement('div');
-            div.className = "note-item";
-            div.style = "background:#1c1f26; padding:10px; margin-bottom:8px; border-radius:4px; border-left:4px solid orange; color:white;";
-            div.textContent = noteText;
-            noteList.appendChild(div);
-       
-    }
-}
-
-    if (snap.empty) {
-        list.innerHTML = "<p>Henüz kayıtlı projeniz yok.</p>";
-        return;
-    }
-
-    
+    if (snap.empty) { list.innerHTML = "<p>Henüz kayıtlı projeniz yok.</p>"; return; }
 
     snap.forEach(docSnap => {
         const d = docSnap.data();
+        const projectId = docSnap.id;
         const div = document.createElement("div");
-        div.className = "nav-btn";
-        div.style = "margin-bottom:10px; width:100%; justify-content: space-between; padding:15px; font-size:14px;";
-        div.innerHTML = `<span>📂 ${d.projectName}</span> <small>${new Date(d.lastUpdated.seconds*1000).toLocaleDateString()}</small>`;
+        div.className = "nav-btn project-item"; // Sağ tık için class ekledik
+        div.style = "margin-bottom:10px; width:100%; justify-content: space-between; padding:15px; font-size:14px; cursor:pointer;";
+        div.innerHTML = `<span>📂 ${d.projectName}</span> <small>${d.lastUpdated ? new Date(d.lastUpdated.seconds*1000).toLocaleDateString() : ''}</small>`;
+        
+        // Sol tık: Yükle
         div.onclick = () => {
             loadProjectToUI(d);
             panel.style.display = "none";
         };
+
+        // SAĞ TIK: SİLME MENÜSÜNÜ BAĞLA
+        window.setupRightClick(div, projectId);
+
         list.appendChild(div);
     });
 };
 
-</script> <script>
+// --- SAĞ TIK SİLME MANTIĞI ---
+window.setupRightClick = function(element, projectId) {
+    element.oncontextmenu = function(e) {
+        e.preventDefault();
+        window.projectToDelete = projectId; // Global değişkene proje ID'sini ata
+        const menu = document.getElementById('projectContextMenu');
+        menu.style.display = 'block';
+        menu.style.left = e.pageX + 'px';
+        menu.style.top = e.pageY + 'px';
+    };
+};
+
+// SİLME BUTONU AKSİYONU
+document.getElementById('deleteProjectBtn').onclick = async () => {
+    if (!window.projectToDelete || !auth.currentUser) return;
+    if (confirm(`"${window.projectToDelete}" projesini kalıcı olarak silmek istiyor musunuz?`)) {
+        try {
+            await deleteDoc(doc(db, "users", auth.currentUser.uid, "projects", window.projectToDelete));
+            alert("Proje başarıyla silindi.");
+            window.handleLoadAction(); // Listeyi yenile
+        } catch (e) { alert("Silme hatası: " + e.message); }
+    }
+};
+
 
 function loadProjectToUI(data) {
     document.getElementById("projectName").value = data.projectName;
