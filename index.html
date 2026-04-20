@@ -588,26 +588,14 @@
   <div id="projectsList"></div>
 </div>
 
-<div id="userMenuWrapper" style="position:relative; display:none;">
-  <div id="userBox" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-    <img id="userPhoto" style="width:26px;height:26px;border-radius:50%;">
-    <span id="userName" style="font-size:12px;"></span>
-  </div>
-
-  <div id="userDropdown" style="
-    display:none;
-    position:absolute;
-    top:35px;
-    right:0;
-    background:#1c1f26;
-    border:1px solid #333;
-    border-radius:6px;
-    min-width:160px;
-    z-index:9999;
-  ">
-    <div class="item" onclick="switchAccount()">🔄 Farklı hesap</div>
-    <div class="item" onclick="logout()">🚪 Çıkış</div>
-  </div>
+<div id="userMenuWrapper" style="display:none; align-items:center; gap:10px; cursor:pointer;" onclick="window.toggleUserDropdown()">
+    <span id="userName"></span>
+    <img id="userPhoto" style="width:32px; height:32px; border-radius:50%;">
+    
+    <div id="userDropdown" style="display:none; position:absolute; top:45px; right:15px; background:#1c1f26; border:1px solid #444; z-index:6000;">
+        <button onclick="window.switchAccount()" style="display:block; width:100%; padding:10px; color:white; background:none; border:none; text-align:left; cursor:pointer;">🔄 Başka Hesap</button>
+        <button onclick="window.logout()" style="display:block; width:100%; padding:10px; color:red; background:none; border:none; text-align:left; cursor:pointer;">🚪 Çıkış Yap</button>
+    </div>
 </div>
 
 
@@ -710,7 +698,9 @@ const db = getFirestore(app);
 // GLOBAL FONKSİYONLAR
 window.toggleUserDropdown = () => {
     const dd = document.getElementById("userDropdown");
-    dd.style.display = dd.style.display === "block" ? "none" : "block";
+    if (dd) {
+        dd.style.display = (dd.style.display === "block") ? "none" : "block";
+    }
 };
 
 window.loginWithGoogle = async () => {
@@ -718,21 +708,27 @@ window.loginWithGoogle = async () => {
     try { await signInWithPopup(auth, provider); } catch (e) { alert("Giriş hatası: " + e.message); }
 };
 
-window.logout = () => { signOut(auth); window.location.reload(); };
-
-window.switchAccount = () => {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    signInWithPopup(auth, provider);
+// Çıkış yapma
+window.logout = async () => {
+    try {
+        await signOut(auth);
+        window.location.reload(); // Sayfayı yenileyerek her şeyi temizle
+    } catch (e) {
+        alert("Çıkış yapılamadı.");
+    }
 };
 
-
-
-window.loginWithGoogle = async () => {
+// Başka hesapla giriş yapma (Hesap seçiciyi açar)
+window.switchAccount = async () => {
     const provider = new GoogleAuthProvider();
-    try { await signInWithPopup(auth, provider); } catch (e) { alert("Giriş hatası: " + e.message); }
+    provider.setCustomParameters({ prompt: 'select_account' }); // Bu satır hesap seçtirir
+    try {
+        await signInWithPopup(auth, provider);
+    } catch (e) {
+        alert("Hata: " + e.message);
+    }
 };
-window.logout = () => { signOut(auth); window.location.reload(); };
+
 
 // --- KAYDETME (NOTLAR DAHİL) ---
 window.handleSaveAction = async () => {
@@ -843,6 +839,28 @@ function loadProjectToUI(data) {
 window.addEventListener('click', (e) => {
     if (!e.target.closest('#userMenuWrapper')) {
         document.getElementById("userDropdown").style.display = "none";
+    }
+});
+
+// GİRİŞ DURUMU TAKİBİ
+onAuthStateChanged(auth, (user) => {
+    const loginBtn = document.getElementById("googleLoginBtn");
+    const userWrapper = document.getElementById("userMenuWrapper");
+    const userPhoto = document.getElementById("userPhoto");
+    const userName = document.getElementById("userName");
+
+    if (user) {
+        // Giriş yapılmışsa
+        if (loginBtn) loginBtn.style.display = "none";
+        if (userWrapper) userWrapper.style.display = "flex";
+        if (userName) userName.textContent = user.displayName;
+        if (userPhoto) userPhoto.src = user.photoURL || 'varsayilan-profil-resmi-url'; 
+        
+        console.log("Kullanıcı aktif:", user.email);
+    } else {
+        // Çıkış yapılmışsa
+        if (loginBtn) loginBtn.style.display = "block";
+        if (userWrapper) userWrapper.style.display = "none";
     }
 });
 
@@ -1719,5 +1737,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     
 </script>
+
+<div id="projectContextMenu" style="display: none; position: fixed; background: #1c1f26; border: 1px solid #444; border-radius: 4px; z-index: 11000; box-shadow: 0 4px 15px rgba(0,0,0,0.8); min-width: 140px;">
+    <button id="deleteProjectBtn" style="background: none; border: none; color: #ff4d4d; padding: 12px 15px; cursor: pointer; width: 100%; text-align: left; font-size: 14px; font-weight: bold;">
+        🗑️ Projeyi Sil
+    </button>
+</div>
 </body>
 </html>
