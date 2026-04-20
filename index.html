@@ -501,55 +501,41 @@
 <div class="top-bar">
     <input type="text" id="projectName" class="project-input" placeholder="PROJE İSMİ...">
     
-    <button id="openModalBtn" class="nav-btn nav-btn-primary">
-        <span>📅</span> TAKVİMİ OLUŞTUR
-    </button>
-
-    <div style="width: 1px; height: 16px; background: #333; margin: 0 4px;"></div>
-
-    <button id="toggleTodayBtn" class="nav-btn">
-        <span>📍</span> BUGÜN
-    </button>
-
-    <button id="toggleViewBtn" class="nav-btn">
-        <span>🔄</span> Takvim Görünümü
-    </button>
-
-    <button id="openAutoModalBtn" class="nav-btn" style="background: #2a2d35 !important; border-color: var(--neon-green) !important;"><span>🤖</span> OTO TAKVİM KURULUMU</button>
+    <button id="openModalBtn" class="nav-btn nav-btn-primary"><span>📅</span> TAKVİMİ OLUŞTUR</button>
+    <button id="toggleTodayBtn" class="nav-btn"><span>📍</span> BUGÜN</button>
+    <button id="toggleViewBtn" class="nav-btn"><span>🔄</span> Takvim Görünümü</button>
+    <button id="openAutoModalBtn" class="nav-btn" style="background: #2a2d35 !important; border-color: var(--neon-green) !important;"><span>🤖</span> OTO TAKVİM</button>
 
     <div class="nav-spacer"></div>
 
-    <div id="userBox" style="display:none; align-items:center; gap:8px;">
-  <img id="userPhoto" style="width:24px;height:24px;border-radius:50%;">
-  <span id="userName" style="font-size:12px;"></span>
+    <button id="googleLoginBtn" onclick="loginWithGoogle()" class="nav-btn" style="border-color: #4285F4;">
+        🔐 Google ile Giriş
+    </button>
+
+    <div id="userMenuWrapper" style="position:relative; display:none;">
+        <div id="userBox" style="display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="toggleUserDropdown()">
+            <img id="userPhoto" style="width:30px; height:30px; border-radius:50%; border:1px solid #555;">
+            <span id="userName" style="font-size:12px; font-weight:bold;"></span>
+        </div>
+        <div id="userDropdown" style="display:none; position:absolute; top:40px; right:0; background:#1c1f26; border:1px solid #444; border-radius:6px; min-width:180px; z-index:9999; box-shadow: 0 10px 20px rgba(0,0,0,0.5);">
+            <div class="item" onclick="switchAccount()" style="padding:10px; cursor:pointer; border-bottom:1px solid #333;">🔄 Farklı hesapla giriş</div>
+            <div class="item" onclick="logout()" style="padding:10px; cursor:pointer; color:#ff5555;">🚪 Çıkış yap</div>
+        </div>
+    </div>
+
+    <button onclick="handleSaveAction()" class="nav-btn"><span>💾</span> KAYDET</button>
+    <button onclick="handleLoadAction()" class="nav-btn"><span>📂</span> YÜKLE</button>
+    
+    <button id="exportVerticalBtn" class="nav-btn"><span>📄</span> DİKEY ÇIKTI</button>
+    <button onclick="toggleSidebar()" class="nav-btn" style="background: #222;"><span>📝</span> NOTLAR</button>
 </div>
 
-    <button onclick="loginWithGoogle()" class="nav-btn">
-  🔐 Google
-</button>
-
-<button onclick="logout()" class="nav-btn">
-  🚪 Çıkış
-</button>
-
-    <button onclick="saveProjectAsPost()" class="nav-btn">
-        <span>💾</span> KAYDET
-    </button>
-
-    <button onclick="document.getElementById('manualFileInput').click()" class="nav-btn">
-        <span>📂</span> YÜKLE
-    </button>
-
-    <button id="exportVerticalBtn" class="nav-btn">
-        <span>📄</span> DİKEY ÇIKTI
-    </button>
-
-    <button onclick="toggleSidebar()" class="nav-btn" style="background: #222; border-color: #444;">
-        <span>📝</span> NOTLAR
-    </button>
-
-    <input type="file" id="manualFileInput" style="display: none;" accept=".post" onchange="handleManualLoad(event)">
-
+<div id="projectsPanel" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+        <h3 style="color:var(--neon-green)">📁 KAYITLI PROJELERİM</h3>
+        <div id="projectsList" style="text-align: left; margin: 20px 0;"></div>
+        <button onclick="document.getElementById('projectsPanel').style.display='none'" class="modal-btn btn-cancel">KAPAT</button>
+    </div>
 </div>
 
     
@@ -703,25 +689,11 @@
 
 
 <script type="module">
+// Firebase importları aynen kalacak...
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-  getAuth, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  onAuthStateChanged, 
-  signOut 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, setDoc, doc, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { 
-  getFirestore, 
-  setDoc, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  collection 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-// CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyDQI87phz2rIGkWNyn_EYRo0MULCpO_6JI",
   authDomain: "postprolab-e6275.firebaseapp.com",
@@ -731,166 +703,136 @@ const firebaseConfig = {
   appId: "1:794443378875:web:c4656bf2323613a04bb99e"
 };
 
-// INIT
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// GLOBAL BAĞLANTI (KRİTİK)
-window.auth = auth;
-window.db = db;
-
-// GOOGLE LOGIN
-async function loginWithGoogle() {
-  const provider = new GoogleAuthProvider();
-  try {
-    await signInWithPopup(auth, provider);
-  } catch (e) {
-    alert(e.message);
-  }
-}
-
-// LOGOUT
-function logout() {
-  signOut(auth);
-}
-
-document.getElementById("userBox").onclick = () => {
-  const dd = document.getElementById("userDropdown");
-  dd.style.display = dd.style.display === "block" ? "none" : "block";
+// GLOBAL FONKSİYONLAR
+window.toggleUserDropdown = () => {
+    const dd = document.getElementById("userDropdown");
+    dd.style.display = dd.style.display === "block" ? "none" : "block";
 };
 
-window.onclick = (e) => {
-  if (!e.target.closest("#userMenuWrapper")) {
-    document.getElementById("userDropdown").style.display = "none";
-  }
+window.loginWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    try { await signInWithPopup(auth, provider); } catch (e) { alert("Giriş hatası: " + e.message); }
 };
 
-function switchAccount() {
-  logout().then(() => loginWithGoogle());
-}
+window.logout = () => { signOut(auth); window.location.reload(); };
 
-// LOGIN STATE
+window.switchAccount = () => {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    signInWithPopup(auth, provider);
+};
+
+// GİRİŞ DURUMU TAKİBİ
 onAuthStateChanged(auth, (user) => {
-  const wrapper = document.getElementById("userMenuWrapper");
-  const panel = document.getElementById("projectsPanel");
+    const loginBtn = document.getElementById("googleLoginBtn");
+    const userWrapper = document.getElementById("userMenuWrapper");
 
-  if (user) {
-    wrapper.style.display = "block";
-
-    document.getElementById("userName").textContent =
-      user.displayName || user.email;
-
-    document.getElementById("userPhoto").src = user.photoURL || "";
-
-    if (panel) panel.style.display = "block";
-
-    loadProjects();
-
-  } else {
-    wrapper.style.display = "none";
-
-    if (panel) panel.style.display = "none";
-  }
-});
-
-// SAVE
-async function saveToFirebase(data) {
-  if (!auth.currentUser) {
-    alert("Önce giriş yap");
-    return;
-  }
-
-  const userId = auth.currentUser.uid;
-  const projectId = Date.now().toString();
-
-  await setDoc(
-    doc(db, "users", userId, "projects", projectId),
-    {
-      ...data,
-      createdAt: new Date()
+    if (user) {
+        loginBtn.style.display = "none";
+        userWrapper.style.display = "flex";
+        document.getElementById("userName").textContent = user.displayName;
+        document.getElementById("userPhoto").src = user.photoURL;
+    } else {
+        loginBtn.style.display = "block";
+        userWrapper.style.display = "none";
     }
-  );
-
-  alert("Projelerime kaydedildi 🚀");
-}
-
-// LOAD PROJECT LIST
-async function loadProjects() {
-  if (!auth.currentUser) return;
-
-  const userId = auth.currentUser.uid;
-  const list = document.getElementById("projectsList");
-
-  if (!list) return;
-
-  list.innerHTML = "Yükleniyor...";
-
-  const snap = await getDocs(
-    collection(db, "users", userId, "projects")
-  );
-
-  list.innerHTML = "";
-
-  snap.forEach(docSnap => {
-    const d = docSnap.data();
-
-    const div = document.createElement("div");
-    div.style.padding = "8px";
-    div.style.border = "1px solid #333";
-    div.style.marginBottom = "5px";
-    div.style.cursor = "pointer";
-
-    div.innerHTML = `
-  <div style="font-weight:bold">${d.projectName || "İsimsiz"}</div>
-`;
-
-    div.onclick = () => openProject(docSnap.id);
-
-    list.appendChild(div);
-  });
-}
-
-// OPEN PROJECT
-async function openProject(projectId) {
-  const userId = auth.currentUser.uid;
-
-  const ref = doc(db, "users", userId, "projects", projectId);
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) return;
-
-  const data = snap.data();
-
-  document.getElementById("projectName").value = data.projectName;
-  createCalendarAction(data.startDate);
-
-  document.querySelectorAll('.cell.timeline').forEach(c => {
-  c.textContent = "";
-  c.style.backgroundColor = "";
-  c.classList.remove("filled");
 });
 
-  setTimeout(() => {
-    data.cells.forEach(c => {
-      const t = document.querySelector(
-        `.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`
-      );
-      if (t) {
-        t.textContent = c.text;
-        t.style.backgroundColor = c.bg;
-        t.classList.add("filled");
-      }
+// KAYDET BUTONU KONTROLÜ
+window.handleSaveAction = async () => {
+    if (!auth.currentUser) {
+        alert("⚠️ Lütfen önce Google ile giriş yapın.");
+        return;
+    }
+    
+    const projectName = document.getElementById("projectName").value || "İsimsiz Proje";
+    const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
+        col: c.dataset.col,
+        ep: c.dataset.ep,
+        procType: c.dataset.proc_type,
+        text: c.textContent,
+        bg: c.style.backgroundColor
+    }));
+
+    const data = {
+        projectName,
+        startDate: document.getElementById("startDate")?.value || "",
+        cells,
+        lastUpdated: new Date()
+    };
+
+    try {
+        const userId = auth.currentUser.uid;
+        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "_" + Date.now();
+        await setDoc(doc(db, "users", userId, "projects", projectId), data);
+        alert("✅ Proje başarıyla buluta kaydedildi!");
+    } catch (e) {
+        alert("Kaydetme hatası: " + e.message);
+    }
+};
+
+// YÜKLE BUTONU KONTROLÜ
+window.handleLoadAction = async () => {
+    if (!auth.currentUser) {
+        alert("⚠️ Lütfen önce Google ile giriş yapın.");
+        return;
+    }
+    
+    const panel = document.getElementById("projectsPanel");
+    const list = document.getElementById("projectsList");
+    panel.style.display = "flex";
+    list.innerHTML = "Yükleniyor...";
+
+    const snap = await getDocs(collection(db, "users", auth.currentUser.uid, "projects"));
+    list.innerHTML = "";
+
+    if (snap.empty) {
+        list.innerHTML = "<p>Henüz kayıtlı projeniz yok.</p>";
+        return;
+    }
+
+    snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const div = document.createElement("div");
+        div.className = "nav-btn";
+        div.style = "margin-bottom:10px; width:100%; justify-content: space-between; padding:15px; font-size:14px;";
+        div.innerHTML = `<span>📂 ${d.projectName}</span> <small>${new Date(d.lastUpdated.seconds*1000).toLocaleDateString()}</small>`;
+        div.onclick = () => {
+            loadProjectToUI(d);
+            panel.style.display = "none";
+        };
+        list.appendChild(div);
     });
-  }, 500);
+};
+
+function loadProjectToUI(data) {
+    document.getElementById("projectName").value = data.projectName;
+    // Takvimi sıfırla ve yeniden çiz (Kendi createCalendarAction fonksiyonunu çağır)
+    if(window.createCalendarAction) window.createCalendarAction(data.startDate);
+    
+    // Hücreleri doldur (Kısa bir gecikme ile gridin oluşmasını bekle)
+    setTimeout(() => {
+        data.cells.forEach(c => {
+            const t = document.querySelector(`.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`);
+            if (t) {
+                t.textContent = c.text;
+                t.style.backgroundColor = c.bg;
+                t.classList.add("filled");
+            }
+        });
+    }, 600);
 }
 
-// 🔥 GLOBAL EXPORT (EN KRİTİK KISIM)
-window.loginWithGoogle = loginWithGoogle;
-window.logout = logout;
-window.saveToFirebase = saveToFirebase;
-window.openProject = openProject;
-window.loadProjects = loadProjects;
+// Dropdown dışına tıklayınca kapat
+window.addEventListener('click', (e) => {
+    if (!e.target.closest('#userMenuWrapper')) {
+        document.getElementById("userDropdown").style.display = "none";
+    }
+});
 
 
     const SAVED_DATA = null;
