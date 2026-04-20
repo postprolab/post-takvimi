@@ -504,13 +504,9 @@
     <button id="openModalBtn" class="nav-btn nav-btn-primary"><span>📅</span> TAKVİMİ OLUŞTUR</button>
     <button id="toggleTodayBtn" class="nav-btn"><span>📍</span> BUGÜN</button>
     <button id="toggleViewBtn" class="nav-btn"><span>🔄</span> Takvim Görünümü</button>
-    <button id="openAutoModalBtn" class="nav-btn" style="background: #2a2d35 !important; border-color: var(--neon-green) !important;"><span>🤖</span> OTO TAKVİM</button>
+    <button id="openAutoModalBtn" class="nav-btn" style="background: #2a2d35 !important; border-color: var(--neon-green) !important;"><span>🤖</span> OTO TAKVİM OLUŞTUR</button>
 
     <div class="nav-spacer"></div>
-
-    <button id="googleLoginBtn" onclick="loginWithGoogle()" class="nav-btn" style="border-color: #4285F4;">
-        🔐 Google ile Giriş
-    </button>
 
     <div id="userMenuWrapper" style="position:relative; display:none;">
         <div id="userBox" style="display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="toggleUserDropdown()">
@@ -528,6 +524,10 @@
     
     <button id="exportVerticalBtn" class="nav-btn"><span>📄</span> DİKEY ÇIKTI</button>
     <button onclick="toggleSidebar()" class="nav-btn" style="background: #222;"><span>📝</span> NOTLAR</button>
+  <button id="googleLoginBtn" onclick="loginWithGoogle()" class="nav-btn" style="border-color: #4285F4;">
+        ⚡Giriş Yap
+    </button>
+                                   
 </div>
 
 <div id="projectsPanel" class="modal-overlay" style="display:none;">
