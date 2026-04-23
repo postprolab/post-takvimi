@@ -692,7 +692,9 @@
 // Firebase importları aynen kalacak...
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, setDoc, doc, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { 
+    getFirestore, setDoc, doc, getDoc, getDocs, collection, deleteDoc // deleteDoc eklendi
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";;
 
 const firebaseConfig = {
   apiKey: "AIzaSyDQI87phz2rIGkWNyn_EYRo0MULCpO_6JI",
@@ -875,6 +877,54 @@ onAuthStateChanged(auth, (user) => {
         if (userWrapper) userWrapper.style.display = "none";
     }
 });
+
+document.addEventListener('click', function(event) {
+        const menu = document.getElementById('projectContextMenu');
+        if (menu) {
+            menu.style.display = 'none';
+        }
+    });
+
+    // Menünün kendi içine tıklandığında kapanmasını engellemek istersen (isteğe bağlı)
+    document.getElementById('projectContextMenu').addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+
+    // Proje listesi oluşturulurken her satıra sağ tık olayı ekle
+window.setupRightClick = function(element, projectName) {
+    element.oncontextmenu = function(e) {
+        e.preventDefault();
+        const menu = document.getElementById('projectContextMenu');
+        window.projectToDelete = projectName; // Silinecek projeyi hafızaya al
+        
+        menu.style.display = 'block';
+        menu.style.left = e.clientX + 'px';
+        menu.style.top = e.clientY + 'px';
+    };
+};
+
+// Sil butonuna basıldığında
+document.getElementById('deleteProjectBtn').onclick = async () => {
+    if (!window.projectToDelete || !auth.currentUser) return;
+
+    const confirmCheck = confirm(`"${window.projectToDelete}" projesini silmek istediğinize emin misiniz?`);
+    if (confirmCheck) {
+        try {
+            // Firestore yolu: users -> UID -> projects -> ProjeAdı
+            const docRef = doc(db, "users", auth.currentUser.uid, "projects", window.projectToDelete);
+            await deleteDoc(docRef);
+            
+            alert("Proje başarıyla silindi.");
+            document.getElementById('projectContextMenu').style.display = 'none';
+            
+            // Listeyi yenilemek için yükle penceresini tekrar tetikle
+            window.handleLoadAction(); 
+        } catch (error) {
+            console.error("Silme hatası:", error);
+            alert("Silme işlemi başarısız oldu.");
+        }
+    }
+};
 
 </script> <script>
 
@@ -1746,11 +1796,12 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 
+
     
     
 </script>
 
-<div id="projectContextMenu" style="display: none; position: fixed; background: #1c1f26; border: 1px solid #444; border-radius: 4px; z-index: 12000; box-shadow: 0 4px 15px rgba(0,0,0,0.8); min-width: 140px;">
+<div id="projectContextMenu" style="display: none; position: fixed; background: #1c1f26; border: 1px solid #444; border-radius: 4px; z-index: 999999 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.5); min-width: 120px;">
     <button id="deleteProjectBtn" style="background: none; border: none; color: #ff4d4d; padding: 12px 15px; cursor: pointer; width: 100%; text-align: left; font-size: 14px; font-weight: bold;">
         🗑️ Projeyi Sil
     </button>
