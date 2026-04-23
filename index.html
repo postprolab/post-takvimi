@@ -762,6 +762,23 @@ window.handleSaveAction = async () => {
         lastUpdated: new Date()
     };
 
+    const toDoItems = [];
+document.querySelectorAll('.todo-item').forEach(item => {
+    toDoItems.push({
+        id: item.dataset.id || Date.now() + Math.random(), // ID yoksa oluştur
+        category: item.dataset.category || 'general',
+        completed: item.querySelector('input[type="checkbox"]').checked,
+        content: item.querySelector('textarea').value // Yazılan notu al
+    });
+});
+
+// Firestore'a gönderilecek ana objeye bunu ekle:
+const projectData = {
+    // ... diğer verilerin (rows, timeline vb.)
+    toDoData: toDoItems, // Artık tüm liste burada
+    lastUpdated: new Date()
+};
+
     try {
         const userId = auth.currentUser.uid;
         // Proje ID'sini proje adından oluşturuyoruz (sağ tık silme için önemli)
@@ -849,6 +866,25 @@ function loadProjectToUI(data) {
     }, 600);
 }
 
+const todoListContainer = document.getElementById('todoList'); // ID'ni kontrol et
+todoListContainer.innerHTML = ''; // Mevcut listeyi boşalt
+
+if (data.toDoData && Array.isArray(data.toDoData)) {
+    data.toDoData.forEach(item => {
+        // Senin renderToDoItem fonksiyonunu veya madde ekleme kodunu çağırıyoruz
+        const newItem = window.renderToDoItem(item); 
+        
+        // Verileri içine yerleştir
+        const textarea = newItem.querySelector('textarea');
+        const checkbox = newItem.querySelector('input[type="checkbox"]');
+        
+        if (textarea) textarea.value = item.content || "";
+        if (checkbox) checkbox.checked = item.completed;
+        
+        todoListContainer.appendChild(newItem);
+    });
+}
+
 // Dropdown dışına tıklayınca kapat
 window.addEventListener('click', (e) => {
     if (!e.target.closest('#userMenuWrapper')) {
@@ -924,6 +960,25 @@ document.getElementById('deleteProjectBtn').onclick = async () => {
             alert("Silme işlemi başarısız oldu.");
         }
     }
+};
+
+window.renderToDoItem = function(data = {}) {
+    const div = document.createElement('div');
+    div.className = 'todo-item';
+    div.dataset.id = data.id || Date.now();
+    div.dataset.category = data.category || 'general';
+
+    div.innerHTML = `
+        <div class="todo-header">
+            <input type="checkbox" ${data.completed ? 'checked' : ''}>
+            <span>${data.category || 'Genel'}</span>
+            <button class="delete-todo-btn">×</button>
+        </div>
+        <textarea placeholder="Notunuzu yazın...">${data.content || ''}</textarea>
+    `;
+    
+    // ... silme butonları ve event listener'lar ...
+    return div;
 };
 
 </script> <script>
