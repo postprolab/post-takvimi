@@ -487,30 +487,22 @@
 
 /* Yükleme Listesi Düzenlemesi */
 #projectsList {
-    max-height: 400px !important; /* Liste boyu 400px'i geçince durur */
-    overflow-y: auto !important;  /* Kaydırma çubuğu ekler */
-    padding: 10px;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-    background: #111318;
+    max-height: 350px !important; /* Yüksekliği 350px ile sınırladık */
+    overflow-y: auto !important;  /* Taşarsa kaydırma çubuğu çıkar */
+    display: block !important;    /* Yan yana gelmelerini engeller */
+    padding: 10px !important;
 }
 
-/* Her bir dosya satırı */
 .project-item {
+    height: auto !important;      /* Kutu boyunu içeriğe göre ayarlar */
+    min-height: 40px !important;  /* Çok küçük olmasın */
+    margin-bottom: 5px !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    padding: 12px 15px !important;
-    background: #1c1f26 !important;
-    border: 1px solid #333 !important;
-    border-radius: 6px !important;
-    font-size: 13px !important;
-    color: #ddd !important;
-    cursor: pointer;
-    white-space: nowrap; /* İsmin alt satıra geçmesini engeller */
-    overflow: hidden;
-    text-overflow: ellipsis; /* İsim çok uzunsa sonuna üç nokta ekler */
+    white-space: normal !important; /* Metin çok uzunsa alt satıra geçer */
 }
 
 .project-item:hover {
@@ -778,12 +770,16 @@ window.switchAccount = async () => {
 
 
 window.handleSaveAction = async () => {
-    if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
+    if (!auth.currentUser) { 
+        alert("⚠️ Lütfen önce Google ile giriş yapın."); 
+        return; 
+    }
     
-    // Kullanıcıdan isim isteyelim ki her seferinde farklı kaydedebilsin
-    const inputName = document.getElementById("projectName").value || "İsimsiz Proje";
-    const projectName = prompt("Proje Kayıt Adı:", inputName) || inputName;
+    // Kullanıcıya bir isim soralım (Prompt her zaman çalışır)
+    const defaultName = document.getElementById("projectName")?.value || "İsimsiz Proje";
+    const projectName = prompt("Proje Kayıt Adı:", defaultName) || defaultName;
 
+    // Takvim verilerini topluyoruz
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
         col: c.dataset.col, 
         ep: c.dataset.ep, 
@@ -792,32 +788,32 @@ window.handleSaveAction = async () => {
         bg: c.style.backgroundColor
     }));
 
-    // Notları tam liste olarak çekiyoruz
+    // NOTLARI LİSTEDEN ÇEKME (Burası senin yapına özel)
+    // #noteList içindeki her bir .note-item'ı alıyoruz
     const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
-        return n.innerText.replace('X', '').trim(); // Yanındaki silme butonunun (X) harfini temizler
+        // Silme butonu olan 'X' harfini temizliyoruz
+        return n.innerText.replace(/X$/, '').trim(); 
     });
 
     const data = {
-        projectName,
+        projectName: projectName,
         startDate: document.getElementById("startDate")?.value || "",
-        cells,
-        notes: notesArray, 
+        cells: cells,
+        notes: notesArray, // Notlar listesi buraya eklendi
         lastUpdated: new Date().toISOString()
     };
 
     try {
-        // BURASI KRİTİK: collection ve addDoc'u import ediyoruz
         const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
         
-        // Bu komut her seferinde Firebase'de benzersiz bir dosya (document) açar
+        // addDoc her zaman YENİ bir dosya (document) oluşturur.
+        // setDoc gibi mevcut olanı güncellemez.
         await addDoc(collection(db, "users", auth.currentUser.uid, "projects"), data);
         
-        alert("✅ Yeni proje kaydı oluşturuldu!");
-        
-        // Listeyi yenilemek için load panelini kapatıp açabilir veya listeyi tetikleyebilirsin
+        alert("✅ " + projectName + " ismiyle yeni bir kayıt oluşturuldu!");
     } catch (error) {
         console.error("Kayıt hatası:", error);
-        alert("❌ Kaydedilemedi: " + error.message);
+        alert("❌ Hata oluştu: " + error.message);
     }
 };
 
