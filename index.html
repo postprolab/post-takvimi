@@ -823,18 +823,16 @@ window.handleSaveAction = async () => {
 
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
 window.handleSaveAction = async () => {
-    // Giriş kontrolü
+    // 1. Giriş Kontrolü
     if (!auth || !auth.currentUser) { 
         alert("⚠️ Lütfen önce Google ile giriş yapın."); 
         return; 
     }
     
-    // Proje ismini alalım
-    const inputName = document.getElementById("projectName")?.value || "İsimsiz Proje";
-    const projectName = prompt("Proje Kayıt Adı:", inputName);
-    if (!projectName) return; // İptal edilirse işlemi durdur
+    // 2. Proje İsmi (Input boşsa otomatik 'İsimsiz Proje' olur)
+    const projectName = document.getElementById("projectName")?.value || "İsimsiz Proje";
 
-    // Takvimdeki dolu hücreleri toplama
+    // 3. Takvim Hücrelerini Toplama
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
         col: c.dataset.col, 
         ep: c.dataset.ep, 
@@ -843,33 +841,32 @@ window.handleSaveAction = async () => {
         bg: c.style.backgroundColor
     }));
 
-    // Sağ taraftaki not listesini toplama
+    // 4. Notları Toplama
     const notesArray = Array.from(document.querySelectorAll('#noteList .note-item'))
         .map(n => n.innerText.replace(/X$/, '').trim())
         .filter(t => t !== "");
 
-    // --- KRİTİK VERİ PAKETİ ---
+    // 5. Firebase Paketi (HATAYI ÇÖZEN FORMAT)
     const data = {
         projectName: projectName,
         startDate: document.getElementById("startDate")?.value || "",
         cells: cells,
         notes: notesArray,
-        // HATAYI ÇÖZEN SATIR: .toISOString() ekledik
+        // Hata veren 'new Date()' yerine metin formatı kullanıyoruz:
         lastUpdated: new Date().toISOString() 
     };
 
     try {
-        // Firebase fonksiyonlarını çağırıyoruz
+        // Firebase modüllerini çağır
         const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
         
-        // addDoc kullanarak yeni bir ID ile yeni dosya oluşturuyoruz
+        // 'addDoc' kullanarak her seferinde yeni bir ID (dosya) oluşturur
         const docRef = await addDoc(collection(db, "users", auth.currentUser.uid, "projects"), data);
         
-        console.log("Kayıt Başarılı, ID:", docRef.id);
-        alert("✅ '" + projectName + "' başarıyla yeni bir kayıt olarak kaydedildi!");
+        console.log("Kayıt başarılı! Dosya ID:", docRef.id);
+        alert("✅ Proje başarıyla kaydedildi!");
     } catch (error) {
         console.error("Firebase Hatası:", error);
-        // Hatanın ne olduğunu anlamak için mesajı gösterelim
         alert("❌ Kaydedilemedi: " + error.message);
     }
 };
