@@ -933,15 +933,6 @@ function loadProjectToUI(data) {
                 t.style.backgroundColor = c.bg;
                 t.classList.add("filled");
             }
-            const noteList = document.getElementById("noteList");
-    if (noteList && d.notes) {
-        noteList.innerHTML = ""; // Eski notları temizle
-        d.notes.forEach(noteText => {
-            // Not ekleme fonksiyonun hangisiyse onu çağır (Örn: addNoteToUI)
-            if (window.addNoteToUI) {
-                window.addNoteToUI(noteText);
-            }
-    
         });
     }, 600);
 }
