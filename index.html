@@ -485,31 +485,6 @@
     text-decoration: underline;
 }
 
-/* Yükleme Listesi Düzenlemesi */
-#projectsList {
-    max-height: 350px !important; /* Yüksekliği 350px ile sınırladık */
-    overflow-y: auto !important;  /* Taşarsa kaydırma çubuğu çıkar */
-    display: block !important;    /* Yan yana gelmelerini engeller */
-    padding: 10px !important;
-}
-
-.project-item {
-    height: auto !important;      /* Kutu boyunu içeriğe göre ayarlar */
-    min-height: 40px !important;  /* Çok küçük olmasın */
-    margin-bottom: 5px !important;
-    padding: 8px 12px !important;
-    font-size: 13px !important;
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    white-space: normal !important; /* Metin çok uzunsa alt satıra geçer */
-}
-
-.project-item:hover {
-    border-color: #FF0000 !important;
-    background: #252830 !important;
-}
-
 /* İptal butonuyla yan yana durmalarını istiyorsanız kapsayıcı ekleyelim */
 .modal-footer {
     display: flex;
@@ -769,92 +744,31 @@ window.switchAccount = async () => {
 };
 
 
+// --- KAYDETME (NOTLAR DAHİL) ---
 window.handleSaveAction = async () => {
     if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
     
     const projectName = document.getElementById("projectName").value || "İsimsiz Proje";
-    
-    // 1. Hücreleri alıyoruz
-    const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
-        col: c.dataset.col, 
-        ep: c.dataset.ep, 
-        procType: c.dataset.proc_type, 
-        text: c.textContent, 
-        bg: c.style.backgroundColor
-    }));
-
-    // 2. NOTLARI ALIYORUZ (Notların kaydedilmesi için burayı güncelledim)
-    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
-        // Notun yanındaki 'X' butonunu temizleyip sadece metni alıyoruz
-        return n.innerText.replace(/X$/, '').trim();
-    }).filter(text => text !== ""); // Boş notları eler
-
-    const data = {
-        projectName,
-        startDate: document.getElementById("startDate")?.value || "",
-        cells: cells,
-        notes: notesArray, // Notlar listesi
-        // HATA ÇÖZÜMÜ: new Date() yerine .toISOString() kullanarak Firebase hatasını engelliyoruz
-        lastUpdated: new Date().toISOString() 
-    };
-
-    try {
-        const userId = auth.currentUser.uid;
-        
-        // HER SEFERİNDE YENİ DOSYA OLUŞTURMAK İÇİN:
-        // Eğer her kaydın ayrı dosya olmasını istiyorsan 'projectId' sonuna zaman eklemeliyiz
-        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
-        
-        const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
-        
-        await setDoc(doc(db, "users", userId, "projects", projectId), data);
-        alert("✅ Proje ve Notlar başarıyla kaydedildi!");
-    } catch (e) { 
-        console.error(e);
-        alert("Kaydetme hatası: " + e.message); 
-    }
-};
-
-// --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
-window.handleSaveAction = async () => {
-    if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
-    
-    const projectName = document.getElementById("projectName").value || "İsimsiz Proje";
-    
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
         col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type, text: c.textContent, bg: c.style.backgroundColor
     }));
-
-    // --- NOTLARI KAYDETME DÜZELTMESİ ---
-    // innerText kullanıyoruz ve silme butonu olan 'X' karakterini temizliyoruz
-    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
-        return n.innerText.replace(/X$/, '').trim();
-    }).filter(text => text !== ""); 
+    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => n.textContent);
 
     const data = {
         projectName,
         startDate: document.getElementById("startDate")?.value || "",
         cells,
-        notes: notesArray, 
-        // HATA ALMAMAK İÇİN: Date objesini string yapıyoruz
-        lastUpdated: new Date().toISOString() 
+        notes: notesArray, // Notları pakete ekledik
+        lastUpdated: new Date()
     };
 
     try {
         const userId = auth.currentUser.uid;
-        
-        // --- ÜSTÜNE YAZMA SORUNU ÇÖZÜMÜ ---
-        // ID'nin sonuna milisaniye cinsinden zaman ekliyoruz, böylece her kayıt benzersiz olur.
-        const timestamp = Date.now();
-        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + timestamp;
-        
-        // Senin kodundaki setDoc yapısını koruyoruz ama yeni ID ile
+        // Proje ID'sini proje adından oluşturuyoruz (sağ tık silme için önemli)
+        const projectId = projectName.replace(/\s+/g, '-').toLowerCase();
         await setDoc(doc(db, "users", userId, "projects", projectId), data);
-        
-        alert("✅ Proje ve Notlar YENİ BİR KAYIT olarak başarıyla oluşturuldu!");
-    } catch (e) { 
-        alert("Kaydetme hatası: " + e.message); 
-    }
+        alert("✅ Proje ve Notlar başarıyla kaydedildi!");
+    } catch (e) { alert("Kaydetme hatası: " + e.message); }
 };
 
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
@@ -889,8 +803,6 @@ window.handleLoadAction = async () => {
         window.setupRightClick(div, projectId);
 
         list.appendChild(div);
-
-        
     });
 };
 
