@@ -770,16 +770,17 @@ window.switchAccount = async () => {
 
 
 window.handleSaveAction = async () => {
-    if (!auth.currentUser) { 
+    // 1. Giriş Kontrolü
+    if (!auth || !auth.currentUser) { 
         alert("⚠️ Lütfen önce Google ile giriş yapın."); 
         return; 
     }
     
-    // Kullanıcıya bir isim soralım (Prompt her zaman çalışır)
-    const defaultName = document.getElementById("projectName")?.value || "İsimsiz Proje";
-    const projectName = prompt("Proje Kayıt Adı:", defaultName) || defaultName;
+    // 2. İsim Alma
+    const inputName = document.getElementById("projectName")?.value || "İsimsiz Proje";
+    const projectName = prompt("Proje Kayıt Adı:", inputName) || inputName;
 
-    // Takvim verilerini topluyoruz
+    // 3. Takvim Verilerini Toplama
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
         col: c.dataset.col, 
         ep: c.dataset.ep, 
@@ -788,32 +789,35 @@ window.handleSaveAction = async () => {
         bg: c.style.backgroundColor
     }));
 
-    // NOTLARI LİSTEDEN ÇEKME (Burası senin yapına özel)
-    // #noteList içindeki her bir .note-item'ı alıyoruz
-    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
-        // Silme butonu olan 'X' harfini temizliyoruz
-        return n.innerText.replace(/X$/, '').trim(); 
-    });
+    // 4. NOTLARI ÇEKME (Hatasız Versiyon)
+    // Listendeki notları alır, boş olanları eler
+    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item'))
+        .map(n => n.innerText.replace(/X$/, '').trim())
+        .filter(text => text !== "");
 
+    // 5. VERİ PAKETİ (Hata Veren 'Date' kısmını düzelttik)
     const data = {
         projectName: projectName,
         startDate: document.getElementById("startDate")?.value || "",
         cells: cells,
-        notes: notesArray, // Notlar listesi buraya eklendi
-        lastUpdated: new Date().toISOString()
+        notes: notesArray,
+        // Hata almamak için Date objesini string'e çeviriyoruz
+        lastUpdated: new Date().toISOString() 
     };
 
     try {
+        // Firebase fonksiyonlarını dinamik olarak çağırıyoruz
         const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
         
-        // addDoc her zaman YENİ bir dosya (document) oluşturur.
-        // setDoc gibi mevcut olanı güncellemez.
-        await addDoc(collection(db, "users", auth.currentUser.uid, "projects"), data);
+        // addDoc kullanarak her seferinde YENİ bir döküman (dosya) oluştururuz
+        const docRef = await addDoc(collection(db, "users", auth.currentUser.uid, "projects"), data);
         
-        alert("✅ " + projectName + " ismiyle yeni bir kayıt oluşturuldu!");
+        console.log("Kaydedilen ID:", docRef.id);
+        alert("✅ '" + projectName + "' başarıyla yeni bir kayıt olarak oluşturuldu!");
     } catch (error) {
-        console.error("Kayıt hatası:", error);
-        alert("❌ Hata oluştu: " + error.message);
+        console.error("Firebase Kayıt Hatası:", error);
+        // Hata mesajını daha detaylı gösterelim
+        alert("❌ Kaydedilemedi: " + error.message);
     }
 };
 
