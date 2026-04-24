@@ -820,26 +820,41 @@ window.handleSaveAction = async () => {
     if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
     
     const projectName = document.getElementById("projectName").value || "İsimsiz Proje";
+    
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
         col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type, text: c.textContent, bg: c.style.backgroundColor
     }));
-    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => n.textContent);
+
+    // --- NOTLARI KAYDETME DÜZELTMESİ ---
+    // innerText kullanıyoruz ve silme butonu olan 'X' karakterini temizliyoruz
+    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
+        return n.innerText.replace(/X$/, '').trim();
+    }).filter(text => text !== ""); 
 
     const data = {
         projectName,
         startDate: document.getElementById("startDate")?.value || "",
         cells,
-        notes: notesArray, // Notları pakete ekledik
-        lastUpdated: new Date()
+        notes: notesArray, 
+        // HATA ALMAMAK İÇİN: Date objesini string yapıyoruz
+        lastUpdated: new Date().toISOString() 
     };
 
     try {
         const userId = auth.currentUser.uid;
-        // Proje ID'sini proje adından oluşturuyoruz (sağ tık silme için önemli)
-        const projectId = projectName.replace(/\s+/g, '-').toLowerCase();
+        
+        // --- ÜSTÜNE YAZMA SORUNU ÇÖZÜMÜ ---
+        // ID'nin sonuna milisaniye cinsinden zaman ekliyoruz, böylece her kayıt benzersiz olur.
+        const timestamp = Date.now();
+        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + timestamp;
+        
+        // Senin kodundaki setDoc yapısını koruyoruz ama yeni ID ile
         await setDoc(doc(db, "users", userId, "projects", projectId), data);
-        alert("✅ Proje ve Notlar başarıyla kaydedildi!");
-    } catch (e) { alert("Kaydetme hatası: " + e.message); }
+        
+        alert("✅ Proje ve Notlar YENİ BİR KAYIT olarak başarıyla oluşturuldu!");
+    } catch (e) { 
+        alert("Kaydetme hatası: " + e.message); 
+    }
 };
 
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
@@ -874,6 +889,8 @@ window.handleLoadAction = async () => {
         window.setupRightClick(div, projectId);
 
         list.appendChild(div);
+
+        
     });
 };
 
@@ -916,6 +933,15 @@ function loadProjectToUI(data) {
                 t.style.backgroundColor = c.bg;
                 t.classList.add("filled");
             }
+            const noteList = document.getElementById("noteList");
+    if (noteList && d.notes) {
+        noteList.innerHTML = ""; // Eski notları temizle
+        d.notes.forEach(noteText => {
+            // Not ekleme fonksiyonun hangisiyse onu çağır (Örn: addNoteToUI)
+            if (window.addNoteToUI) {
+                window.addNoteToUI(noteText);
+            }
+    
         });
     }, 600);
 }
