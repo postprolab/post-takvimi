@@ -823,52 +823,64 @@ window.handleSaveAction = async () => {
 
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
 window.handleSaveAction = async () => {
-    // 1. Giriş Kontrolü
-    if (!auth || !auth.currentUser) { 
-        alert("⚠️ Lütfen önce Google ile giriş yapın."); 
-        return; 
-    }
+    if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
     
-    // 2. Proje İsmi (Input boşsa otomatik 'İsimsiz Proje' olur)
-    const projectName = document.getElementById("projectName")?.value || "İsimsiz Proje";
-
-    // 3. Takvim Hücrelerini Toplama
+    const projectName = document.getElementById("projectName").value || "İsimsiz Proje";
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
-        col: c.dataset.col, 
-        ep: c.dataset.ep, 
-        procType: c.dataset.proc_type, 
-        text: c.textContent, 
-        bg: c.style.backgroundColor
+        col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type, text: c.textContent, bg: c.style.backgroundColor
     }));
+    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => n.textContent);
 
-    // 4. Notları Toplama
-    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item'))
-        .map(n => n.innerText.replace(/X$/, '').trim())
-        .filter(t => t !== "");
-
-    // 5. Firebase Paketi (HATAYI ÇÖZEN FORMAT)
     const data = {
-        projectName: projectName,
+        projectName,
         startDate: document.getElementById("startDate")?.value || "",
-        cells: cells,
-        notes: notesArray,
-        // Hata veren 'new Date()' yerine metin formatı kullanıyoruz:
-        lastUpdated: new Date().toISOString() 
+        cells,
+        notes: notesArray, // Notları pakete ekledik
+        lastUpdated: new Date()
     };
 
     try {
-        // Firebase modüllerini çağır
-        const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+        const userId = auth.currentUser.uid;
+        // Proje ID'sini proje adından oluşturuyoruz (sağ tık silme için önemli)
+        const projectId = projectName.replace(/\s+/g, '-').toLowerCase();
+        await setDoc(doc(db, "users", userId, "projects", projectId), data);
+        alert("✅ Proje ve Notlar başarıyla kaydedildi!");
+    } catch (e) { alert("Kaydetme hatası: " + e.message); }
+};
+
+// --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
+window.handleLoadAction = async () => {
+    if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
+    
+    const panel = document.getElementById("projectsPanel");
+    const list = document.getElementById("projectsList");
+    panel.style.display = "flex";
+    list.innerHTML = "Yükleniyor...";
+
+    const snap = await getDocs(collection(db, "users", auth.currentUser.uid, "projects"));
+    list.innerHTML = "";
+
+    if (snap.empty) { list.innerHTML = "<p>Henüz kayıtlı projeniz yok.</p>"; return; }
+
+    snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const projectId = docSnap.id;
+        const div = document.createElement("div");
+        div.className = "nav-btn project-item"; // Sağ tık için class ekledik
+        div.style = "margin-bottom:10px; width:100%; justify-content: space-between; padding:15px; font-size:14px; cursor:pointer;";
+        div.innerHTML = `<span>📂 ${d.projectName}</span> <small>${d.lastUpdated ? new Date(d.lastUpdated.seconds*1000).toLocaleDateString() : ''}</small>`;
         
-        // 'addDoc' kullanarak her seferinde yeni bir ID (dosya) oluşturur
-        const docRef = await addDoc(collection(db, "users", auth.currentUser.uid, "projects"), data);
-        
-        console.log("Kayıt başarılı! Dosya ID:", docRef.id);
-        alert("✅ Proje başarıyla kaydedildi!");
-    } catch (error) {
-        console.error("Firebase Hatası:", error);
-        alert("❌ Kaydedilemedi: " + error.message);
-    }
+        // Sol tık: Yükle
+        div.onclick = () => {
+            loadProjectToUI(d);
+            panel.style.display = "none";
+        };
+
+        // SAĞ TIK: SİLME MENÜSÜNÜ BAĞLA
+        window.setupRightClick(div, projectId);
+
+        list.appendChild(div);
+    });
 };
 
 // --- SAĞ TIK SİLME MANTIĞI ---
