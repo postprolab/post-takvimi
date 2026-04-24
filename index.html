@@ -485,6 +485,35 @@
     text-decoration: underline;
 }
 
+/* Proje Listesi Kapsayıcısı */
+#projectsList {
+    max-height: 380px !important; /* Yükseklik sınırı */
+    overflow-y: auto !important;  /* Taşınca kaydırma çubuğu */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    scrollbar-width: thin; /* Modern tarayıcılar için ince scroll */
+}
+
+/* Her bir proje butonu */
+.project-item {
+    min-height: 50px;
+    background: #1c1f26 !important;
+    border: 1px solid #333 !important;
+    padding: 12px !important;
+    border-radius: 6px !important;
+    cursor: pointer;
+    color: #eee !important;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.project-item:hover {
+    background: #2a2d35 !important;
+    border-color: #FF0000 !important;
+}
+
 /* İptal butonuyla yan yana durmalarını istiyorsanız kapsayıcı ekleyelim */
 .modal-footer {
     display: flex;
@@ -744,31 +773,47 @@ window.switchAccount = async () => {
 };
 
 
-// --- KAYDETME (NOTLAR DAHİL) ---
 window.handleSaveAction = async () => {
-    if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
+    if (!auth.currentUser) { 
+        alert("⚠️ Lütfen önce Google ile giriş yapın."); 
+        return; 
+    }
     
-    const projectName = document.getElementById("projectName").value || "İsimsiz Proje";
+    // Proje adını soralım (Her seferinde farklı isimle kaydedebilmek için prompt ekledik)
+    const currentName = document.getElementById("projectName").value || "İsimsiz Proje";
+    const projectName = prompt("Proje Kayıt Adı:", currentName) || currentName;
+    
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
-        col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type, text: c.textContent, bg: c.style.backgroundColor
+        col: c.dataset.col, 
+        ep: c.dataset.ep, 
+        procType: c.dataset.proc_type, 
+        text: c.textContent, 
+        bg: c.style.backgroundColor
     }));
-    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => n.textContent);
+
+    // NOTLARI ÇEKME: Senin yapında notlar #noteList içindeyse bu doğru
+    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => n.innerText.replace('X', '').trim());
 
     const data = {
         projectName,
         startDate: document.getElementById("startDate")?.value || "",
         cells,
-        notes: notesArray, // Notları pakete ekledik
-        lastUpdated: new Date()
+        notes: notesArray,
+        lastUpdated: new Date().toISOString() // Firebase için string tarih daha güvenlidir
     };
 
     try {
-        const userId = auth.currentUser.uid;
-        // Proje ID'sini proje adından oluşturuyoruz (sağ tık silme için önemli)
-        const projectId = projectName.replace(/\s+/g, '-').toLowerCase();
-        await setDoc(doc(db, "users", userId, "projects", projectId), data);
-        alert("✅ Proje ve Notlar başarıyla kaydedildi!");
-    } catch (e) { alert("Kaydetme hatası: " + e.message); }
+        // 'setDoc' yerine 'addDoc' ve 'collection' kullanarak her kaydı yeni bir belge yaparız
+        const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+        
+        // Bu satır her seferinde benzersiz bir ID oluşturur:
+        await addDoc(collection(db, "users", auth.currentUser.uid, "projects"), data);
+        
+        alert("✅ Proje yeni bir kayıt olarak başarıyla oluşturuldu!");
+    } catch (error) {
+        console.error("Kayıt hatası:", error);
+        alert("❌ Kaydedilemedi: " + error.message);
+    }
 };
 
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
