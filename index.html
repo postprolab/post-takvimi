@@ -770,17 +770,11 @@ window.switchAccount = async () => {
 
 
 window.handleSaveAction = async () => {
-    // 1. Giriş Kontrolü
-    if (!auth || !auth.currentUser) { 
-        alert("⚠️ Lütfen önce Google ile giriş yapın."); 
-        return; 
-    }
+    if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
     
-    // 2. İsim Alma
-    const inputName = document.getElementById("projectName")?.value || "İsimsiz Proje";
-    const projectName = prompt("Proje Kayıt Adı:", inputName) || inputName;
-
-    // 3. Takvim Verilerini Toplama
+    const projectName = document.getElementById("projectName").value || "İsimsiz Proje";
+    
+    // 1. Hücreleri alıyoruz
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
         col: c.dataset.col, 
         ep: c.dataset.ep, 
@@ -789,35 +783,35 @@ window.handleSaveAction = async () => {
         bg: c.style.backgroundColor
     }));
 
-    // 4. NOTLARI ÇEKME (Hatasız Versiyon)
-    // Listendeki notları alır, boş olanları eler
-    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item'))
-        .map(n => n.innerText.replace(/X$/, '').trim())
-        .filter(text => text !== "");
+    // 2. NOTLARI ALIYORUZ (Notların kaydedilmesi için burayı güncelledim)
+    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
+        // Notun yanındaki 'X' butonunu temizleyip sadece metni alıyoruz
+        return n.innerText.replace(/X$/, '').trim();
+    }).filter(text => text !== ""); // Boş notları eler
 
-    // 5. VERİ PAKETİ (Hata Veren 'Date' kısmını düzelttik)
     const data = {
-        projectName: projectName,
+        projectName,
         startDate: document.getElementById("startDate")?.value || "",
         cells: cells,
-        notes: notesArray,
-        // Hata almamak için Date objesini string'e çeviriyoruz
+        notes: notesArray, // Notlar listesi
+        // HATA ÇÖZÜMÜ: new Date() yerine .toISOString() kullanarak Firebase hatasını engelliyoruz
         lastUpdated: new Date().toISOString() 
     };
 
     try {
-        // Firebase fonksiyonlarını dinamik olarak çağırıyoruz
-        const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+        const userId = auth.currentUser.uid;
         
-        // addDoc kullanarak her seferinde YENİ bir döküman (dosya) oluştururuz
-        const docRef = await addDoc(collection(db, "users", auth.currentUser.uid, "projects"), data);
+        // HER SEFERİNDE YENİ DOSYA OLUŞTURMAK İÇİN:
+        // Eğer her kaydın ayrı dosya olmasını istiyorsan 'projectId' sonuna zaman eklemeliyiz
+        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
         
-        console.log("Kaydedilen ID:", docRef.id);
-        alert("✅ '" + projectName + "' başarıyla yeni bir kayıt olarak oluşturuldu!");
-    } catch (error) {
-        console.error("Firebase Kayıt Hatası:", error);
-        // Hata mesajını daha detaylı gösterelim
-        alert("❌ Kaydedilemedi: " + error.message);
+        const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+        
+        await setDoc(doc(db, "users", userId, "projects", projectId), data);
+        alert("✅ Proje ve Notlar başarıyla kaydedildi!");
+    } catch (e) { 
+        console.error(e);
+        alert("Kaydetme hatası: " + e.message); 
     }
 };
 
