@@ -822,38 +822,55 @@ window.handleSaveAction = async () => {
 };
 
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
-window.handleLoadAction = async () => {
-    if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
+window.handleSaveAction = async () => {
+    // 1. Giriş kontrolü (Hata almamak için önemli)
+    if (!auth || !auth.currentUser) { 
+        alert("⚠️ Lütfen önce Google ile giriş yapın."); 
+        return; 
+    }
     
-    const panel = document.getElementById("projectsPanel");
-    const list = document.getElementById("projectsList");
-    panel.style.display = "flex";
-    list.innerHTML = "Yükleniyor...";
+    // 2. Proje ismini alalım (İptal edilirse fonksiyonu durdurur)
+    const currentName = document.getElementById("projectName")?.value || "İsimsiz Proje";
+    const projectName = prompt("Proje Kayıt Adı:", currentName);
+    if (!projectName) return; // İptal basılırsa kaydetme
 
-    const snap = await getDocs(collection(db, "users", auth.currentUser.uid, "projects"));
-    list.innerHTML = "";
+    // 3. Takvim verilerini toplama
+    const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
+        col: c.dataset.col, 
+        ep: c.dataset.ep, 
+        procType: c.dataset.proc_type, 
+        text: c.textContent, 
+        bg: c.style.backgroundColor
+    }));
 
-    if (snap.empty) { list.innerHTML = "<p>Henüz kayıtlı projeniz yok.</p>"; return; }
+    // 4. Notları toplama
+    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item'))
+        .map(n => n.innerText.replace(/X$/, '').trim())
+        .filter(t => t !== "");
 
-    snap.forEach(docSnap => {
-        const d = docSnap.data();
-        const projectId = docSnap.id;
-        const div = document.createElement("div");
-        div.className = "nav-btn project-item"; // Sağ tık için class ekledik
-        div.style = "margin-bottom:10px; width:100%; justify-content: space-between; padding:15px; font-size:14px; cursor:pointer;";
-        div.innerHTML = `<span>📂 ${d.projectName}</span> <small>${d.lastUpdated ? new Date(d.lastUpdated.seconds*1000).toLocaleDateString() : ''}</small>`;
+    // 5. VERİ PAKETİ (Hatanın çözüldüğü yer)
+    const data = {
+        projectName: projectName,
+        startDate: document.getElementById("startDate")?.value || "",
+        cells: cells,
+        notes: notesArray,
+        // HATA ÇÖZÜMÜ: Date objesini string'e çevirdik
+        lastUpdated: new Date().toISOString() 
+    };
+
+    try {
+        // Firebase fonksiyonlarını modül içinden çağırıyoruz
+        const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
         
-        // Sol tık: Yükle
-        div.onclick = () => {
-            loadProjectToUI(d);
-            panel.style.display = "none";
-        };
-
-        // SAĞ TIK: SİLME MENÜSÜNÜ BAĞLA
-        window.setupRightClick(div, projectId);
-
-        list.appendChild(div);
-    });
+        // setDoc yerine addDoc kullanarak her seferinde YENİ dosya oluşturuyoruz
+        const docRef = await addDoc(collection(db, "users", auth.currentUser.uid, "projects"), data);
+        
+        console.log("Yeni kayıt ID:", docRef.id);
+        alert("✅ '" + projectName + "' ismiyle yeni bir kayıt oluşturuldu!");
+    } catch (error) {
+        console.error("Firebase Kayıt Hatası:", error);
+        alert("❌ Kaydedilemedi: " + error.message);
+    }
 };
 
 // --- SAĞ TIK SİLME MANTIĞI ---
