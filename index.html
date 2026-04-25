@@ -769,12 +769,14 @@ window.handleSaveAction = async () => {
     }));
 
     // --- 3. TO-DO LİST / NOTLARI DURUMLARIYLA ALMA ---
-    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
-        return {
-            text: n.innerText.replace(/X$/, '').trim(),
-            isCompleted: n.classList.contains('completed') // Notun durumunu (yapılan/bekleyen) saklar
-        };
-    }).filter(note => note.text !== "");
+   const notesArray = Array.from(document.querySelectorAll('.todo-item')).map(n => {
+    // n.firstChild.textContent ile sadece notun metnini alıyoruz (tarih ve X butonunu ayıklıyoruz)
+    const textSpan = n.querySelector('span'); // Not metni genellikle bir span içindedir
+    return {
+        text: textSpan ? textSpan.innerText : n.innerText.replace(/X$/, '').trim(),
+        isCompleted: n.classList.contains('completed')
+    };
+}).filter(note => note.text !== "");
 
     const data = {
         projectName,
@@ -867,26 +869,31 @@ function loadProjectToUI(data) {
     document.getElementById("projectName").value = data.projectName;
     if(window.createCalendarAction) window.createCalendarAction(data.startDate);
     
-    // NOTLARI TO-DO LİSTESİNE GERİ YÜKLE
-    const noteList = document.getElementById("noteList");
-    if (noteList) {
-        noteList.innerHTML = ""; 
+    // --- NOTLARI TO-DO LİSTESİNE GERİ YÜKLE ---
+    const todoList = document.querySelector('.todo-list'); // Senin HTML'indeki sınıf
+    if (todoList) {
+        todoList.innerHTML = ""; // Mevcutları temizle
         if (data.notes && Array.isArray(data.notes)) {
             data.notes.forEach(noteObj => {
-                const li = document.createElement("div");
-                li.className = "note-item";
-                // Eğer not obje değilse (eski kayıtsa) sadece metin olarak al
-                const text = typeof noteObj === 'string' ? noteObj : noteObj.text;
-                const completed = noteObj.isCompleted ? 'completed' : '';
+                // Notun metnini al (obje veya eski string formatı fark etmez)
+                const noteText = typeof noteObj === 'string' ? noteObj : noteObj.text;
                 
-                if(completed) li.classList.add('completed');
-                
-                li.innerHTML = `${text} <span class="delete-note" onclick="this.parentElement.remove()">X</span>`;
-                noteList.appendChild(li);
+                // Senin aşağıdaki script'indeki orijinal addTodo mantığını taklit ediyoruz
+                const li = document.createElement("li");
+                li.className = "todo-item";
+                if(noteObj.isCompleted) li.classList.add('completed');
+
+                li.innerHTML = `
+                    <span>${noteText}</span>
+                    <button class="complete-btn"><i class="fas fa-check"></i></button>
+                    <button class="trash-btn"><i class="fas fa-trash"></i></button>
+                `;
+                todoList.appendChild(li);
             });
         }
     }
     
+    // Takvim hücrelerini doldurma (setTimeout kısmı aynı kalsın)
     setTimeout(() => {
         if(data.cells) {
             data.cells.forEach(c => {
