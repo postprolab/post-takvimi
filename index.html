@@ -775,6 +775,7 @@ window.handleSaveAction = async () => {
     return {
         text: n.querySelector('.note-text')?.innerText || '',
         status: n.dataset.status || 'waiting'
+        date: n.querySelector('.note-date')?.innerText || ''
     };
 }).filter(note => note.text !== "");
     
