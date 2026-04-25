@@ -760,12 +760,13 @@ window.handleSaveAction = async () => {
     }));
 
     // --- TO-DO NOTLARINI ÇEKME (SENİN HTML YAPINA ÖZEL) ---
-  const notesArray = Array.from(document.querySelectorAll('.todo-item')).map(n => {
-    // n içindeki metni al (span içinden)
-    const textSpan = n.querySelector('span');
+ const notesArray = Array.from(document.querySelectorAll('.todo-item')).map(n => {
+    const span = n.querySelector('span'); 
     return {
-        text: textSpan ? textSpan.innerText : n.innerText.replace(/X$/, '').trim(),
-        isCompleted: n.classList.contains('completed') // Renk ve durum bilgisi buradan gelir
+        // Notun metni ve yanındaki tarih bilgisini alır
+        text: span ? span.innerText : n.innerText.replace(/X$/, '').trim(),
+        // YAPILDI MI? (completed class'ı varsa true, yoksa false)
+        isCompleted: n.classList.contains('completed') 
     };
 }).filter(note => note.text !== "");
     
@@ -855,39 +856,31 @@ function loadProjectToUI(data) {
     document.getElementById("projectName").value = data.projectName;
     if(window.createCalendarAction) window.createCalendarAction(data.startDate);
     
-    // --- NOTLARI SENİN SİSTEMİNE GÖRE YÜKLE ---
-    const todoList = document.querySelector('.todo-list'); // Senin dosmandaki sınıf ismi
-
+    // --- NOTLARI TO-DO LİSTESİNE DURUMUYLA YÜKLE ---
+const todoList = document.querySelector('.todo-list');
 if (todoList) {
-    todoList.innerHTML = ""; // Mevcut (eski) notları temizle
+    todoList.innerHTML = ""; 
     if (data.notes && Array.isArray(data.notes)) {
         data.notes.forEach(noteObj => {
-            // 1. li elementi oluştur (Senin tasarımındaki temel yapı)
             const li = document.createElement("li");
             li.className = "todo-item";
             
-            // 2. Eğer not "yapıldı" olarak kaydedildiyse sınıfını geri ekle (Renk burada devreye girer)
+            // Eğer kayıt sırasında "yapıldı" (completed) ise class'ı geri ekle
             if (noteObj.isCompleted) {
-                li.classList.add('completed');
+                li.classList.add("completed");
             }
 
-            // 3. İçerik ve butonları senin orijinal HTML yapınla oluştur
-            // Metin içindeki tarih/saat bilgisi zaten noteObj.text içindedir
+            // İçerik ve butonlar (Senin orijinal ikonlarınla)
             li.innerHTML = `
                 <span>${noteObj.text}</span>
                 <button class="complete-btn"><i class="fas fa-check"></i></button>
                 <button class="trash-btn"><i class="fas fa-trash"></i></button>
             `;
 
-            // 4. Butonların çalışması için gerekli fonksiyonları bağla
-            li.querySelector('.complete-btn').onclick = function() {
-                li.classList.toggle('completed');
-            };
-            li.querySelector('.trash-btn').onclick = function() {
-                li.remove();
-            };
+            // Butonların tıklama özelliklerini yeniden aktif et
+            li.querySelector('.complete-btn').onclick = () => li.classList.toggle("completed");
+            li.querySelector('.trash-btn').onclick = () => li.remove();
 
-            // 5. Listeye ekle
             todoList.appendChild(li);
         });
     }
