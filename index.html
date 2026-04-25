@@ -518,7 +518,10 @@
         </div>
     </div>
 
-    <button onclick="handleSaveAction()" class="nav-btn"><span>💾</span> KAYDET</button>
+    <button id="saveBtn" class="nav-btn">
+    <span>💾</span> KAYDET
+</button>
+
     <button onclick="handleLoadAction()" class="nav-btn"><span>📂</span> YÜKLE</button>
     
     <button id="exportVerticalBtn" class="nav-btn"><span>📄</span> DİKEY ÇIKTI</button>
@@ -768,7 +771,7 @@ window.handleSaveAction = async () => {
     }));
 
     // --- 3. TO-DO LİST / NOTLARI DURUMLARIYLA ALMA ---
-  const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
+ const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
     return {
         text: n.querySelector('.note-text')?.innerText || '',
         status: n.dataset.status || 'waiting'
@@ -985,6 +988,10 @@ document.getElementById('deleteProjectBtn').onclick = async () => {
         }
     }
 };
+
+document.getElementById('saveBtn').addEventListener('click', () => {
+    handleSaveAction();
+});
 
 </script> <script>
 
