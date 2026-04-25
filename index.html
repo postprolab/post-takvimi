@@ -886,10 +886,11 @@ function loadProjectToUI(data) {
                 li.className = `note-item ${status}`;
                 li.dataset.status = status;
 
-                li.innerHTML = `
-                    <span class="note-text">${noteObj.text}</span>
-                    <span class="delete-note" onclick="this.parentElement.remove()">X</span>
-                `;
+             li.innerHTML = `
+    <span class="note-text">${noteObj.text}</span>
+    <span class="note-date">${noteObj.date || ''}</span>
+    <span class="delete-note" onclick="this.parentElement.remove()">X</span>
+`;
 
                 li.oncontextmenu = (e) => {
                     e.preventDefault();
