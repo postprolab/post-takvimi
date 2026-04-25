@@ -732,10 +732,9 @@ const db = getFirestore(app);
 // GLOBAL FONKSİYONLAR
 window.toggleUserDropdown = () => {
     const dd = document.getElementById("userDropdown");
-    if (dd) {
-        dd.style.display = (dd.style.display === "block") ? "none" : "block";
-    }
+    dd.style.display = (dd.style.display === "block") ? "none" : "block";
 };
+
 
 window.loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
@@ -969,11 +968,14 @@ onAuthStateChanged(auth, (user) => {
 });
 
 document.addEventListener('click', function(event) {
-        const menu = document.getElementById('projectContextMenu');
-        if (menu) {
-            menu.style.display = 'none';
-        }
-    });
+    const dropdown = document.getElementById('userDropdown');
+    const wrapper = document.getElementById('userMenuWrapper');
+
+    if (!wrapper.contains(event.target)) {
+        dropdown.style.display = 'none';
+    }
+});
+
 
     // Menünün kendi içine tıklandığında kapanmasını engellemek istersen (isteğe bağlı)
     document.getElementById('projectContextMenu').addEventListener('click', function(e) {
@@ -1367,6 +1369,16 @@ function handleRename() {
         selBox.style.width = '0px'; selBox.style.height = '0px'; 
         selBox.style.display = 'block'; 
     });
+
+    function handleDelete() {
+    if (!contextTarget) return;
+
+    contextTarget.textContent = "";
+    contextTarget.style.backgroundColor = "";
+    contextTarget.classList.remove("filled");
+
+    menu.style.display = "none";
+}
 
     window.addEventListener('mousemove', (e) => { 
         if (!isSelecting) return; 
