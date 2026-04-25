@@ -746,36 +746,54 @@ window.switchAccount = async () => {
 
 // --- KAYDETME (NOTLAR DAHİL) ---
 window.handleSaveAction = async () => {
-    if (!auth.currentUser) { alert("⚠️ Önce giriş yapın."); return; }
+    if (!auth || !auth.currentUser) { 
+        alert("⚠️ Lütfen önce Google ile giriş yapın."); 
+        return; 
+    }
     
-    let projectName = document.getElementById("projectName").value.trim() || "İsimsiz Proje";
+    // --- 1. ZORUNLU İSİM KONTROLÜ ---
+    let projectName = document.getElementById("projectName").value.trim();
+    
+    if (!projectName || projectName === "İsimsiz Proje") {
+        projectName = prompt("Lütfen proje için bir isim girin (Boş bırakılamaz):");
+        if (!projectName || projectName.trim() === "") {
+            alert("⚠️ Proje ismi olmadan kayıt yapılamaz.");
+            return; 
+        }
+        document.getElementById("projectName").value = projectName;
+    }
 
+    // --- 2. VERİLERİ TOPLAMA ---
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
         col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type, text: c.textContent, bg: c.style.backgroundColor
     }));
 
-    // --- TO-DO NOTLARINI ÇEKME (SENİN HTML YAPINA ÖZEL) ---
-    const notesArray = Array.from(document.querySelectorAll('.todo')).map(todoDiv => {
-        const li = todoDiv.querySelector('.todo-item');
+    // --- 3. TO-DO LİST / NOTLARI DURUMLARIYLA ALMA ---
+    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
         return {
-            text: li ? li.innerText : "",
-            completed: todoDiv.classList.contains('completed')
+            text: n.innerText.replace(/X$/, '').trim(),
+            isCompleted: n.classList.contains('completed') // Notun durumunu (yapılan/bekleyen) saklar
         };
-    }).filter(n => n.text !== "");
-    
-   const data = {
+    }).filter(note => note.text !== "");
+
+    const data = {
         projectName,
+        startDate: document.getElementById("startDate")?.value || "",
         cells,
         notes: notesArray,
-        lastUpdated: new Date().toISOString(),
-        startDate: document.getElementById("startDate")?.value || ""
+        lastUpdated: new Date().toISOString() 
     };
 
     try {
+        const userId = auth.currentUser.uid;
+        // Benzersiz ID oluşturma
         const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
-        await setDoc(doc(db, "users", auth.currentUser.uid, "projects", projectId), data);
-        alert("✅ Kayıt Başarılı!");
-    } catch (e) { alert("Hata: " + e.message); }
+        
+        await setDoc(doc(db, "users", userId, "projects", projectId), data);
+        alert("✅ '" + projectName + "' ve notlar başarıyla kaydedildi!");
+    } catch (e) { 
+        alert("Kaydetme hatası: " + e.message); 
+    }
 };
     
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
@@ -848,50 +866,27 @@ document.getElementById('deleteProjectBtn').onclick = async () => {
 function loadProjectToUI(data) {
     document.getElementById("projectName").value = data.projectName;
     if(window.createCalendarAction) window.createCalendarAction(data.startDate);
-
-    // --- TO-DO LİSTESİNİ SENİN SİSTEMİNLE YENİDEN İNŞA ET ---
-    const todoList = document.querySelector(".todo-list");
-    if (todoList) {
-        todoList.innerHTML = ""; // Mevcutları temizle
-        if (data.notes) {
+    
+    // NOTLARI TO-DO LİSTESİNE GERİ YÜKLE
+    const noteList = document.getElementById("noteList");
+    if (noteList) {
+        noteList.innerHTML = ""; 
+        if (data.notes && Array.isArray(data.notes)) {
             data.notes.forEach(noteObj => {
-                // 1. Dış kutu
-                const todoDiv = document.createElement("div");
-                todoDiv.classList.add("todo");
-                if (noteObj.completed) todoDiv.classList.add("completed");
-
-                // 2. Metin alanı
-                const newTodo = document.createElement("li");
-                newTodo.innerText = noteObj.text;
-                newTodo.classList.add("todo-item");
-                todoDiv.appendChild(newTodo);
-
-                // 3. Check Butonu
-                const completedButton = document.createElement("button");
-                completedButton.innerHTML = '<i class="fas fa-check"></i>';
-                completedButton.classList.add("complete-btn");
-                todoDiv.appendChild(completedButton);
-
-                // 4. Silme Butonu
-                const trashButton = document.createElement("button");
-                trashButton.innerHTML = '<i class="fas fa-trash"></i>';
-                trashButton.classList.add("trash-btn");
-                todoDiv.appendChild(trashButton);
-
-                // 5. Olayları Bağla (Senin alttaki script'in yaptıklarını burada yapıyoruz)
-                completedButton.onclick = () => todoDiv.classList.toggle("completed");
-                trashButton.onclick = () => {
-                    todoDiv.classList.add("fall");
-                    todoDiv.addEventListener("transitionend", () => todoDiv.remove());
-                };
-
-                // 6. Listeye Ekle
-                todoList.appendChild(todoDiv);
+                const li = document.createElement("div");
+                li.className = "note-item";
+                // Eğer not obje değilse (eski kayıtsa) sadece metin olarak al
+                const text = typeof noteObj === 'string' ? noteObj : noteObj.text;
+                const completed = noteObj.isCompleted ? 'completed' : '';
+                
+                if(completed) li.classList.add('completed');
+                
+                li.innerHTML = `${text} <span class="delete-note" onclick="this.parentElement.remove()">X</span>`;
+                noteList.appendChild(li);
             });
         }
     }
-
-    // Takvim hücreleri
+    
     setTimeout(() => {
         if(data.cells) {
             data.cells.forEach(c => {
