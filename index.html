@@ -830,7 +830,13 @@ window.handleLoadAction = async () => {
     list.innerHTML = "Yükleniyor...";
 
     const snap = await getDocs(collection(db, "users", auth.currentUser.uid, "projects"));
-    list.innerHTML = "";
+
+const deleteBtn = document.getElementById('deleteAllProjectsBtn');
+if (deleteBtn) {
+    deleteBtn.style.display = snap.size >= 2 ? "inline-block" : "none";
+}
+
+list.innerHTML = "";
 
     if (snap.empty) { list.innerHTML = "<p>Kayıt bulunamadı.</p>"; return; }
 
