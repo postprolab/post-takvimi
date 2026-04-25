@@ -771,11 +771,14 @@ window.handleSaveAction = async () => {
     }));
 
     // --- 3. TO-DO LİST / NOTLARI DURUMLARIYLA ALMA ---
- const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
+const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
+    const textEl = n.querySelector('.note-text');
+    const dateEl = n.querySelector('.note-date');
+
     return {
-        text: n.querySelector('.note-text')?.innerText || '',
-        status: n.dataset.status || 'waiting'
-        date: n.querySelector('.note-date')?.innerText || ''
+        text: textEl ? textEl.innerText : '',
+        status: n.dataset.status || 'waiting',
+        date: dateEl ? dateEl.innerText : ''
     };
 }).filter(note => note.text !== "");
     
@@ -887,12 +890,11 @@ function loadProjectToUI(data) {
                 li.className = `note-item ${status}`;
                 li.dataset.status = status;
 
-             li.innerHTML = `
+   li.innerHTML = `
     <span class="note-text">${noteObj.text}</span>
     <span class="note-date">${noteObj.date || ''}</span>
     <span class="delete-note" onclick="this.parentElement.remove()">X</span>
 `;
-
                 li.oncontextmenu = (e) => {
                     e.preventDefault();
                     contextTarget = li;
