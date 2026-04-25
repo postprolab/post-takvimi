@@ -1179,7 +1179,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function addNote() {
-        const input = document.getElementById('noteInput'); if (!input.value.trim()) return;
+              const input = document.getElementById('noteInput');
+
+if (input && input.value.trim() !== "") {
+    addNote(); // 👈 zorla ekle
+}
         const now = new Date();
         const dateStr = `${now.getDate()}/${now.getMonth() + 1} ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
         const note = document.createElement('div');
