@@ -746,22 +746,33 @@ window.switchAccount = async () => {
 
 // --- KAYDETME (NOTLAR DAHİL) ---
 window.handleSaveAction = async () => {
-    if (!auth.currentUser) { alert("⚠️ Giriş yapın."); return; }
+    if (!auth || !auth.currentUser) { 
+        alert("⚠️ Lütfen önce Google ile giriş yapın."); 
+        return; 
+    }
     
-    let projectName = document.getElementById("projectName").value.trim() || "İsimsiz Proje";
+    // --- 1. ZORUNLU İSİM KONTROLÜ ---
+    let projectName = document.getElementById("projectName").value.trim();
     
+    if (!projectName || projectName === "İsimsiz Proje") {
+        projectName = prompt("Lütfen proje için bir isim girin (Boş bırakılamaz):");
+        if (!projectName || projectName.trim() === "") {
+            alert("⚠️ Proje ismi olmadan kayıt yapılamaz.");
+            return; 
+        }
+        document.getElementById("projectName").value = projectName;
+    }
+
+    // --- 2. VERİLERİ TOPLAMA ---
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
         col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type, text: c.textContent, bg: c.style.backgroundColor
     }));
 
-    // --- GELİŞMİŞ NOT KAYDETME ---
-    // Notun metnini, eklenme tarihini ve 'completed' durumunu alıyoruz
+    // --- 3. TO-DO LİST / NOTLARI DURUMLARIYLA ALMA ---
     const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
-        const textContent = n.innerText.replace(/X$/, '').trim();
         return {
-            text: textContent,
-            isCompleted: n.classList.contains('completed'), // Yapıldı mı kontrolü
-            // Eğer tarih metnin içindeyse o haliyle kalır, ama biz saf metni temizleyip alıyoruz
+            text: n.innerText.replace(/X$/, '').trim(),
+            isCompleted: n.classList.contains('completed') // Notun durumunu (yapılan/bekleyen) saklar
         };
     }).filter(note => note.text !== "");
 
@@ -769,20 +780,25 @@ window.handleSaveAction = async () => {
         projectName,
         startDate: document.getElementById("startDate")?.value || "",
         cells,
-        notes: notesArray, 
+        notes: notesArray,
         lastUpdated: new Date().toISOString() 
     };
 
     try {
         const userId = auth.currentUser.uid;
+        // Benzersiz ID oluşturma
         const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
+        
         await setDoc(doc(db, "users", userId, "projects", projectId), data);
-        alert("✅ Her şey başarıyla kaydedildi!");
-    } catch (e) { alert("Hata: " + e.message); }
+        alert("✅ '" + projectName + "' ve notlar başarıyla kaydedildi!");
+    } catch (e) { 
+        alert("Kaydetme hatası: " + e.message); 
+    }
 };
+    
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
 window.handleLoadAction = async () => {
-    if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
+    if (!auth || !auth.currentUser) { alert("⚠️ Giriş yapın."); return; }
     
     const panel = document.getElementById("projectsPanel");
     const list = document.getElementById("projectsList");
@@ -792,26 +808,31 @@ window.handleLoadAction = async () => {
     const snap = await getDocs(collection(db, "users", auth.currentUser.uid, "projects"));
     list.innerHTML = "";
 
-    if (snap.empty) { list.innerHTML = "<p>Henüz kayıtlı projeniz yok.</p>"; return; }
+    if (snap.empty) { list.innerHTML = "<p>Kayıt bulunamadı.</p>"; return; }
 
-    snap.forEach(docSnap => {
+    // VERİLERİ TARİHE GÖRE SIRALA (En yeni en üstte)
+    const sortedDocs = snap.docs.sort((a, b) => {
+        const dateA = new Date(a.data().lastUpdated || 0);
+        const dateB = new Date(b.data().lastUpdated || 0);
+        return dateB - dateA;
+    });
+
+    sortedDocs.forEach(docSnap => {
         const d = docSnap.data();
-        const projectId = docSnap.id;
         const div = document.createElement("div");
-        div.className = "nav-btn project-item"; // Sağ tık için class ekledik
-        div.style = "margin-bottom:10px; width:100%; justify-content: space-between; padding:15px; font-size:14px; cursor:pointer;";
-       const dateDisplay = d.lastUpdated ? new Date(d.lastUpdated).toLocaleDateString('tr-TR') : 'Tarih Yok';
-
-div.innerHTML = `<span>📂 ${d.projectName}</span> <small>${dateDisplay}</small>`;
+        div.className = "nav-btn project-item";
+        div.style = "margin-bottom:10px; width:100%; display:flex; justify-content: space-between; padding:15px; font-size:14px; cursor:pointer; background:#1c1f26; border:1px solid #333; border-radius:6px;";
         
-        // Sol tık: Yükle
+        const dateDisplay = d.lastUpdated ? new Date(d.lastUpdated).toLocaleDateString('tr-TR') : 'Tarih Yok';
+        div.innerHTML = `<span>📂 ${d.projectName}</span> <small>${dateDisplay}</small>`;
+        
         div.onclick = () => {
             loadProjectToUI(d);
             panel.style.display = "none";
         };
-
-        // SAĞ TIK: SİLME MENÜSÜNÜ BAĞLA
-        window.setupRightClick(div, projectId);
+        
+        // Sağ tık silme özelliğin varsa bağlayalım
+        if(window.setupRightClick) window.setupRightClick(div, docSnap.id);
 
         list.appendChild(div);
     });
@@ -846,7 +867,7 @@ function loadProjectToUI(data) {
     document.getElementById("projectName").value = data.projectName;
     if(window.createCalendarAction) window.createCalendarAction(data.startDate);
     
-    // --- NOTLARI TO-DO LİSTESİNE ASSET OLARAK YÜKLE ---
+    // NOTLARI TO-DO LİSTESİNE GERİ YÜKLE
     const noteList = document.getElementById("noteList");
     if (noteList) {
         noteList.innerHTML = ""; 
@@ -854,21 +875,13 @@ function loadProjectToUI(data) {
             data.notes.forEach(noteObj => {
                 const li = document.createElement("div");
                 li.className = "note-item";
-                if(noteObj.isCompleted) li.classList.add('completed');
+                // Eğer not obje değilse (eski kayıtsa) sadece metin olarak al
+                const text = typeof noteObj === 'string' ? noteObj : noteObj.text;
+                const completed = noteObj.isCompleted ? 'completed' : '';
                 
-                // Notun görsel yapısını kuruyoruz
-                li.innerHTML = `
-                    <span class="note-text">${noteObj.text}</span>
-                    <span class="delete-note" onclick="this.parentElement.remove()">X</span>
-                `;
+                if(completed) li.classList.add('completed');
                 
-                // Not tıklandığında yapıldı/yapılmadı işaretleme özelliği varsa:
-                li.onclick = function(e) {
-                    if(!e.target.classList.contains('delete-note')) {
-                        this.classList.toggle('completed');
-                    }
-                };
-
+                li.innerHTML = `${text} <span class="delete-note" onclick="this.parentElement.remove()">X</span>`;
                 noteList.appendChild(li);
             });
         }
@@ -887,7 +900,7 @@ function loadProjectToUI(data) {
         }
     }, 600);
 }
-
+    
 // GİRİŞ DURUMU TAKİBİ
 onAuthStateChanged(auth, (user) => {
     const loginBtn = document.getElementById("googleLoginBtn");
