@@ -281,7 +281,6 @@
     width: 100%;
     box-sizing: border-box;
 }
-}
 
         .cal-header-cell {
             background: var(--bg-header);
@@ -769,13 +768,13 @@ window.handleSaveAction = async () => {
     }));
 
     // --- 3. TO-DO LİST / NOTLARI DURUMLARIYLA ALMA ---
-    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
-        return {
-            text: n.innerText.replace(/X$/, '').trim(),
-            isCompleted: n.classList.contains('completed') // Notun durumunu (yapılan/bekleyen) saklar
-        };
-    }).filter(note => note.text !== "");
-
+  const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
+    return {
+        text: n.querySelector('.note-text')?.innerText || '',
+        status: n.dataset.status || 'waiting'
+    };
+}).filter(note => note.text !== "");
+    
     const data = {
         projectName,
         startDate: document.getElementById("startDate")?.value || "",
@@ -865,32 +864,48 @@ document.getElementById('deleteProjectBtn').onclick = async () => {
 
 function loadProjectToUI(data) {
     document.getElementById("projectName").value = data.projectName;
-    if(window.createCalendarAction) window.createCalendarAction(data.startDate);
+
+    if (window.createCalendarAction) {
+        window.createCalendarAction(data.startDate);
+    }
     
-    // NOTLARI TO-DO LİSTESİNE GERİ YÜKLE
+    // NOTLARI YÜKLE
     const noteList = document.getElementById("noteList");
+
     if (noteList) {
         noteList.innerHTML = ""; 
+
         if (data.notes && Array.isArray(data.notes)) {
             data.notes.forEach(noteObj => {
                 const li = document.createElement("div");
-                li.className = "note-item";
-                // Eğer not obje değilse (eski kayıtsa) sadece metin olarak al
-                const text = typeof noteObj === 'string' ? noteObj : noteObj.text;
-                const completed = noteObj.isCompleted ? 'completed' : '';
-                
-                if(completed) li.classList.add('completed');
-                
-                li.innerHTML = `${text} <span class="delete-note" onclick="this.parentElement.remove()">X</span>`;
+
+                const status = noteObj.status || 'waiting';
+                li.className = `note-item ${status}`;
+                li.dataset.status = status;
+
+                li.innerHTML = `
+                    <span class="note-text">${noteObj.text}</span>
+                    <span class="delete-note" onclick="this.parentElement.remove()">X</span>
+                `;
+
+                li.oncontextmenu = (e) => {
+                    e.preventDefault();
+                    contextTarget = li;
+                    showNoteMenu(e.pageX, e.pageY);
+                };
+
                 noteList.appendChild(li);
             });
         }
     }
-    
+
+    // TAKVİMİ YÜKLE
     setTimeout(() => {
-        if(data.cells) {
+        if (data.cells) {
             data.cells.forEach(c => {
-                const t = document.querySelector(`.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`);
+                const t = document.querySelector(
+                    `.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`
+                );
                 if (t) {
                     t.textContent = c.text;
                     t.style.backgroundColor = c.bg;
