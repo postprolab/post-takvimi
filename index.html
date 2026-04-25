@@ -746,16 +746,26 @@ window.switchAccount = async () => {
 
 // --- KAYDETME (NOTLAR DAHİL) ---
 window.handleSaveAction = async () => {
-    // Giriş kontrolü (Hata almamak için)
-    if (!auth || !auth.currentUser) { 
+    if (!auth.currentUser) { 
         alert("⚠️ Lütfen önce Google ile giriş yapın."); 
         return; 
     }
     
-    // 1. Proje İsmi
-    const projectName = document.getElementById("projectName")?.value || "İsimsiz Proje";
+    // --- 1. PROJE İSMİ KONTROLÜ ---
+    let projectName = document.getElementById("projectName").value.trim();
+    
+    // Eğer isim boşsa kullanıcıdan isim isteyelim
+    if (!projectName || projectName === "İsimsiz Proje") {
+        projectName = prompt("Lütfen proje için bir isim girin:");
+        if (!projectName || projectName.trim() === "") {
+            alert("⚠️ Proje ismi olmadan kayıt yapılamaz.");
+            return; // Kaydı durdur
+        }
+        // Input alanını da güncelleyelim
+        document.getElementById("projectName").value = projectName;
+    }
 
-    // 2. Takvim Verileri
+    // --- 2. VERİLERİ TOPLAMA ---
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
         col: c.dataset.col, 
         ep: c.dataset.ep, 
@@ -764,36 +774,30 @@ window.handleSaveAction = async () => {
         bg: c.style.backgroundColor
     }));
 
-    // 3. NOTLARI KAYDETME (Düzeltildi)
-    // Notlardaki 'X' silme butonunu temizleyip metni alıyoruz
+    // --- 3. TO-DO LİST / NOTLARI ALMA (KESİN ÇÖZÜM) ---
+    // Notların içindeki 'X' silme butonunu temizleyerek alıyoruz
     const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
+        // 'X' butonunu ve gereksiz boşlukları temizle
         return n.innerText.replace(/X$/, '').trim();
-    }).filter(text => text !== "");
+    }).filter(text => text !== ""); // Boş olanları kaydetme
 
-    // 4. VERİ PAKETİ (Hata veren Date objesi düzeltildi)
     const data = {
         projectName,
         startDate: document.getElementById("startDate")?.value || "",
         cells,
         notes: notesArray,
-        lastUpdated: new Date().toISOString() // Hata almamak için string formatı
+        // Firebase'in anlayacağı ve 'Invalid Date' hatası vermeyecek format:
+        lastUpdated: new Date().toISOString() 
     };
 
     try {
         const userId = auth.currentUser.uid;
+        // Her seferinde YENİ kayıt açması için zaman damgalı ID
+        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
         
-        // --- ÜST ÜSTE YAZMAYI ENGELLEYEN BENZERSİZ ID ---
-        // Proje isminin yanına zaman damgası ekliyoruz (Örn: proje-adi-1714000...)
-        const timestamp = Date.now();
-        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + timestamp;
-        
-        // setDoc kullanarak yeni ID ile kaydediyoruz
-        // Not: setDoc, doc gibi fonksiyonların modülün başında import edildiğinden emin ol.
         await setDoc(doc(db, "users", userId, "projects", projectId), data);
-        
-        alert("✅ Proje ve Notlar YENİ bir kayıt olarak başarıyla oluşturuldu!");
+        alert("✅ '" + projectName + "' ve notlar başarıyla kaydedildi!");
     } catch (e) { 
-        console.error("Kaydetme Hatası:", e);
         alert("Kaydetme hatası: " + e.message); 
     }
 };
