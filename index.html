@@ -989,8 +989,20 @@ document.getElementById('deleteProjectBtn').onclick = async () => {
     }
 };
 
-document.getElementById('saveBtn').addEventListener('click', () => {
-    handleSaveAction();
+document.addEventListener("DOMContentLoaded", () => {
+
+    console.log("JS YÜKLENDİ");
+
+    const btn = document.getElementById('saveBtn');
+    console.log("BUTON:", btn);
+
+    if (btn) {
+        btn.addEventListener('click', () => {
+            console.log("CLICK ALGILANDI");
+            handleSaveAction();
+        });
+    }
+
 });
 
 </script> <script>
