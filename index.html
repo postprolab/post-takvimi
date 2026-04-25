@@ -771,11 +771,10 @@ window.handleSaveAction = async () => {
     }));
 
     // --- 3. TO-DO LİST / NOTLARI DURUMLARIYLA ALMA ---
- const notesArray = Array.from(document.querySelectorAll('.note-item')).map(n => {
+ const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
     return {
         text: n.querySelector('.note-text')?.innerText || '',
-        status: n.dataset.status || 'waiting',
-        date: n.querySelector('.note-date')?.innerText || ''
+        status: n.dataset.status || 'waiting'
     };
 }).filter(note => note.text !== "");
     
@@ -887,11 +886,10 @@ function loadProjectToUI(data) {
                 li.className = `note-item ${status}`;
                 li.dataset.status = status;
 
-               li.innerHTML = `
-    <span class="note-text">${noteObj.text}</span>
-    <span class="note-date">${noteObj.date || ''}</span>
-    <span class="delete-note" onclick="this.parentElement.remove()">X</span>
-`;
+                li.innerHTML = `
+                    <span class="note-text">${noteObj.text}</span>
+                    <span class="delete-note" onclick="this.parentElement.remove()">X</span>
+                `;
 
                 li.oncontextmenu = (e) => {
                     e.preventDefault();
@@ -1123,30 +1121,16 @@ document.addEventListener("DOMContentLoaded", () => {
         } 
     });
 
-   function addNote() {
-    const input = document.getElementById('noteInput'); 
-    if (!input.value.trim()) return;
-
-    const dateStr = new Date().toLocaleString('tr-TR'); // 👈 BURASI
-
-    const note = document.createElement('div');
-    note.className = 'note-item waiting'; 
-    note.dataset.status = 'waiting';
-
-    note.innerHTML = `
-        <span class="note-text">${input.value}</span>
-        <span class="note-date">${dateStr}</span>
-    `;
-
-    note.oncontextmenu = (e) => { 
-        e.preventDefault(); 
-        contextTarget = note; 
-        showNoteMenu(e.pageX, e.pageY); 
-    };
-
-    document.getElementById('noteList').prepend(note); 
-    input.value = '';
-}
+    function addNote() {
+        const input = document.getElementById('noteInput'); if (!input.value.trim()) return;
+        const now = new Date();
+        const dateStr = `${now.getDate()}/${now.getMonth() + 1} ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+        const note = document.createElement('div');
+        note.className = 'note-item waiting'; note.dataset.status = 'waiting';
+        note.innerHTML = `<span class="note-text">${input.value}</span><span class="note-date">${dateStr}</span>`;
+        note.oncontextmenu = (e) => { e.preventDefault(); contextTarget = note; showNoteMenu(e.pageX, e.pageY); };
+        document.getElementById('noteList').prepend(note); input.value = '';
+    }
 
     function showNoteMenu(x, y) {
         menu.innerHTML = `<div class="item" onclick="updateNoteStatus('waiting')">🟠 Bekleniyor</div><div class="item" onclick="updateNoteStatus('done')">🟢 Yapıldı</div><div class="item" onclick="updateNoteStatus('canceled')">🔴 İptal</div><hr style="border:0; border-top:1px solid #333; margin:5px 0;"><div class="item" style="color:#ff5555" onclick="contextTarget.remove(); closeMenu();">🗑 Sil</div>`;
