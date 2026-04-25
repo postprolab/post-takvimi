@@ -760,14 +760,15 @@ window.handleSaveAction = async () => {
     }));
 
     // --- TO-DO NOTLARINI ÇEKME (SENİN HTML YAPINA ÖZEL) ---
-const notesArray = Array.from(document.querySelectorAll('.todo-item')).map(n => {
-    // Senin kodunda not metni genellikle ilk çocuğun (firstChild) içindedir
-    const text = n.innerText.replace(/[\n\r]/g, ' ').replace(/X$/, '').trim(); 
-    return {
-        text: text,
-        completed: n.classList.contains('completed')
-    };
-}).filter(note => note.text !== "");
+const notesArray = Array.from(document.querySelectorAll('.todo')).map(todoDiv => {
+        const liElement = todoDiv.querySelector('.todo-item');
+        return {
+            // Notun metnini ve yanındaki tarihi alır
+            text: liElement ? liElement.innerText : "",
+            // 'completed' class'ı varsa yapıldı (true), yoksa bekliyor (false)
+            completed: todoDiv.classList.contains('completed')
+        };
+    }).filter(note => note.text !== ""); // Boşları ele
     
     const data = {
         projectName,
@@ -860,9 +861,9 @@ const todoList = document.querySelector(".todo-list");
     if (todoList && data.notes) {
         todoList.innerHTML = ""; // Eskileri sil
         data.notes.forEach(noteObj => {
-            const todoDiv = document.createElement("div");
-            todoDiv.classList.add("todo"); // Senin CSS'indeki class
-            if(noteObj.completed) todoDiv.classList.add("completed");
+           const todoDiv = document.createElement("div");
+todoDiv.classList.add("todo"); 
+if(noteObj.completed) todoDiv.classList.add("completed");
 
             const newTodo = document.createElement("li");
             newTodo.innerText = noteObj.text;
