@@ -751,21 +751,17 @@ window.handleSaveAction = async () => {
         return; 
     }
     
-    // --- 1. PROJE İSMİ KONTROLÜ ---
     let projectName = document.getElementById("projectName").value.trim();
     
-    // Eğer isim boşsa kullanıcıdan isim isteyelim
     if (!projectName || projectName === "İsimsiz Proje") {
         projectName = prompt("Lütfen proje için bir isim girin:");
         if (!projectName || projectName.trim() === "") {
             alert("⚠️ Proje ismi olmadan kayıt yapılamaz.");
-            return; // Kaydı durdur
+            return; 
         }
-        // Input alanını da güncelleyelim
         document.getElementById("projectName").value = projectName;
     }
 
-    // --- 2. VERİLERİ TOPLAMA ---
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
         col: c.dataset.col, 
         ep: c.dataset.ep, 
@@ -774,26 +770,26 @@ window.handleSaveAction = async () => {
         bg: c.style.backgroundColor
     }));
 
-    // --- 3. TO-DO LİST / NOTLARI ALMA (KESİN ÇÖZÜM) ---
-    // Notların içindeki 'X' silme butonunu temizleyerek alıyoruz
+    // --- NOTLARI ALMA (GELİŞTİRİLMİŞ) ---
     const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
-        // 'X' butonunu ve gereksiz boşlukları temizle
-        return n.innerText.replace(/X$/, '').trim();
-    }).filter(text => text !== ""); // Boş olanları kaydetme
+        // Eğer notun içinde 'X' butonu varsa, sadece metni almak için:
+        // innerText genellikle görünen metni alır, biz sonundaki X'i temizliyoruz
+        let val = n.innerText || n.textContent;
+        return val.replace(/X\s*$/, '').trim(); 
+    }).filter(text => text !== ""); 
 
     const data = {
         projectName,
         startDate: document.getElementById("startDate")?.value || "",
         cells,
-        notes: notesArray,
-        // Firebase'in anlayacağı ve 'Invalid Date' hatası vermeyecek format:
+        notes: notesArray, // Burası artık daha güvenli
         lastUpdated: new Date().toISOString() 
     };
 
     try {
         const userId = auth.currentUser.uid;
-        // Her seferinde YENİ kayıt açması için zaman damgalı ID
-        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
+        const timestamp = Date.now();
+        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + timestamp;
         
         await setDoc(doc(db, "users", userId, "projects", projectId), data);
         alert("✅ '" + projectName + "' ve notlar başarıyla kaydedildi!");
@@ -866,28 +862,40 @@ document.getElementById('deleteProjectBtn').onclick = async () => {
 
 function loadProjectToUI(data) {
     document.getElementById("projectName").value = data.projectName;
-    // Takvimi sıfırla ve yeniden çiz (Kendi createCalendarAction fonksiyonunu çağır)
+    
+    // Takvimi sıfırla ve yeniden çiz
     if(window.createCalendarAction) window.createCalendarAction(data.startDate);
+    
+    // --- NOTLARI TO-DO LİSTESİNE GERİ YÜKLE ---
+    const noteList = document.getElementById("noteList");
+    if (noteList) {
+        noteList.innerHTML = ""; // Mevcut (eski) notları temizle
+        if (data.notes && Array.isArray(data.notes)) {
+            data.notes.forEach(noteText => {
+                // Notu oluştur ve listeye ekle
+                const li = document.createElement("div");
+                li.className = "note-item";
+                // Senin tasarımındaki gibi metin ve silme butonuyla birlikte ekler
+                li.innerHTML = `${noteText} <span class="delete-note" onclick="this.parentElement.remove()">X</span>`;
+                noteList.appendChild(li);
+            });
+        }
+    }
     
     // Hücreleri doldur (Kısa bir gecikme ile gridin oluşmasını bekle)
     setTimeout(() => {
-        data.cells.forEach(c => {
-            const t = document.querySelector(`.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`);
-            if (t) {
-                t.textContent = c.text;
-                t.style.backgroundColor = c.bg;
-                t.classList.add("filled");
-            }
-        });
+        if(data.cells) {
+            data.cells.forEach(c => {
+                const t = document.querySelector(`.cell.timeline[data-col="${c.col}"][data-ep="${c.ep}"][data-proc_type="${c.procType}"]`);
+                if (t) {
+                    t.textContent = c.text;
+                    t.style.backgroundColor = c.bg;
+                    t.classList.add("filled");
+                }
+            });
+        }
     }, 600);
 }
-
-// Dropdown dışına tıklayınca kapat
-window.addEventListener('click', (e) => {
-    if (!e.target.closest('#userMenuWrapper')) {
-        document.getElementById("userDropdown").style.display = "none";
-    }
-});
 
 // GİRİŞ DURUMU TAKİBİ
 onAuthStateChanged(auth, (user) => {
