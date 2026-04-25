@@ -746,29 +746,56 @@ window.switchAccount = async () => {
 
 // --- KAYDETME (NOTLAR DAHİL) ---
 window.handleSaveAction = async () => {
-    if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
+    // Giriş kontrolü (Hata almamak için)
+    if (!auth || !auth.currentUser) { 
+        alert("⚠️ Lütfen önce Google ile giriş yapın."); 
+        return; 
+    }
     
-    const projectName = document.getElementById("projectName").value || "İsimsiz Proje";
-    const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
-        col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type, text: c.textContent, bg: c.style.backgroundColor
-    }));
-    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => n.textContent);
+    // 1. Proje İsmi
+    const projectName = document.getElementById("projectName")?.value || "İsimsiz Proje";
 
+    // 2. Takvim Verileri
+    const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
+        col: c.dataset.col, 
+        ep: c.dataset.ep, 
+        procType: c.dataset.proc_type, 
+        text: c.textContent, 
+        bg: c.style.backgroundColor
+    }));
+
+    // 3. NOTLARI KAYDETME (Düzeltildi)
+    // Notlardaki 'X' silme butonunu temizleyip metni alıyoruz
+    const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
+        return n.innerText.replace(/X$/, '').trim();
+    }).filter(text => text !== "");
+
+    // 4. VERİ PAKETİ (Hata veren Date objesi düzeltildi)
     const data = {
         projectName,
         startDate: document.getElementById("startDate")?.value || "",
         cells,
-        notes: notesArray, // Notları pakete ekledik
-        lastUpdated: new Date()
+        notes: notesArray,
+        lastUpdated: new Date().toISOString() // Hata almamak için string formatı
     };
 
     try {
         const userId = auth.currentUser.uid;
-        // Proje ID'sini proje adından oluşturuyoruz (sağ tık silme için önemli)
-        const projectId = projectName.replace(/\s+/g, '-').toLowerCase();
+        
+        // --- ÜST ÜSTE YAZMAYI ENGELLEYEN BENZERSİZ ID ---
+        // Proje isminin yanına zaman damgası ekliyoruz (Örn: proje-adi-1714000...)
+        const timestamp = Date.now();
+        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + timestamp;
+        
+        // setDoc kullanarak yeni ID ile kaydediyoruz
+        // Not: setDoc, doc gibi fonksiyonların modülün başında import edildiğinden emin ol.
         await setDoc(doc(db, "users", userId, "projects", projectId), data);
-        alert("✅ Proje ve Notlar başarıyla kaydedildi!");
-    } catch (e) { alert("Kaydetme hatası: " + e.message); }
+        
+        alert("✅ Proje ve Notlar YENİ bir kayıt olarak başarıyla oluşturuldu!");
+    } catch (e) { 
+        console.error("Kaydetme Hatası:", e);
+        alert("Kaydetme hatası: " + e.message); 
+    }
 };
 
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
