@@ -746,58 +746,40 @@ window.switchAccount = async () => {
 
 // --- KAYDETME (NOTLAR DAHİL) ---
 window.handleSaveAction = async () => {
-    if (!auth.currentUser) { 
-        alert("⚠️ Lütfen önce Google ile giriş yapın."); 
-        return; 
-    }
+    if (!auth.currentUser) { alert("⚠️ Giriş yapın."); return; }
     
-    let projectName = document.getElementById("projectName").value.trim();
+    let projectName = document.getElementById("projectName").value.trim() || "İsimsiz Proje";
     
-    if (!projectName || projectName === "İsimsiz Proje") {
-        projectName = prompt("Lütfen proje için bir isim girin:");
-        if (!projectName || projectName.trim() === "") {
-            alert("⚠️ Proje ismi olmadan kayıt yapılamaz.");
-            return; 
-        }
-        document.getElementById("projectName").value = projectName;
-    }
-
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
-        col: c.dataset.col, 
-        ep: c.dataset.ep, 
-        procType: c.dataset.proc_type, 
-        text: c.textContent, 
-        bg: c.style.backgroundColor
+        col: c.dataset.col, ep: c.dataset.ep, procType: c.dataset.proc_type, text: c.textContent, bg: c.style.backgroundColor
     }));
 
-    // --- NOTLARI ALMA (GELİŞTİRİLMİŞ) ---
+    // --- GELİŞMİŞ NOT KAYDETME ---
+    // Notun metnini, eklenme tarihini ve 'completed' durumunu alıyoruz
     const notesArray = Array.from(document.querySelectorAll('#noteList .note-item')).map(n => {
-        // Eğer notun içinde 'X' butonu varsa, sadece metni almak için:
-        // innerText genellikle görünen metni alır, biz sonundaki X'i temizliyoruz
-        let val = n.innerText || n.textContent;
-        return val.replace(/X\s*$/, '').trim(); 
-    }).filter(text => text !== ""); 
+        const textContent = n.innerText.replace(/X$/, '').trim();
+        return {
+            text: textContent,
+            isCompleted: n.classList.contains('completed'), // Yapıldı mı kontrolü
+            // Eğer tarih metnin içindeyse o haliyle kalır, ama biz saf metni temizleyip alıyoruz
+        };
+    }).filter(note => note.text !== "");
 
     const data = {
         projectName,
         startDate: document.getElementById("startDate")?.value || "",
         cells,
-        notes: notesArray, // Burası artık daha güvenli
+        notes: notesArray, 
         lastUpdated: new Date().toISOString() 
     };
 
     try {
         const userId = auth.currentUser.uid;
-        const timestamp = Date.now();
-        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + timestamp;
-        
+        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
         await setDoc(doc(db, "users", userId, "projects", projectId), data);
-        alert("✅ '" + projectName + "' ve notlar başarıyla kaydedildi!");
-    } catch (e) { 
-        alert("Kaydetme hatası: " + e.message); 
-    }
+        alert("✅ Her şey başarıyla kaydedildi!");
+    } catch (e) { alert("Hata: " + e.message); }
 };
-
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
 window.handleLoadAction = async () => {
     if (!auth.currentUser) { alert("⚠️ Lütfen önce Google ile giriş yapın."); return; }
@@ -862,27 +844,36 @@ document.getElementById('deleteProjectBtn').onclick = async () => {
 
 function loadProjectToUI(data) {
     document.getElementById("projectName").value = data.projectName;
-    
-    // Takvimi sıfırla ve yeniden çiz
     if(window.createCalendarAction) window.createCalendarAction(data.startDate);
     
-    // --- NOTLARI TO-DO LİSTESİNE GERİ YÜKLE ---
+    // --- NOTLARI TO-DO LİSTESİNE ASSET OLARAK YÜKLE ---
     const noteList = document.getElementById("noteList");
     if (noteList) {
-        noteList.innerHTML = ""; // Mevcut (eski) notları temizle
+        noteList.innerHTML = ""; 
         if (data.notes && Array.isArray(data.notes)) {
-            data.notes.forEach(noteText => {
-                // Notu oluştur ve listeye ekle
+            data.notes.forEach(noteObj => {
                 const li = document.createElement("div");
                 li.className = "note-item";
-                // Senin tasarımındaki gibi metin ve silme butonuyla birlikte ekler
-                li.innerHTML = `${noteText} <span class="delete-note" onclick="this.parentElement.remove()">X</span>`;
+                if(noteObj.isCompleted) li.classList.add('completed');
+                
+                // Notun görsel yapısını kuruyoruz
+                li.innerHTML = `
+                    <span class="note-text">${noteObj.text}</span>
+                    <span class="delete-note" onclick="this.parentElement.remove()">X</span>
+                `;
+                
+                // Not tıklandığında yapıldı/yapılmadı işaretleme özelliği varsa:
+                li.onclick = function(e) {
+                    if(!e.target.classList.contains('delete-note')) {
+                        this.classList.toggle('completed');
+                    }
+                };
+
                 noteList.appendChild(li);
             });
         }
     }
     
-    // Hücreleri doldur (Kısa bir gecikme ile gridin oluşmasını bekle)
     setTimeout(() => {
         if(data.cells) {
             data.cells.forEach(c => {
