@@ -997,14 +997,14 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("BUTON:", btn);
 
     if (btn) {
-        btn.addEventListener('click', () => {
-            console.log("CLICK ALGILANDI");
-            handleSaveAction();
-        });
+        btn.addEventListener('click', handleSaveAction);
+
+        // 👇 BURAYA EKLE
+        btn.onclick = () => console.log("ONCLICK ÇALIŞTI");
     }
 
 });
-
+    
 </script> <script>
 
 
