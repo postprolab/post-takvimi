@@ -788,22 +788,14 @@ window.handleSaveAction = async () => {
     }));
 
     // --- 3. TO-DO LİST / NOTLARI DURUMLARIYLA ALMA ---
-const noteList = document.getElementById('noteList');
-    console.log("NOTE LIST ELEMENT:", noteList);
-console.log("NOTE COUNT:", noteList?.children.length);
+console.log("STATE NOTE COUNT:", notesState.length);
+console.log("STATE DATA:", notesState);
 
-const notesArray = noteList 
-    ? Array.from(noteList.querySelectorAll('.note-item')).map(n => {
-        const textEl = n.querySelector('.note-text');
-        const dateEl = n.querySelector('.note-date');
-
-        return {
-            text: textEl ? textEl.innerText : '',
-            status: n.dataset.status || 'waiting',
-            date: dateEl ? dateEl.innerText : ''
-        };
-    }).filter(note => note.text !== "")
-    : [];
+const notesArray = notesState.map(n => ({
+    text: n.text || '',
+    status: n.status || 'waiting',
+    date: n.date || ''
+}));
     
     const data = {
         projectName,
