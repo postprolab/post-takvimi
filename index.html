@@ -498,12 +498,12 @@
 <body>
 
 <div class="top-bar">
-    <input type="text" id="projectName" class="project-input" placeholder="PROJE İSMİ...">
+    <input type="text" id="projectName" class="project-input" placeholder="PROJECT NAME...">
     
-    <button id="openModalBtn" class="nav-btn nav-btn-primary"><span>📅</span> TAKVİMİ OLUŞTUR</button>
-    <button id="toggleTodayBtn" class="nav-btn"><span>📍</span> BUGÜN</button>
-    <button id="toggleViewBtn" class="nav-btn"><span>🔄</span> Takvim Görünümü</button>
-    <button id="openAutoModalBtn" class="nav-btn" style="background: #2a2d35 !important; border-color: var(--neon-green) !important;"><span>🤖</span> OTO TAKVİM OLUŞTUR</button>
+    <button id="openModalBtn" class="nav-btn nav-btn-primary"><span>📅</span> SET START DATE</button>
+    <button id="toggleTodayBtn" class="nav-btn"><span>📍</span> TODAY LINE</button>
+    <button id="toggleViewBtn" class="nav-btn"><span>🔄</span> CALENDAR VIEW</button>
+    <button id="openAutoModalBtn" class="nav-btn" style="background: #2a2d35 !important; border-color: var(--neon-green) !important;"><span>🤖</span> AUTO SCHEDULE</button>
 
     <div class="nav-spacer"></div>
 
@@ -513,21 +513,21 @@
             <span id="userName" style="font-size:12px; font-weight:bold;"></span>
         </div>
           <div id="userDropdown" style="display:none; position:absolute; top:40px; right:0; background:#1c1f26; border:1px solid #444; border-radius:6px; min-width:180px; z-index:9999; box-shadow: 0 10px 20px rgba(0,0,0,0.5);">
-            <div class="item" onclick="switchAccount()" style="padding:10px; cursor:pointer; border-bottom:1px solid #333;">🔄 Farklı hesapla giriş</div>
-            <div class="item" onclick="logout()" style="padding:10px; cursor:pointer; color:#ff5555;">🚪 Çıkış yap</div>
+            <div class="item" onclick="switchAccount()" style="padding:10px; cursor:pointer; border-bottom:1px solid #333;">🔄 Use Another ACCOUNT</div>
+            <div class="item" onclick="logout()" style="padding:10px; cursor:pointer; color:#ff5555;">🚪 log Out</div>
         </div>
     </div>
 
     <button id="saveBtn" class="nav-btn">
-    <span>💾</span> KAYDET
+    <span>💾</span> SAVE
 </button>
 
-    <button onclick="handleLoadAction()" class="nav-btn"><span>📂</span> YÜKLE</button>
+    <button onclick="handleLoadAction()" class="nav-btn"><span>📂</span> LOAD</button>
     
-    <button id="exportVerticalBtn" class="nav-btn"><span>📄</span> DİKEY ÇIKTI</button>
-    <button onclick="toggleSidebar()" class="nav-btn" style="background: #222;"><span>📝</span> NOTLAR</button>
+    <button id="exportVerticalBtn" class="nav-btn"><span>📄</span> VERTICAL VIEW</button>
+    <button onclick="toggleSidebar()" class="nav-btn" style="background: #222;"><span>📝</span> NOTES</button>
   <button id="googleLoginBtn" onclick="loginWithGoogle()" class="nav-btn" style="border-color: #4285F4;">
-        ⚡Giriş Yap
+        ⚡Log In
     </button>
                                    
 </div>
@@ -535,7 +535,7 @@
 <div id="projectsPanel" class="modal-overlay" style="display:none;">
     <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
         
-        <h3 style="color:var(--neon-green)">📁 KAYITLI PROJELERİM</h3>
+        <h3 style="color:var(--neon-green)">📁 MY PROJECTS</h3>
         
         <div id="projectsList" style="text-align: left; margin: 20px 0;"></div>
 
@@ -545,12 +545,12 @@
             <button id="deleteAllProjectsBtn" 
                 class="modal-btn btn-cancel" 
                 style="background:#ff3333; color:white;">
-                🗑 TÜMÜNÜ SİL
+                🗑 DELETE ALL
             </button>
 
             <button onclick="document.getElementById('projectsPanel').style.display='none'" 
                 class="modal-btn btn-cancel">
-                KAPAT
+                CLOSE
             </button>
 
         </div>
@@ -568,18 +568,18 @@
 
 <div id="dateModal" class="modal-overlay">
     <div class="modal-content">
-        <h3>BAŞLANGIÇ TARİHİ SEÇ</h3>
+        <h3>SELECT START DATE</h3>
         <input type="date" id="startDate" class="modal-input" onclick="if(this.showPicker) this.showPicker()">
         <div class="modal-buttons">
-            <button id="confirmDateBtn" class="modal-btn btn-confirm">OLUŞTUR</button>
-            <button id="closeModalBtn" class="modal-btn btn-cancel">İPTAL</button>
+            <button id="confirmDateBtn" class="modal-btn btn-confirm">APPLY</button>
+            <button id="closeModalBtn" class="modal-btn btn-cancel">CANCEL</button>
         </div>
     </div>
 </div>
 
 <div class="filter-bar" id="deptFilters">
-    <div class="filter-label">ODAK MODU:</div>
-    <button class="dept-filter-btn active" id="btn-all" onclick="filterDept('all', this)"><span>🌐</span> HEPSİ</button>
+    <div class="filter-label">FOCUS MODE:</div>
+    <button class="dept-filter-btn active" id="btn-all" onclick="filterDept('all', this)"><span>🌐</span> ALL</button>
     <button class="dept-filter-btn" onclick="filterDept('set', this)"><span>🎬</span> SET</button>
     <button class="dept-filter-btn" onclick="filterDept('edit', this)"><span>✂️</span> EDIT</button>
     <button class="dept-filter-btn" onclick="filterDept('cuts', this)"><span>🎞️</span> CUTS</button>
@@ -602,11 +602,6 @@
 
     <div id="verticalViewContainer"></div>
 
-    <!-- PROJELER PANELİ -->
-<div id="projectsPanel" style="display:none; padding:10px; background:#000;">
-  <h3>📁 Projelerim</h3>
-  <div id="projectsList"></div>
-</div>
 
 <div id="userMenuWrapper" style="position:relative; display:none;">
   <div id="userBox" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
@@ -634,13 +629,13 @@
     <div class="sidebar closed" id="sidebar">
         <div class="sidebar-header">TO DO LIST</div>
         <div class="note-input-area">
-            <input type="text" id="noteInput" class="note-input" placeholder="Yeni not...">
-            <button onclick="addNote()" style="background:var(--accent); color:white; border:none; padding:0 12px; border-radius:4px; cursor:pointer; font-weight:bold;">EKLE</button>
+            <input type="text" id="noteInput" class="note-input" placeholder="Add a note...">
+            <button onclick="addNote()" style="background:var(--accent); color:white; border:none; padding:0 12px; border-radius:4px; cursor:pointer; font-weight:bold;">ADD</button>
         </div>
         <div class="todo-filter-bar">
-            <button class="filter-btn active" onclick="filterNotes('all', this)">Hepsi</button>
-            <button class="filter-btn" onclick="filterNotes('waiting', this)">Beklenenler</button>
-            <button class="filter-btn" onclick="filterNotes('done', this)">Yapılanlar</button>
+            <button class="filter-btn active" onclick="filterNotes('all', this)">ALL</button>
+            <button class="filter-btn" onclick="filterNotes('waiting', this)">WAITING</button>
+            <button class="filter-btn" onclick="filterNotes('done', this)">DONE</button>
         </div>
         <div class="sidebar-content" id="noteList"></div>
     </div>
@@ -650,47 +645,47 @@
 
 <div id="autoSetupModal" class="modal">
     <div class="modal-content">
-        <h2 class="modal-title">PRODÜKSİYON SİHİRBAZI</h2>
+        <h2 class="modal-title">AUTO SCHEDULER ⭐</h2>
         <div class="modal-divider"></div>
 
         <div class="setup-grid">
             <div class="input-group full-width">
-                <label>SET BAŞLANGIÇ</label>
+                <label>SET START DATE</label>
                 <input type="date" id="autoSetStart">
             </div>
             <div class="input-group full-width">
-                <label>TOPLAM BÖLÜM</label>
+                <label>TOTAL EPISODES</label>
                 <input type="number" id="autoEpCount" placeholder="Örn: 13">
             </div>
 
-            <div class="section-subtitle">SÜREÇ GÜN SAYILARI (BÖLÜM BAZLI)</div>
+            <div class="section-subtitle">PROCESS DURATIONS (PER EPISODE)</div>
 
             <div class="input-group">
-                <label>SET GÜN SAYISI</label>
+                <label>SET DAYS</label>
                 <input type="number" id="dSet" placeholder="0">
             </div>
             <div class="input-group">
-                <label>EDIT GÜNÜ</label>
+                <label>EDIT DAYS</label>
                 <input type="number" id="dEdit" placeholder="0">
             </div>
             <div class="input-group">
-                <label>CUTS GÜNÜ</label>
+                <label>DIRECTOR DAYS</label>
                 <input type="number" id="dCuts" placeholder="0">
             </div>
             <div class="input-group">
-                <label>VFX GÜNÜ</label>
+                <label>VFX DAYS</label>
                 <input type="number" id="dVfx" placeholder="0">
             </div>
             <div class="input-group">
-                <label>COLOR GÜNÜ</label>
+                <label>COLOR DAYS</label>
                 <input type="number" id="dColor" placeholder="0">
             </div>
             <div class="input-group">
-                <label>MÜZİK GÜNÜ</label>
+                <label>MUSIC DAYS</label>
                 <input type="number" id="dMusic" placeholder="0">
             </div>
             <div class="input-group">
-                <label>MIX GÜNÜ</label>
+                <label>MIX DAYS</label>
                 <input type="number" id="dMix" placeholder="0">
             </div>
             <div class="input-group">
@@ -700,8 +695,8 @@
         </div>
 
         <div class="modal-footer">
-            <button id="runAutoSetupBtn" class="main-btn">TAKVİMİ OLUŞTUR</button>
-            <button id="closeAutoModalBtn" class="cancel-btn">İPTAL</button>
+            <button id="runAutoSetupBtn" class="main-btn">GENERATE SCHEDULE</button>
+            <button id="closeAutoModalBtn" class="cancel-btn">CANCEL</button>
         </div>
     </div>
 </div>
@@ -874,7 +869,7 @@ list.innerHTML = "";
         div.className = "nav-btn project-item";
         div.style = "margin-bottom:10px; width:100%; display:flex; justify-content: space-between; padding:15px; font-size:14px; cursor:pointer; background:#1c1f26; border:1px solid #333; border-radius:6px;";
         
-        const dateDisplay = d.lastUpdated ? new Date(d.lastUpdated).toLocaleDateString('tr-TR') : 'Tarih Yok';
+        const dateDisplay = d.lastUpdated ? new Date(d.lastUpdated).toLocaleDateString('en-US') : 'Tarih Yok';
         div.innerHTML = `<span>📂 ${d.projectName}</span> <small>${dateDisplay}</small>`;
         
         div.onclick = () => {
@@ -907,9 +902,9 @@ document.getElementById('deleteProjectBtn').onclick = async () => {
     if (confirm(`"${window.projectToDelete}" projesini kalıcı olarak silmek istiyor musunuz?`)) {
         try {
             await deleteDoc(doc(db, "users", auth.currentUser.uid, "projects", window.projectToDelete));
-            alert("Proje başarıyla silindi.");
+            alert("Project deleted successfully");
             window.handleLoadAction(); // Listeyi yenile
-        } catch (e) { alert("Silme hatası: " + e.message); }
+        } catch (e) { alert("Delete error: " + e.message); }
     }
 };
 
@@ -1116,7 +1111,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeModalBtn.onclick = () => { dateModal.style.display = 'none'; };
     confirmDateBtn.onclick = () => {
         const val = document.getElementById("startDate").value;
-        if (!val) return alert("Lütfen tarih seçin!");
+        if (!val) return alert("Please select a date!");
         createCalendarAction(val); dateModal.style.display = 'none';
     };
 
@@ -1261,9 +1256,9 @@ function showNoteMenu(x, y) {
     function showDateSummary(colIdx, x, y) {
         const dateObj = dates[colIdx];
         const filledCells = document.querySelectorAll(`.cell.timeline.filled[data-col="${colIdx}"]`);
-        let html = `<div class="pop-title">${dateObj.toLocaleDateString('tr-TR', {day:'numeric', month:'long', weekday:'long'})}</div>`;
-        if(filledCells.length === 0) html += `<div style="opacity:0.5;font-style:italic;">Plan yok.</div>`;
-        else filledCells.forEach(cell => { const ep = cell.dataset.ep == 0 ? "SET" : "BÖLÜM " + cell.dataset.ep; html += `<div style="display:flex;gap:8px;margin-bottom:4px;align-items:center;"><div style="width:8px;height:8px;border-radius:50%;background:${cell.style.backgroundColor}"></div><b>${ep}:</b><span>${cell.textContent}</span></div>`; });
+        let html = `<div class="pop-title">${dateObj.toLocaleDateString('en-US', {day:'numeric', month:'long', weekday:'long'})}</div>`;
+        if(filledCells.length === 0) html += `<div style="opacity:0.5;font-style:italic;">No schedule.</div>`;
+        else filledCells.forEach(cell => { const ep = cell.dataset.ep == 0 ? "SET" : "EPISODE" + cell.dataset.ep; html += `<div style="display:flex;gap:8px;margin-bottom:4px;align-items:center;"><div style="width:8px;height:8px;border-radius:50%;background:${cell.style.backgroundColor}"></div><b>${ep}:</b><span>${cell.textContent}</span></div>`; });
         summaryPop.innerHTML = html; summaryPop.style.display = "block"; summaryPop.style.left = x + "px"; summaryPop.style.top = (y + 30) + "px";
     }
 
@@ -1275,7 +1270,7 @@ function showNoteMenu(x, y) {
 function buildHeader() {
     const header = document.getElementById("header"); header.innerHTML = "";
     header.style.gridTemplateColumns = `var(--sticky-1) var(--sticky-2) repeat(${TOTAL_DAYS}, var(--cell-width))`;
-    header.innerHTML += `<div class="cell sticky-col-1 month" style="height:60px; grid-row: span 2">BÖLÜM</div><div class="cell sticky-col-2 month" style="height:60px; grid-row: span 2">DEPARTMANLAR</div>`;
+    header.innerHTML += `<div class="cell sticky-col-1 month" style="height:60px; grid-row: span 2">EPISODE</div><div class="cell sticky-col-2 month" style="height:60px; grid-row: span 2">PIPELINE</div>`;
     
     let currentMonth = -1, months = [], span = 0;
     dates.forEach((d, i) => { 
@@ -1288,7 +1283,7 @@ function buildHeader() {
 
     let dIdx = 0;
     months.forEach(mSpan => { 
-        header.innerHTML += `<div class="cell month" style="grid-column: span ${mSpan}">${dates[dIdx].toLocaleDateString("tr-TR", { month: "long", year: "numeric" }).toUpperCase()}</div>`; 
+        header.innerHTML += `<div class="cell month" style="grid-column: span ${mSpan}">${dates[dIdx].toLocaleDateString("en-US", { month: "long", year: "numeric" }).toUpperCase()}</div>`; 
         dIdx += mSpan; 
     });
 
@@ -1296,7 +1291,7 @@ function buildHeader() {
         let dCell = document.createElement("div"); 
         dCell.className = "cell date"; 
         // Gün ismini kısa formatta ekliyoruz (Pzt, Sal...)
-        const dayName = d.toLocaleDateString('tr-TR', { weekday: 'short' }).toUpperCase();
+        const dayName = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
         dCell.innerHTML = `<div style="line-height:1.2; padding-top:2px;">${d.getDate()}/${d.getMonth()+1}<br><span style="font-size:8px; opacity:0.7;">${dayName}</span></div>`; 
         
         dCell.dataset.col = i;
@@ -1602,7 +1597,7 @@ function handleRename() {
             
             Object.keys(plansByDate).sort((a,b) => a - b).forEach(col => { 
                 let d = new Date(document.getElementById("startDate").value); d.setDate(d.getDate() + parseInt(col)); 
-                mainContent += `<div class="month-section" style="border:1px solid #ccc;margin-bottom:15px;border-radius:6px;overflow:hidden"><div style="background:#f0f0f0;padding:8px 15px;font-weight:bold">${d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' })}</div>`; 
+                mainContent += `<div class="month-section" style="border:1px solid #ccc;margin-bottom:15px;border-radius:6px;overflow:hidden"><div style="background:#f0f0f0;padding:8px 15px;font-weight:bold">${d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' })}</div>`; 
                 plansByDate[col].sort((a,b) => a.ep - b.ep).forEach(item => { mainContent += `<div style="display:flex;align-items:center;padding:8px 15px;border-bottom:1px solid #eee"><div style="width:12px;height:12px;border-radius:50%;margin-right:12px;background:${item.color}"></div><b>${item.ep == 0 ? 'SET' : 'BÖLÜM ' + item.ep}:</b>&nbsp;${item.text}</div>`; }); mainContent += `</div>`; 
             });
         }
@@ -1645,7 +1640,7 @@ function handleRename() {
         let tempDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
 
         while (tempDate <= lastDate) {
-            let monthTitle = tempDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+            let monthTitle = tempDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
             html += `<div class="month-section">`;
             html += `<div style="background: #1c1f26; color: var(--accent); padding: 10px; font-weight: bold; border-bottom: 2px solid var(--accent); margin-top: 20px; text-transform: uppercase; letter-spacing: 1px;">${monthTitle}</div>`;
             html += `<div class="calendar-view-grid" style="margin-bottom: 20px;">`;
@@ -1660,7 +1655,7 @@ function handleRename() {
                 let cur = new Date(tempDate.getFullYear(), tempDate.getMonth(), day);
                 const colIdx = Math.round((cur - baseDate) / (1000 * 3600 * 24));
                 const isToday = cur.toDateString() === new Date().toDateString();
-                const fullDateLabel = cur.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
+                const fullDateLabel = cur.toLocaleDateString('en-US', { day: 'numeric', month: 'long', weekday: 'long' });
 
                 html += `<div class="cal-day-cell ${isToday ? 'today-cell' : ''}" data-col-idx="${colIdx}" onclick="toggleDaySelection(this, event)">
                             <div class="day-num">${fullDateLabel}</div>`;
@@ -1754,7 +1749,7 @@ saveToFirebase(data);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         const simdi = new Date();
-        const tarih = simdi.toLocaleDateString('tr-TR').replace(/\./g, '-');
+        const tarih = simdi.toLocaleDateString('en-US').replace(/\./g, '-');
         
         a.href = url;
         a.download = (projName === "proje" ? `Post_Takvim_${tarih}` : projName) + ".post";
