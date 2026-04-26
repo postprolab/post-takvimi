@@ -805,17 +805,50 @@ const notesArray = notesState.map(n => ({
         lastUpdated: new Date().toISOString() 
     };
 
-    try {
-        const userId = auth.currentUser.uid;
-        // Benzersiz ID oluşturma
-        const projectId = projectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
-        
-        await setDoc(doc(db, "users", userId, "projects", projectId), data);
-        alert("✅ '" + projectName + "' ve notlar başarıyla kaydedildi!");
-    } catch (e) { 
-        alert("Kaydetme hatası: " + e.message); 
+try {
+    const userId = auth.currentUser.uid;
+    const projectsRef = collection(db, "users", userId, "projects");
+
+    const snap = await getDocs(projectsRef);
+
+    let version = 1;
+
+    snap.forEach(docSnap => {
+        const d = docSnap.data();
+        if (!d.projectName) return;
+
+        const safeName = projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`^${safeName}_V(\\d+)$`);
+
+        if (d.projectName === projectName) {
+            version = Math.max(version, 2);
+        }
+
+        const match = d.projectName.match(regex);
+        if (match) {
+            const v = parseInt(match[1]);
+            version = Math.max(version, v + 1);
+        }
+    });
+
+    let finalProjectName = projectName;
+
+    if (version > 1) {
+        finalProjectName = `${projectName}_V${version}`;
     }
-};
+
+    const projectId = finalProjectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
+
+    // 🔥 KRİTİK
+    data.projectName = finalProjectName;
+
+    await setDoc(doc(db, "users", userId, "projects", projectId), data);
+
+    alert("✅ '" + finalProjectName + "' başarıyla kaydedildi!");
+
+} catch (e) { 
+    alert("Kaydetme hatası: " + e.message); 
+}
     
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
 window.handleLoadAction = async () => {
