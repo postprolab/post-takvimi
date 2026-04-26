@@ -854,6 +854,7 @@ window.handleSaveAction = async (isManual = false) => {
 } catch (e) { 
     alert("Save error: " + e.message); 
 }
+    };
     
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
 window.handleLoadAction = async () => {
@@ -1086,7 +1087,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 };
     
-</script> <script>
+</script> 
+    <script>
 
 
     const SAVED_DATA = null;
