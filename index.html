@@ -1549,6 +1549,22 @@ function handleRename() {
     menu.style.display = "none";
 }
 
+window.showGridMenu = function(x, y) {
+    menu.innerHTML = `
+        <div class="item rename">✏️ Rename</div>
+        <div class="item color">🎨 Color</div>
+        <div class="item delete">🗑 Delete</div>
+    `;
+
+    menu.style.display = "block";
+    menu.style.left = x + "px";
+    menu.style.top = y + "px";
+
+    menu.querySelector(".rename").onclick = handleRename;
+    menu.querySelector(".color").onclick = handleChangeColor;
+    menu.querySelector(".delete").onclick = handleDelete;
+};
+
     window.addEventListener('mousemove', (e) => { 
         if (!isSelecting) return; 
         const rect = container.getBoundingClientRect(); 
