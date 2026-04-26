@@ -1203,12 +1203,35 @@ window.addNote = function() {
     });
 }
     
-    function showNoteMenu(x, y) {
-        menu.innerHTML = `<div class="item" onclick="updateNoteStatus('waiting')">🟠 Bekleniyor</div><div class="item" onclick="updateNoteStatus('done')">🟢 Yapıldı</div><div class="item" onclick="updateNoteStatus('canceled')">🔴 İptal</div><hr style="border:0; border-top:1px solid #333; margin:5px 0;"><div class="item" style="color:#ff5555" onclick="contextTarget.remove(); closeMenu();">🗑 Sil</div>`;
-        menu.style.display = "block"; menu.style.left = x + "px"; menu.style.top = y + "px";
-    }
+function showNoteMenu(x, y) {
+    menu.innerHTML = `
+    <div class="item" onclick="updateNoteStatus('waiting')">🟠 Bekleniyor</div>
+    <div class="item" onclick="updateNoteStatus('done')">🟢 Yapıldı</div>
+    <div class="item" onclick="updateNoteStatus('canceled')">🔴 İptal</div>
+    <hr style="border:0; border-top:1px solid #333; margin:5px 0;">
+    <div class="item" style="color:#ff5555" onclick="deleteNote()">🗑 Sil</div>
+    `;
+    menu.style.display = "block";
+    menu.style.left = x + "px";
+    menu.style.top = y + "px";
+}
 
-    function updateNoteStatus(status) { contextTarget.className = `note-item ${status}`; contextTarget.dataset.status = status; closeMenu(); }
+    window.updateNoteStatus = function(status) {
+    if (contextIndex !== null) {
+        notesState[contextIndex].status = status; // 👈 VERİYİ GÜNCELLE
+        renderNotes();                            // 👈 UI YENİLE
+    }
+    closeMenu();
+}
+
+    window.deleteNote = function() {
+    if (contextIndex !== null) {
+        notesState.splice(contextIndex, 1); // 👈 STATE’TEN SİL
+        renderNotes();                      // 👈 UI YENİLE
+    }
+    closeMenu();
+}
+    
     function filterNotes(status, btn) { document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.querySelectorAll('.note-item').forEach(note => note.style.display = (status === 'all' || note.dataset.status === status) ? 'flex' : 'none'); }
 
     function showDateSummary(colIdx, x, y) {
@@ -1219,6 +1242,11 @@ window.addNote = function() {
         else filledCells.forEach(cell => { const ep = cell.dataset.ep == 0 ? "SET" : "BÖLÜM " + cell.dataset.ep; html += `<div style="display:flex;gap:8px;margin-bottom:4px;align-items:center;"><div style="width:8px;height:8px;border-radius:50%;background:${cell.style.backgroundColor}"></div><b>${ep}:</b><span>${cell.textContent}</span></div>`; });
         summaryPop.innerHTML = html; summaryPop.style.display = "block"; summaryPop.style.left = x + "px"; summaryPop.style.top = (y + 30) + "px";
     }
+
+    function closeMenu() {
+    menu.style.display = "none";
+    contextIndex = null; // 👈 ekle
+}
 
 function buildHeader() {
     const header = document.getElementById("header"); header.innerHTML = "";
