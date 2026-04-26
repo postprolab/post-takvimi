@@ -805,64 +805,62 @@ window.handleSaveAction = async (isManual = false) => {
     };
 
     try {
-        const userId = auth.currentUser.uid;
-        const projectsRef = collection(db, "users", userId, "projects");
+    const userId = auth.currentUser.uid;
+    const projectsRef = collection(db, "users", userId, "projects");
 
-        // 🔥 YENİ PROJE SADECE 2 DURUMDA OLUŞUR:
-        // 1. ilk autosave (hiç proje yok)
-        // 2. manual save ile yeni proje istenmiş
+    // 🔥 SADECE İLK KEZ ID OLUŞTUR
+    if (!currentProjectId) {
+        currentProjectId = "project-" + Date.now();
+        console.log("NEW PROJECT CREATED:", currentProjectId);
+    }
 
-        if (!currentProjectId) {
+    let finalProjectName = projectName;
 
-            let finalProjectName = projectName;
+    // 🔥 VERSION SADECE MANUAL SAVE
+    if (isManual) {
+        const snap = await getDocs(projectsRef);
+        let version = 1;
 
-            // 🔥 VERSION SADECE MANUAL SAVE'DE
-            if (isManual) {
-                const snap = await getDocs(projectsRef);
-                let version = 1;
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
+            if (!d.projectName) return;
 
-                snap.forEach(docSnap => {
-                    const d = docSnap.data();
-                    if (!d.projectName) return;
+            const safeName = projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`^${safeName}_V(\\d+)$`);
 
-                    const safeName = projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const regex = new RegExp(`^${safeName}_V(\\d+)$`);
-
-                    if (d.projectName === projectName) {
-                        version = Math.max(version, 2);
-                    }
-
-                    const match = d.projectName.match(regex);
-                    if (match) {
-                        const v = parseInt(match[1]);
-                        version = Math.max(version, v + 1);
-                    }
-                });
-
-                if (version > 1) {
-                    finalProjectName = `${projectName}_V${version}`;
-                }
+            if (d.projectName === projectName) {
+                version = Math.max(version, 2);
             }
 
-            currentProjectId = finalProjectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
-            data.projectName = finalProjectName;
+            const match = d.projectName.match(regex);
+            if (match) {
+                const v = parseInt(match[1]);
+                version = Math.max(version, v + 1);
+            }
+        });
+
+        if (version > 1) {
+            finalProjectName = `${projectName}_V${version}`;
         }
 
-        // 🔥 HER ZAMAN AYNI PROJEYE YAZ
-        await setDoc(doc(db, "users", userId, "projects", currentProjectId), data);
-
-        if (isManual) {
-            alert("✅ Saved as '" + data.projectName + "'");
-        }
-
-    } catch (e) { 
-        alert("Save error: " + e.message); 
+        // 🔥 MANUAL SAVE → YENİ PROJE
+        currentProjectId = finalProjectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
     }
-};
+
+    data.projectName = finalProjectName;
+
+    await setDoc(doc(db, "users", userId, "projects", currentProjectId), data);
+
+} catch (e) { 
+    alert("Save error: " + e.message); 
+}
     
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
 window.handleLoadAction = async () => {
-    if (!auth || !auth.currentUser) { alert("⚠️ Giriş yapın."); return; }
+    if (!auth || !auth.currentUser) { 
+        alert("⚠️ Giriş yapın."); 
+        return; 
+    }
     
     const panel = document.getElementById("projectsPanel");
     const list = document.getElementById("projectsList");
@@ -871,16 +869,18 @@ window.handleLoadAction = async () => {
 
     const snap = await getDocs(collection(db, "users", auth.currentUser.uid, "projects"));
 
-const deleteBtn = document.getElementById('deleteAllProjectsBtn');
-if (deleteBtn) {
-    deleteBtn.style.display = snap.size >= 2 ? "inline-block" : "none";
-}
+    const deleteBtn = document.getElementById('deleteAllProjectsBtn');
+    if (deleteBtn) {
+        deleteBtn.style.display = snap.size >= 2 ? "inline-block" : "none";
+    }
 
-list.innerHTML = "";
+    list.innerHTML = "";
 
-    if (snap.empty) { list.innerHTML = "<p>Kayıt bulunamadı.</p>"; return; }
+    if (snap.empty) { 
+        list.innerHTML = "<p>Kayıt bulunamadı.</p>"; 
+        return; 
+    }
 
-    // VERİLERİ TARİHE GÖRE SIRALA (En yeni en üstte)
     const sortedDocs = snap.docs.sort((a, b) => {
         const dateA = new Date(a.data().lastUpdated || 0);
         const dateB = new Date(b.data().lastUpdated || 0);
@@ -889,20 +889,24 @@ list.innerHTML = "";
 
     sortedDocs.forEach(docSnap => {
         const d = docSnap.data();
+        const projectId = docSnap.id; // 🔥 EKLENDİ
+
         const div = document.createElement("div");
         div.className = "nav-btn project-item";
         div.style = "margin-bottom:10px; width:100%; display:flex; justify-content: space-between; padding:15px; font-size:14px; cursor:pointer; background:#1c1f26; border:1px solid #333; border-radius:6px;";
         
-        const dateDisplay = d.lastUpdated ? new Date(d.lastUpdated).toLocaleDateString('en-US') : 'Tarih Yok';
+        const dateDisplay = d.lastUpdated ? new Date(d.lastUpdated).toLocaleDateString('en-US') : 'No date';
         div.innerHTML = `<span>📂 ${d.projectName}</span> <small>${dateDisplay}</small>`;
         
         div.onclick = () => {
+            currentProjectId = projectId; // 🔥 EN KRİTİK SATIR
+            console.log("LOADED PROJECT:", currentProjectId);
+
             loadProjectToUI(d);
             panel.style.display = "none";
         };
         
-        // Sağ tık silme özelliğin varsa bağlayalım
-        if(window.setupRightClick) window.setupRightClick(div, docSnap.id);
+        if(window.setupRightClick) window.setupRightClick(div, projectId);
 
         list.appendChild(div);
     });
