@@ -513,7 +513,7 @@
             <span id="userName" style="font-size:12px; font-weight:bold;"></span>
         </div>
           <div id="userDropdown" style="display:none; position:absolute; top:40px; right:0; background:#1c1f26; border:1px solid #444; border-radius:6px; min-width:180px; z-index:9999; box-shadow: 0 10px 20px rgba(0,0,0,0.5);">
-            <div class="item" onclick="switchAccount()" style="padding:10px; cursor:pointer; border-bottom:1px solid #333;">🔄 Use Another ACCOUNT</div>
+            <div class="item" onclick="switchAccount()" style="padding:10px; cursor:pointer; border-bottom:1px solid #333;">🔄 Switch Account</div>
             <div class="item" onclick="logout()" style="padding:10px; cursor:pointer; color:#ff5555;">🚪 log Out</div>
         </div>
     </div>
@@ -1224,11 +1224,11 @@ window.addNote = function() {
     
 function showNoteMenu(x, y) {
     menu.innerHTML = `
-    <div class="item" onclick="updateNoteStatus('waiting')">🟠 Bekleniyor</div>
-    <div class="item" onclick="updateNoteStatus('done')">🟢 Yapıldı</div>
-    <div class="item" onclick="updateNoteStatus('canceled')">🔴 İptal</div>
+    <div class="item" onclick="updateNoteStatus('waiting')">🟠 Waiting</div>
+    <div class="item" onclick="updateNoteStatus('done')">🟢 Done</div>
+    <div class="item" onclick="updateNoteStatus('canceled')">🔴 Canceled</div>
     <hr style="border:0; border-top:1px solid #333; margin:5px 0;">
-    <div class="item" style="color:#ff5555" onclick="deleteNote()">🗑 Sil</div>
+    <div class="item" style="color:#ff5555" onclick="deleteNote()">🗑 Delete</div>
     `;
     menu.style.display = "block";
     menu.style.left = x + "px";
@@ -1522,13 +1522,13 @@ function handleRename() {
         if (isVerticalActive) {
             container.style.display = 'none';
             vContainer.style.display = 'block';
-            this.textContent = "📊 TABLO GÖRÜNÜMÜ";
+            this.textContent = "📊 TIMELINE VIEW";
             this.style.background = "#006064";
             renderVerticalDashboard();
         } else {
             container.style.display = 'block';
             vContainer.style.display = 'none';
-            this.textContent = "🔄 TAKVİM GÖRÜNÜMÜ";
+            this.textContent = "🔄 CALENDAR VIEW";
             this.style.background = "#4a148c";
         }
     };
