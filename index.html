@@ -1053,6 +1053,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const SAVED_DATA = null;
     let TOTAL_DAYS = 365, TOTAL_EPISODES = 16, dates = [], selectedCells = new Set(), dragSource = null, contextTarget = null, isSelecting = false, startX, startY;
     let currentActiveDept = 'all'; 
+    let notesState = [];
 
     let historyStack = [];
     function saveHistory() {
@@ -1163,7 +1164,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } 
     });
 
-function addNote() {
+window.addNote = function() {
     const input = document.getElementById('noteInput'); 
     if (!input.value.trim()) return;
 
