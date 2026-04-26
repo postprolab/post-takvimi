@@ -776,10 +776,11 @@ window.handleSaveAction = async (isManual = false) => {
         projectName = newName;
         document.getElementById("projectName").value = projectName;
 
-        // 🔥 YENİ PROJE OLUŞTUR
+        // yeni proje başlat
         currentProjectId = null;
     }
 
+    // boşsa default
     if (!projectName) {
         projectName = "Untitled Project";
         document.getElementById("projectName").value = projectName;
@@ -807,41 +808,47 @@ window.handleSaveAction = async (isManual = false) => {
         const userId = auth.currentUser.uid;
         const projectsRef = collection(db, "users", userId, "projects");
 
-        // 🔥 SADECE YENİ PROJEDE VERSION HESAPLA
+        // 🔥 YENİ PROJE SADECE 2 DURUMDA OLUŞUR:
+        // 1. ilk autosave (hiç proje yok)
+        // 2. manual save ile yeni proje istenmiş
+
         if (!currentProjectId) {
-
-            const snap = await getDocs(projectsRef);
-            let version = 1;
-
-            snap.forEach(docSnap => {
-                const d = docSnap.data();
-                if (!d.projectName) return;
-
-                const safeName = projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regex = new RegExp(`^${safeName}_V(\\d+)$`);
-
-                if (d.projectName === projectName) {
-                    version = Math.max(version, 2);
-                }
-
-                const match = d.projectName.match(regex);
-                if (match) {
-                    const v = parseInt(match[1]);
-                    version = Math.max(version, v + 1);
-                }
-            });
 
             let finalProjectName = projectName;
 
-            if (version > 1) {
-                finalProjectName = `${projectName}_V${version}`;
+            // 🔥 VERSION SADECE MANUAL SAVE'DE
+            if (isManual) {
+                const snap = await getDocs(projectsRef);
+                let version = 1;
+
+                snap.forEach(docSnap => {
+                    const d = docSnap.data();
+                    if (!d.projectName) return;
+
+                    const safeName = projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`^${safeName}_V(\\d+)$`);
+
+                    if (d.projectName === projectName) {
+                        version = Math.max(version, 2);
+                    }
+
+                    const match = d.projectName.match(regex);
+                    if (match) {
+                        const v = parseInt(match[1]);
+                        version = Math.max(version, v + 1);
+                    }
+                });
+
+                if (version > 1) {
+                    finalProjectName = `${projectName}_V${version}`;
+                }
             }
 
             currentProjectId = finalProjectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
-
             data.projectName = finalProjectName;
         }
 
+        // 🔥 HER ZAMAN AYNI PROJEYE YAZ
         await setDoc(doc(db, "users", userId, "projects", currentProjectId), data);
 
         if (isManual) {
