@@ -759,7 +759,7 @@ window.switchAccount = async () => {
 
 
 // --- KAYDETME (NOTLAR DAHİL) ---
-window.handleSaveAction = async () => {
+window.handleSaveAction = async (isManual = false) => {
 
     if (!auth || !auth.currentUser) { 
         alert("⚠️ Please sign in first."); 
@@ -768,8 +768,19 @@ window.handleSaveAction = async () => {
 
     let projectName = document.getElementById("projectName").value.trim();
 
-    // boşsa otomatik isim
-    if (!projectName || projectName === "İsimsiz Proje") {
+    // 🔥 MANUAL SAVE + UNTITLED → İSİM SOR
+    if (isManual && (!projectName || projectName === "Untitled Project")) {
+        const newName = prompt("Enter project name:");
+        if (!newName) return;
+
+        projectName = newName;
+        document.getElementById("projectName").value = projectName;
+
+        // 🔥 YENİ PROJE OLUŞTUR
+        currentProjectId = null;
+    }
+
+    if (!projectName) {
         projectName = "Untitled Project";
         document.getElementById("projectName").value = projectName;
     }
@@ -796,7 +807,7 @@ window.handleSaveAction = async () => {
         const userId = auth.currentUser.uid;
         const projectsRef = collection(db, "users", userId, "projects");
 
-        // 🔥 SADECE İLK KEZ ÇALIŞSIN
+        // 🔥 SADECE YENİ PROJEDE VERSION HESAPLA
         if (!currentProjectId) {
 
             const snap = await getDocs(projectsRef);
@@ -826,16 +837,16 @@ window.handleSaveAction = async () => {
                 finalProjectName = `${projectName}_V${version}`;
             }
 
-            // 🔥 ID SADECE BURADA OLUŞUR
             currentProjectId = finalProjectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
 
             data.projectName = finalProjectName;
         }
 
-        // 🔥 HER ZAMAN AYNI PROJEYE YAZ
         await setDoc(doc(db, "users", userId, "projects", currentProjectId), data);
 
-        console.log("Saved");
+        if (isManual) {
+            alert("✅ Saved as '" + data.projectName + "'");
+        }
 
     } catch (e) { 
         alert("Save error: " + e.message); 
