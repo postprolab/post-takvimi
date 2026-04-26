@@ -762,15 +762,16 @@ window.switchAccount = async () => {
 window.handleSaveAction = async () => {
 
     if (!auth || !auth.currentUser) { 
-        alert("⚠️ Lütfen önce Google ile giriş yapın."); 
+        alert("⚠️ Please sign in first."); 
         return; 
     }
 
     let projectName = document.getElementById("projectName").value.trim();
 
+    // boşsa otomatik isim
     if (!projectName || projectName === "İsimsiz Proje") {
-        projectName = prompt("Lütfen proje için bir isim girin:");
-        if (!projectName) return;
+        projectName = "Untitled Project";
+        document.getElementById("projectName").value = projectName;
     }
 
     const cells = Array.from(document.querySelectorAll('.cell.timeline.filled')).map(c => ({
@@ -788,51 +789,56 @@ window.handleSaveAction = async () => {
         startDate: document.getElementById("startDate")?.value || "",
         cells,
         notes: notesArray,
-        lastUpdated: new Date().toISOString() 
+        lastUpdated: new Date().toISOString()
     };
 
     try {
         const userId = auth.currentUser.uid;
         const projectsRef = collection(db, "users", userId, "projects");
 
-        const snap = await getDocs(projectsRef);
+        // 🔥 SADECE İLK KEZ ÇALIŞSIN
+        if (!currentProjectId) {
 
-        let version = 1;
+            const snap = await getDocs(projectsRef);
+            let version = 1;
 
-        snap.forEach(docSnap => {
-            const d = docSnap.data();
-            if (!d.projectName) return;
+            snap.forEach(docSnap => {
+                const d = docSnap.data();
+                if (!d.projectName) return;
 
-            const safeName = projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(`^${safeName}_V(\\d+)$`);
+                const safeName = projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`^${safeName}_V(\\d+)$`);
 
-            if (d.projectName === projectName) {
-                version = Math.max(version, 2);
+                if (d.projectName === projectName) {
+                    version = Math.max(version, 2);
+                }
+
+                const match = d.projectName.match(regex);
+                if (match) {
+                    const v = parseInt(match[1]);
+                    version = Math.max(version, v + 1);
+                }
+            });
+
+            let finalProjectName = projectName;
+
+            if (version > 1) {
+                finalProjectName = `${projectName}_V${version}`;
             }
 
-            const match = d.projectName.match(regex);
-            if (match) {
-                const v = parseInt(match[1]);
-                version = Math.max(version, v + 1);
-            }
-        });
+            // 🔥 ID SADECE BURADA OLUŞUR
+            currentProjectId = finalProjectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
 
-        let finalProjectName = projectName;
-
-        if (version > 1) {
-            finalProjectName = `${projectName}_V${version}`;
+            data.projectName = finalProjectName;
         }
 
-        const projectId = finalProjectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
+        // 🔥 HER ZAMAN AYNI PROJEYE YAZ
+        await setDoc(doc(db, "users", userId, "projects", currentProjectId), data);
 
-        data.projectName = finalProjectName;
-
-        await setDoc(doc(db, "users", userId, "projects", projectId), data);
-
-        alert("✅ '" + finalProjectName + "' başarıyla kaydedildi!");
+        console.log("Saved");
 
     } catch (e) { 
-        alert("Kaydetme hatası: " + e.message); 
+        alert("Save error: " + e.message); 
     }
 };
     
@@ -1062,9 +1068,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const SAVED_DATA = null;
-    let TOTAL_DAYS = 365, TOTAL_EPISODES = 16, dates = [], selectedCells = new Set(), dragSource = null, contextTarget = null, isSelecting = false, startX, startY;
-    let currentActiveDept = 'all'; 
-    let notesState = [];
+
+let autoSaveTimer = null;
+let isSaving = false;
+
+let currentProjectId = null; // ✅ BURAYA
+
+let TOTAL_DAYS = 365, TOTAL_EPISODES = 16, dates = [], selectedCells = new Set(), dragSource = null, contextTarget = null, isSelecting = false, startX, startY;
+let currentActiveDept = 'all'; 
+let notesState = [];
 
     let historyStack = [];
     function saveHistory() {
@@ -1167,13 +1179,27 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    window.addEventListener('keydown', (e) => { 
-        if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
-        if ((e.key === "Delete" || e.key === "Backspace") && selectedCells.size > 0 && document.activeElement.tagName !== 'INPUT') { 
-            selectedCells.forEach(cell => { cell.dataset.proc = ""; cell.textContent = ""; cell.style.backgroundColor = ""; cell.classList.remove("filled", "selected"); }); 
-            selectedCells.clear(); saveHistory();
-        } 
-    });
+window.addEventListener('keydown', (e) => { 
+    if (e.ctrlKey && e.key === 'z') { 
+        e.preventDefault(); 
+        undo(); 
+    }
+
+    if ((e.key === "Delete" || e.key === "Backspace") && selectedCells.size > 0 && document.activeElement.tagName !== 'INPUT') { 
+        
+        selectedCells.forEach(cell => { 
+            cell.dataset.proc = ""; 
+            cell.textContent = ""; 
+            cell.style.backgroundColor = ""; 
+            cell.classList.remove("filled", "selected"); 
+        }); 
+
+        selectedCells.clear(); 
+        saveHistory();
+
+        triggerAutoSave(); // ✅ BURAYA
+    } 
+});
 
 window.addNote = function() {
     const input = document.getElementById('noteInput'); 
@@ -1188,12 +1214,34 @@ window.addNote = function() {
         date: dateStr
     };
 
-    notesState.unshift(noteObj); // 👈 ANA NOKTA
+notesState.unshift(noteObj);   // 1. veri
+renderNotes();                 // 2. UI
+input.value = '';              // 3. temizlik
 
-    renderNotes(); // 👈 DOM’u buradan üret
-
-    input.value = '';
+triggerAutoSave();             // 4. save ✅
 }
+    
+    function triggerAutoSave() {
+
+    if (autoSaveTimer) {
+        clearTimeout(autoSaveTimer);
+    }
+
+    autoSaveTimer = setTimeout(async () => {
+
+        if (isSaving) return;
+
+        isSaving = true;
+
+        await handleSaveAction();
+
+        isSaving = false;
+
+        console.log("Auto saved");
+
+    }, 2000);
+}
+    
 
     function renderNotes() {
     const noteList = document.getElementById('noteList');
@@ -1235,18 +1283,21 @@ function showNoteMenu(x, y) {
     menu.style.top = y + "px";
 }
 
-    window.updateNoteStatus = function(status) {
+window.updateNoteStatus = function(status) {
     if (contextIndex !== null) {
-        notesState[contextIndex].status = status; // 👈 VERİYİ GÜNCELLE
-        renderNotes();                            // 👈 UI YENİLE
+        notesState[contextIndex].status = status; // 1. veri
+        renderNotes();                            // 2. UI
     }
     closeMenu();
+
+    triggerAutoSave(); // ✅ 3. autosave
 }
 
-    window.deleteNote = function() {
+window.deleteNote = function() {
     if (contextIndex !== null) {
-        notesState.splice(contextIndex, 1); // 👈 STATE’TEN SİL
-        renderNotes();                      // 👈 UI YENİLE
+        notesState.splice(contextIndex, 1);   // 1. veri değişti
+        renderNotes();                        // 2. UI güncellendi
+        triggerAutoSave();                    // 3. save
     }
     closeMenu();
 }
@@ -1391,14 +1442,15 @@ function buildHeader() {
         cell.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); if (!cell.classList.contains('filled')) return; contextTarget = cell; showGridMenu(e.pageX, e.pageY); };
     }
 
-    function showGridMenu(x, y) { menu.innerHTML = `<div class="item" onclick="handleRename()">✏️ Ad Değiştir</div><div class="item" onclick="handleChangeColor()">🎨 Renk Seç</div><hr style="border:0; border-top:1px solid #333; margin:5px 0;"><div class="item" style="color:#ff5555" onclick="handleDelete()">🗑 Sil</div>`; menu.style.display = "block"; menu.style.left = x + "px"; menu.style.top = y + "px"; }
 function handleRename() { 
     let n = prompt("Yeni isim:", contextTarget.textContent); 
+
     if (n) { 
         let newText = n.toUpperCase();
+
         contextTarget.textContent = newText; 
 
-        // Karakter sayısına göre fontu ayarla (Hücreye sığdırma motoru)
+        // font ayarı
         let len = newText.length;
         if (len > 12) contextTarget.style.fontSize = "6.5px";
         else if (len > 9) contextTarget.style.fontSize = "7.5px";
@@ -1406,7 +1458,10 @@ function handleRename() {
         else contextTarget.style.fontSize = "10px";
         
         saveHistory(); 
+
+        triggerAutoSave(); // ✅ TAM BURAYA
     } 
+
     closeMenu(); 
 }
     function handleChangeColor() { 
