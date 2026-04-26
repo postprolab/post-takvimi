@@ -1101,6 +1101,7 @@ let isSaving = false;
 let TOTAL_DAYS = 365, TOTAL_EPISODES = 16, dates = [], selectedCells = new Set(), dragSource = null, contextTarget = null, isSelecting = false, startX, startY;
 let currentActiveDept = 'all'; 
 let notesState = [];
+        let currentProjectId = null;
 
     let historyStack = [];
     function saveHistory() {
