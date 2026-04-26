@@ -768,12 +768,16 @@ window.handleSaveAction = async (isManual = false) => {
 
     let projectName = document.getElementById("projectName").value.trim();
 
-    // 🔥 MANUAL SAVE + UNTITLED → İSİM SOR
-    if (isManual && (!projectName || projectName === "Untitled Project")) {
+    // 🔥 MANUAL SAVE → HER ZAMAN İSİM SOR
+    if (isManual) {
         const newName = prompt("Enter project name:");
-        if (!newName) return;
 
-        projectName = newName;
+        if (!newName || newName.trim() === "") {
+            alert("Project name is required.");
+            return;
+        }
+
+        projectName = newName.trim();
         document.getElementById("projectName").value = projectName;
 
         // yeni proje başlat
@@ -805,56 +809,59 @@ window.handleSaveAction = async (isManual = false) => {
     };
 
     try {
-    const userId = auth.currentUser.uid;
-    const projectsRef = collection(db, "users", userId, "projects");
+        const userId = auth.currentUser.uid;
+        const projectsRef = collection(db, "users", userId, "projects");
 
-    // 🔥 SADECE İLK KEZ ID OLUŞTUR
-    if (!currentProjectId) {
-        currentProjectId = "project-" + Date.now();
-        console.log("NEW PROJECT CREATED:", currentProjectId);
-    }
+        let finalProjectName = projectName;
 
-    let finalProjectName = projectName;
+        // 🔥 MANUAL SAVE → VERSION + YENİ ID
+        if (isManual) {
+            const snap = await getDocs(projectsRef);
+            let version = 1;
 
-    // 🔥 VERSION SADECE MANUAL SAVE
-    if (isManual) {
-        const snap = await getDocs(projectsRef);
-        let version = 1;
+            snap.forEach(docSnap => {
+                const d = docSnap.data();
+                if (!d.projectName) return;
 
-        snap.forEach(docSnap => {
-            const d = docSnap.data();
-            if (!d.projectName) return;
+                const safeName = projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`^${safeName}_V(\\d+)$`);
 
-            const safeName = projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(`^${safeName}_V(\\d+)$`);
+                if (d.projectName === projectName) {
+                    version = Math.max(version, 2);
+                }
 
-            if (d.projectName === projectName) {
-                version = Math.max(version, 2);
+                const match = d.projectName.match(regex);
+                if (match) {
+                    const v = parseInt(match[1]);
+                    version = Math.max(version, v + 1);
+                }
+            });
+
+            if (version > 1) {
+                finalProjectName = `${projectName}_V${version}`;
             }
 
-            const match = d.projectName.match(regex);
-            if (match) {
-                const v = parseInt(match[1]);
-                version = Math.max(version, v + 1);
-            }
-        });
-
-        if (version > 1) {
-            finalProjectName = `${projectName}_V${version}`;
+            currentProjectId = finalProjectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
         }
 
-        // 🔥 MANUAL SAVE → YENİ PROJE
-        currentProjectId = finalProjectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
+        // 🔥 AUTOSAVE → SADECE İLK KEZ ID OLUŞTUR
+        if (!currentProjectId && !isManual) {
+            currentProjectId = "project-" + Date.now();
+            console.log("NEW PROJECT CREATED:", currentProjectId);
+        }
+
+        data.projectName = finalProjectName;
+
+        await setDoc(doc(db, "users", userId, "projects", currentProjectId), data);
+
+        if (isManual) {
+            alert("✅ Saved as '" + finalProjectName + "'");
+        }
+
+    } catch (e) { 
+        alert("Save error: " + e.message); 
     }
-
-    data.projectName = finalProjectName;
-
-    await setDoc(doc(db, "users", userId, "projects", currentProjectId), data);
-
-} catch (e) { 
-    alert("Save error: " + e.message); 
-}
-    };
+};
     
 // --- YÜKLEME VE LİSTELEME (SAĞ TIK DESTEKLİ) ---
 window.handleLoadAction = async () => {
