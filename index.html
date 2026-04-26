@@ -1389,69 +1389,97 @@ function buildHeader() {
         updateTodayLine(); saveHistory(); 
     }
 
-    function attachGridEvents(cell, proc, colIndex, episodeNum) {
-        cell.dataset.col = colIndex; cell.dataset.ep = episodeNum; cell.dataset.proc_type = proc; 
-        cell.ondblclick = (e) => { e.stopPropagation(); if (cell.classList.contains('filled')) { contextTarget = cell; showGridMenu(e.pageX, e.pageY); } else { cell.dataset.proc = proc; cell.textContent = proc.toUpperCase(); cell.style.backgroundColor = deptColors[proc]; cell.classList.add("filled"); saveHistory(); } };
+function attachGridEvents(cell, proc, colIndex, episodeNum) {
+    cell.dataset.col = colIndex; 
+    cell.dataset.ep = episodeNum; 
+    cell.dataset.proc_type = proc; 
+
+    // 🔥 DOUBLE CLICK (tek hücre doldurma)
+    cell.ondblclick = (e) => { 
+        e.stopPropagation(); 
+
+        if (cell.classList.contains('filled')) { 
+            contextTarget = cell; 
+            showGridMenu(e.pageX, e.pageY); 
+
+        } else { 
+            cell.dataset.proc = proc; 
+            cell.textContent = proc.toUpperCase(); 
+            cell.style.backgroundColor = deptColors[proc]; 
+            cell.classList.add("filled"); 
+
+            saveHistory(); 
+            triggerAutoSave(); // ✅ BURAYA
+        } 
+    };
         
-        cell.onmousedown = (e) => {
-            if (e.button !== 0) return;
-            if (cell.classList.contains('filled')) {
-                dragSource = cell;
-                if (!cell.classList.contains('selected')) {
-                    if (!e.shiftKey) clearActiveSelection();
-                    cell.classList.add('selected');
-                    selectedCells.add(cell);
-                }
-            }
-        };
-
-    cell.onclick = (e) => { 
-    if (e.shiftKey) {
-        // 1. En son seçilen (ve içi dolu olan) başlangıç hücresini bul
-        let lastFilled = null;
-        selectedCells.forEach(c => {
-            if (c.classList.contains('filled')) lastFilled = c;
-        });
-
-        if (lastFilled) {
-            const startCol = parseInt(lastFilled.dataset.col);
-            const targetCol = parseInt(cell.dataset.col);
-            const ep = lastFilled.dataset.ep;
-            const proc = lastFilled.dataset.proc_type;
-            const content = lastFilled.textContent;
-            const bgColor = lastFilled.style.backgroundColor;
-
-            // Sadece aynı satırda ve ileriye doğruysa doldur
-            if (cell.dataset.ep === ep && cell.dataset.proc_type === proc && targetCol > startCol) {
-                for (let c = startCol + 1; c <= targetCol; c++) {
-                    const target = document.querySelector(`.cell.timeline[data-col="${c}"][data-ep="${ep}"][data-proc_type="${proc}"]`);
-                    if (target) {
-                        target.textContent = content;
-                        target.style.backgroundColor = bgColor;
-                        target.dataset.proc = proc;
-                        target.classList.add('filled');
-                    }
-                }
-                saveHistory();
-                clearActiveSelection();
-                return; // İşlem tamam, seçim moduna girme
+    cell.onmousedown = (e) => {
+        if (e.button !== 0) return;
+        if (cell.classList.contains('filled')) {
+            dragSource = cell;
+            if (!cell.classList.contains('selected')) {
+                if (!e.shiftKey) clearActiveSelection();
+                cell.classList.add('selected');
+                selectedCells.add(cell);
             }
         }
-        
-        // Eğer doldurma şartları oluşmadıysa normal seçime devam et
-        cell.classList.toggle('selected'); 
-        if (cell.classList.contains('selected')) selectedCells.add(cell); 
-        else selectedCells.delete(cell);
-        
-    } else if (cell.classList.contains('filled')) {
-        clearActiveSelection();
-        cell.classList.add('selected');
-        selectedCells.add(cell);
-    }
-};
+    };
 
-        cell.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); if (!cell.classList.contains('filled')) return; contextTarget = cell; showGridMenu(e.pageX, e.pageY); };
-    }
+    // 🔥 SHIFT + CLICK (range doldurma)
+    cell.onclick = (e) => { 
+        if (e.shiftKey) {
+
+            let lastFilled = null;
+            selectedCells.forEach(c => {
+                if (c.classList.contains('filled')) lastFilled = c;
+            });
+
+            if (lastFilled) {
+                const startCol = parseInt(lastFilled.dataset.col);
+                const targetCol = parseInt(cell.dataset.col);
+                const ep = lastFilled.dataset.ep;
+                const proc = lastFilled.dataset.proc_type;
+                const content = lastFilled.textContent;
+                const bgColor = lastFilled.style.backgroundColor;
+
+                if (cell.dataset.ep === ep && cell.dataset.proc_type === proc && targetCol > startCol) {
+                    for (let c = startCol + 1; c <= targetCol; c++) {
+                        const target = document.querySelector(`.cell.timeline[data-col="${c}"][data-ep="${ep}"][data-proc_type="${proc}"]`);
+                        if (target) {
+                            target.textContent = content;
+                            target.style.backgroundColor = bgColor;
+                            target.dataset.proc = proc;
+                            target.classList.add('filled');
+                        }
+                    }
+
+                    saveHistory(); 
+                    triggerAutoSave(); // ✅ BURAYA (range doldurma)
+
+                    clearActiveSelection();
+                    return;
+                }
+            }
+            
+            cell.classList.toggle('selected'); 
+            if (cell.classList.contains('selected')) selectedCells.add(cell); 
+            else selectedCells.delete(cell);
+            
+        } else if (cell.classList.contains('filled')) {
+            clearActiveSelection();
+            cell.classList.add('selected');
+            selectedCells.add(cell);
+        }
+    };
+
+    cell.oncontextmenu = (e) => { 
+        e.preventDefault(); 
+        e.stopPropagation(); 
+        if (!cell.classList.contains('filled')) return; 
+        contextTarget = cell; 
+        showGridMenu(e.pageX, e.pageY); 
+    };
+}
 
 function handleRename() { 
     let n = prompt("Yeni isim:", contextTarget.textContent); 
