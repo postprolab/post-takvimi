@@ -905,33 +905,12 @@ function loadProjectToUI(data) {
         window.createCalendarAction(data.startDate);
     }
     
-    // NOTLARI YÜKLE
+    // ✅ NOTLARI STATE İLE YÜKLE (EN KRİTİK KISIM)
     const noteList = document.getElementById("noteList");
 
     if (noteList) {
-        noteList.innerHTML = ""; 
-
-        if (data.notes && Array.isArray(data.notes)) {
-            data.notes.forEach(noteObj => {
-                const li = document.createElement("div");
-
-                const status = noteObj.status || 'waiting';
-                li.className = `note-item ${status}`;
-                li.dataset.status = status;
-
-   li.innerHTML = `
-    <span class="note-text">${noteObj.text}</span>
-    <span class="note-date">${noteObj.date || ''}</span>
-`;
-                li.oncontextmenu = (e) => {
-                    e.preventDefault();
-                    contextTarget = li;
-                    showNoteMenu(e.pageX, e.pageY);
-                };
-
-                noteList.appendChild(li);
-            });
-        }
+        notesState = data.notes || []; // 👈 BURASI
+        renderNotes();                 // 👈 BURASI
     }
 
     // TAKVİMİ YÜKLE
@@ -1191,25 +1170,46 @@ function addNote() {
     const now = new Date();
     const dateStr = `${now.getDate()}/${now.getMonth() + 1} ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
 
-    const note = document.createElement('div');
-    note.className = 'note-item waiting'; 
-    note.dataset.status = 'waiting';
-
-    note.innerHTML = `
-        <span class="note-text">${input.value}</span>
-        <span class="note-date">${dateStr}</span>
-    `;
-
-    note.oncontextmenu = (e) => { 
-        e.preventDefault(); 
-        contextTarget = note; 
-        showNoteMenu(e.pageX, e.pageY); 
+    const noteObj = {
+        text: input.value,
+        status: 'waiting',
+        date: dateStr
     };
 
-    document.getElementById('noteList').prepend(note); 
+    notesState.unshift(noteObj); // 👈 ANA NOKTA
+
+    renderNotes(); // 👈 DOM’u buradan üret
+
     input.value = '';
 }
 
+    function renderNotes() {
+    const noteList = document.getElementById('noteList');
+    if (!noteList) return;
+
+    noteList.innerHTML = "";
+
+    notesState.forEach((note, index) => {
+        const div = document.createElement('div');
+        div.className = `note-item ${note.status}`;
+        div.dataset.status = note.status;
+
+        div.innerHTML = `
+            <span class="note-text">${note.text}</span>
+            <span class="note-date">${note.date}</span>
+        `;
+
+        div.oncontextmenu = (e) => {
+            e.preventDefault();
+            contextTarget = div;
+            contextIndex = index; // 👈 önemli
+            showNoteMenu(e.pageX, e.pageY);
+        };
+
+        noteList.appendChild(div);
+    });
+}
+    
     function showNoteMenu(x, y) {
         menu.innerHTML = `<div class="item" onclick="updateNoteStatus('waiting')">🟠 Bekleniyor</div><div class="item" onclick="updateNoteStatus('done')">🟢 Yapıldı</div><div class="item" onclick="updateNoteStatus('canceled')">🔴 İptal</div><hr style="border:0; border-top:1px solid #333; margin:5px 0;"><div class="item" style="color:#ff5555" onclick="contextTarget.remove(); closeMenu();">🗑 Sil</div>`;
         menu.style.display = "block"; menu.style.left = x + "px"; menu.style.top = y + "px";
