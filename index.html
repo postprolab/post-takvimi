@@ -789,6 +789,8 @@ window.handleSaveAction = async () => {
 
     // --- 3. TO-DO LİST / NOTLARI DURUMLARIYLA ALMA ---
 const noteList = document.getElementById('noteList');
+    console.log("NOTE LIST ELEMENT:", noteList);
+console.log("NOTE COUNT:", noteList?.children.length);
 
 const notesArray = noteList 
     ? Array.from(noteList.querySelectorAll('.note-item')).map(n => {
