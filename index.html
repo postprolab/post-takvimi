@@ -780,8 +780,6 @@ window.handleSaveAction = async (isManual = false) => {
         projectName = newName.trim();
         document.getElementById("projectName").value = projectName;
 
-        // yeni proje başlat
-        currentProjectId = null;
     }
 
     // boşsa default
@@ -811,6 +809,10 @@ window.handleSaveAction = async (isManual = false) => {
     try {
         const userId = auth.currentUser.uid;
         const projectsRef = collection(db, "users", userId, "projects");
+        if (!currentProjectId && !isManual) {
+    currentProjectId = "project-" + Date.now();
+    console.log("AUTO PROJECT CREATED:", currentProjectId);
+}
 
         let finalProjectName = projectName;
 
@@ -843,13 +845,6 @@ window.handleSaveAction = async (isManual = false) => {
 
             currentProjectId = finalProjectName.replace(/\s+/g, '-').toLowerCase() + "-" + Date.now();
         }
-
-        // 🔥 AUTOSAVE → SADECE İLK KEZ ID OLUŞTUR
-        if (!currentProjectId && !isManual) {
-            currentProjectId = "project-" + Date.now();
-            console.log("NEW PROJECT CREATED:", currentProjectId);
-        }
-
         data.projectName = finalProjectName;
 
         await setDoc(doc(db, "users", userId, "projects", currentProjectId), data);
@@ -1102,8 +1097,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let autoSaveTimer = null;
 let isSaving = false;
-
-let currentProjectId = null; // ✅ BURAYA
 
 let TOTAL_DAYS = 365, TOTAL_EPISODES = 16, dates = [], selectedCells = new Set(), dragSource = null, contextTarget = null, isSelecting = false, startX, startY;
 let currentActiveDept = 'all'; 
@@ -1415,23 +1408,23 @@ function attachGridEvents(cell, proc, colIndex, episodeNum) {
     cell.dataset.proc_type = proc; 
 
     // 🔥 DOUBLE CLICK (tek hücre doldurma)
-    cell.ondblclick = (e) => { 
-        e.stopPropagation(); 
+  cell.ondblclick = (e) => { 
+    e.stopPropagation(); 
 
-        if (cell.classList.contains('filled')) { 
-            contextTarget = cell; 
-            showGridMenu(e.pageX, e.pageY); 
+    if (cell.classList.contains('filled')) { 
+        contextTarget = cell; 
+        showGridMenu(e.pageX, e.pageY); 
 
-        } else { 
-            cell.dataset.proc = proc; 
-            cell.textContent = proc.toUpperCase(); 
-            cell.style.backgroundColor = deptColors[proc]; 
-            cell.classList.add("filled"); 
+    } else { 
+        cell.dataset.proc = proc; 
+        cell.textContent = proc.toUpperCase(); 
+        cell.style.backgroundColor = deptColors[proc]; 
+        cell.classList.add("filled"); 
 
-            saveHistory(); 
-            triggerAutoSave(); // ✅ BURAYA
-        } 
-    };
+        saveHistory(); 
+        triggerAutoSave(); // 🔥 BU YOKSA AUTOSAVE ÇALIŞMAZ
+    } 
+};
         
     cell.onmousedown = (e) => {
         if (e.button !== 0) return;
