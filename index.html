@@ -512,7 +512,6 @@ body.read-only-mode .cell.timeline { cursor: default; }
 
 /* Takvim modülü içindeki eski sayfa düzeni */
 #calendarModule .main-layout { flex: 1; min-height: 0; }
-#notesModule #notesPage { display: flex; flex: 1; min-height: 0; }
 
 /* ---------- MODÜL DÜZENİ (Senaryo & Toplantılar) ---------- */
 .mod-layout { flex: 1; min-height: 0; display: flex; }
@@ -521,7 +520,7 @@ body.read-only-mode .cell.timeline { cursor: default; }
     overflow-y: auto; padding: 14px 10px; display: flex; flex-direction: column; gap: 4px; box-sizing: border-box;
 }
 .mod-list-title { font-size: 10px; color: #555; letter-spacing: 1.5px; font-weight: bold; padding: 4px 8px 8px; }
-#scriptList, #meetingList { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+#meetingList { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
 .mod-list-item {
     display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
     background: none; border: 1px solid transparent; color: #bbb; text-align: left; padding: 9px 10px;
@@ -604,6 +603,70 @@ body.read-only-mode .cell.timeline { cursor: default; }
 .action-item.done input[type="text"] { text-decoration: line-through; opacity: 0.5; }
 .meeting-foot { margin-top: 20px; padding-top: 16px; border-top: 1px solid #1f2228; }
 
+/* ---------- TAKVİM VERSİYONLARI ---------- */
+.version-group { display: flex; gap: 6px; align-items: center; }
+.version-btn {
+    background: #1a1416 !important; border-color: var(--accent) !important; color: #fff !important;
+    font-size: 11px; max-width: 260px;
+}
+.version-btn .v-label { color: #ff8a80; font-size: 9px; letter-spacing: 1px; }
+.version-btn #versionName { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: none; }
+.version-btn .caret { color: #888; }
+.tb-sep { width: 1px; align-self: stretch; background: #2a2d35; margin: 0 4px; }
+
+.context-menu.version-menu { min-width: 320px; max-width: 420px; max-height: 65vh; overflow-y: auto; }
+.context-menu .ver-item { gap: 10px; }
+.context-menu .ver-item.active { background: #22161a; }
+.ver-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ver-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ver-main small { color: #777; font-size: 10px; }
+.ver-actions { display: flex; gap: 2px; opacity: 0.45; }
+.ver-item:hover .ver-actions { opacity: 1; }
+.context-menu .check { margin-left: 0; padding-left: 0; }
+
+/* ---------- ESKİ KAYIT BANDI & TAŞIMA ---------- */
+.legacy-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    background: linear-gradient(90deg, #2a1416, #15171c); border: 1px solid #5a2a2a; border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 18px; font-size: 13px; color: #ffcdd2;
+}
+.migrate-content { max-width: 760px !important; max-height: 88vh; overflow-y: auto; text-align: left !important; }
+.migrate-content h3 { text-align: center; }
+.mig-intro { line-height: 1.6; }
+.mig-section-title { font-size: 10px; color: #777; letter-spacing: 1.5px; font-weight: bold; margin: 20px 0 8px; border-bottom: 1px solid #23262d; padding-bottom: 6px; }
+.mig-groups { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.mig-group { display: flex; align-items: center; gap: 10px; }
+.mig-group input {
+    flex: 1; background: #1d1f23; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 8px;
+    font-size: 14px; font-weight: 700; font-family: inherit; outline: none;
+}
+.mig-group input:focus { border-color: var(--neon-green); }
+.mig-rows { display: flex; flex-direction: column; gap: 4px; }
+.mig-row { display: grid; grid-template-columns: 1fr auto 240px; gap: 10px; align-items: center; background: #15171c; border: 1px solid #23262d; border-radius: 8px; padding: 8px 12px; }
+.mig-row.skipped { opacity: 0.45; }
+.mig-row-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mig-row-info b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mig-row-info small { color: #777; font-size: 11px; }
+.mig-arrow { color: #555; }
+.mig-row select {
+    background: #1d1f23; border: 1px solid #333; color: #fff; padding: 7px 8px; border-radius: 6px;
+    font-size: 12px; font-family: inherit; width: 100%;
+}
+#migStatus { margin: 14px 0 0; text-align: center; }
+
+/* ---------- NOT MODÜLLERİ & PDF ---------- */
+.detail-tools { display: flex; align-items: center; gap: 12px; }
+.meeting-tools { justify-content: flex-end; margin-bottom: -10px; }
+.mod-list-items { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+
+@media (max-width: 820px) {
+    .mig-row { grid-template-columns: 1fr; }
+    .mig-arrow { display: none; }
+    .mod-list-items { flex-direction: row; margin: 0; }
+    .detail-head { flex-wrap: wrap; }
+    .version-btn { max-width: 160px; }
+}
+
 /* ---------- BANNER'LAR ---------- */
 .banner { position: fixed; left: 0; width: 100%; box-sizing: border-box; padding: 9px 16px; font-size: 12px; text-align: center; z-index: 19000; }
 .banner-readonly { top: 0; background: #1a2e1a; color: #a8e6a1; border-bottom: 1px solid #4CAF50; }
@@ -629,7 +692,7 @@ body.read-only-mode .cell.timeline { cursor: default; }
     .mod-layout { flex-direction: column; }
     .mod-list { width: 100%; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid #1f2228; padding: 8px; }
     .mod-list-title { display: none; }
-    #scriptList, #meetingList { flex-direction: row; margin: 0; }
+    #meetingList { flex-direction: row; margin: 0; }
     .mod-list-item { white-space: nowrap; width: auto; }
     .mod-list .primary-btn.wide { width: auto; }
     .mod-detail { padding: 16px; }
@@ -688,6 +751,7 @@ body.read-only-mode .cell.timeline { cursor: default; }
             </div>
             <button id="newProjectBtn" class="primary-btn">+ <span data-i18n="newProject">New project</span></button>
         </div>
+        <div id="legacyBanner" class="legacy-banner" hidden></div>
         <div id="projectGrid" class="project-grid"></div>
     </main>
 </section>
@@ -714,6 +778,15 @@ body.read-only-mode .cell.timeline { cursor: default; }
         <!-- TAKVİM -->
         <div id="calendarModule" class="ws-module">
             <div class="top-bar">
+                <div id="versionGroup" class="version-group">
+                    <button id="versionBtn" class="nav-btn version-btn">
+                        <span class="v-label" data-i18n="versionLabel">VERSION</span>
+                        <span id="versionName">—</span>
+                        <span class="caret">▾</span>
+                    </button>
+                    <button id="newVersionBtn" class="nav-btn"><span>＋</span> <span data-i18n="newVersionBtn">NEW VERSION</span></button>
+                </div>
+                <div class="tb-sep"></div>
                 <button id="openModalBtn" class="nav-btn nav-btn-primary"><span>📅</span> <span data-i18n="setStartDate">SET START DATE</span></button>
                 <button id="toggleTodayBtn" class="nav-btn"><span>📍</span> <span data-i18n="todayLine">TODAY LINE</span></button>
                 <button id="toggleViewBtn" class="nav-btn">🔄 CALENDAR VIEW</button>
@@ -749,24 +822,8 @@ body.read-only-mode .cell.timeline { cursor: default; }
             </div>
         </div>
 
-        <!-- BÖLÜM NOTLARI -->
-        <div id="notesModule" class="ws-module">
-            <div id="notesPage" class="tab-page">
-                <div class="notes-board">
-                    <div class="notes-grid-header">
-                        <div class="notes-ep-col header-cell">EPISODES</div>
-                        <div class="notes-dept header-cell" data-dep="edit">🎬 EDIT<div class="resize-handle"></div></div>
-                        <div class="notes-dept header-cell" data-dep="cuts">✂ CUTS<div class="resize-handle"></div></div>
-                        <div class="notes-dept header-cell" data-dep="vfx">✨ VFX<div class="resize-handle"></div></div>
-                        <div class="notes-dept header-cell" data-dep="color">🎨 COLOR<div class="resize-handle"></div></div>
-                        <div class="notes-dept header-cell" data-dep="sound">🔊 SOUND<div class="resize-handle"></div></div>
-                        <div class="notes-dept header-cell" data-dep="music">🎵 MUSIC<div class="resize-handle"></div></div>
-                        <div class="notes-dept header-cell" data-dep="send">📦 SEND<div class="resize-handle"></div></div>
-                    </div>
-                    <div id="notesGridBody"></div>
-                </div>
-            </div>
-        </div>
+        <!-- BÖLÜM NOTLARI (workspace.js çizer) -->
+        <div id="notesModule" class="ws-module"></div>
 
         <!-- SENARYO (workspace.js çizer) -->
         <div id="scriptModule" class="ws-module"></div>
@@ -822,6 +879,10 @@ body.read-only-mode .cell.timeline { cursor: default; }
     </form>
 </div>
 
+<div id="migrateModal" class="modal-overlay">
+    <div id="migrateBody" class="modal-content migrate-content"></div>
+</div>
+
 <div id="dateSummaryPop" class="date-summary-pop"></div>
 <div id="contextMenu" class="context-menu"></div>
 
@@ -857,9 +918,7 @@ body.read-only-mode .cell.timeline { cursor: default; }
     </div>
 </div>
 
-<!-- =========================================================
-     SCRIPTLER — sıra önemli: önce takvim, sonra çalışma alanı, en son Firebase
-     ========================================================= -->
+<!-- Sıra önemli: önce takvim, sonra çalışma alanı, en son Firebase -->
 <script>
 // =====================================================================
 // calendar.js — Takvim (timeline + takvim görünümü), bölüm notları,
@@ -2569,34 +2628,126 @@ setTimeout(() => {
 }, 8000);
 
 // ---------------------------------------------------------------------
-// 4) GİRİŞ / OFFLINE
+// 4) VERİ KATMANI — online: Firebase (window.FB), offline: tarayıcı belleği
+// Her iki taraf aynı fonksiyonları sunar; uygulama api() üzerinden çağırır.
+// ---------------------------------------------------------------------
+Object.assign(I18N.en, {
+    versionLabel: "VERSION", newVersionBtn: "NEW VERSION", calendarVersions: "CALENDAR VERSIONS",
+    newVersionCopy: "Save a copy as new version", newVersionBlank: "New empty version",
+    versionNamePrompt: "Version name:", renameVersionPrompt: "New name for this version:",
+    confirmDeleteVersion: "Delete calendar version “{name}”? This cannot be undone.",
+    versionsShort: "versions", activeVersion: "Active version", loadingVersion: "Loading calendar…",
+    versionLoadError: "This calendar version could not be loaded.",
+    legacyBannerText: "You have {n} calendar saves from the old system. Sort them into projects as calendar versions.",
+    legacyBannerBtn: "Sort into projects",
+    migTitle: "Sort old saves into projects",
+    migIntro: "Each old save will be moved into the project you choose as a calendar version. Saves starting with the same name (e.g. “Pervaneler”, “Pervaneler_V2”) are grouped automatically — change anything you like. Episode notes, script notes and meetings are moved to the project too. Old saves are not deleted.",
+    migNewProjects: "PROJECTS TO CREATE", migOldSaves: "OLD SAVES", migAddGroup: "+ Add project",
+    migSkip: "— Don't import (hide)", migExisting: "Existing project", migNew: "New project",
+    migRun: "IMPORT", migRunning: "Importing… {i}/{n}", migDone: "Done — {n} projects updated.",
+    migNewGroupPrompt: "New project name:", cellsShort: "cells", migNothing: "Nothing selected to import."
+});
+Object.assign(I18N.tr, {
+    versionLabel: "VERSİYON", newVersionBtn: "YENİ VERSİYON", calendarVersions: "TAKVİM VERSİYONLARI",
+    newVersionCopy: "Kopyasını yeni versiyon olarak kaydet", newVersionBlank: "Boş yeni versiyon",
+    versionNamePrompt: "Versiyon adı:", renameVersionPrompt: "Bu versiyonun yeni adı:",
+    confirmDeleteVersion: "“{name}” takvim versiyonu silinsin mi? Bu işlem geri alınamaz.",
+    versionsShort: "versiyon", activeVersion: "Aktif versiyon", loadingVersion: "Takvim yükleniyor…",
+    versionLoadError: "Bu takvim versiyonu yüklenemedi.",
+    legacyBannerText: "Eski sistemden {n} takvim kaydın var. Bunları projelere takvim versiyonu olarak ayıralım.",
+    legacyBannerBtn: "Projelere ayır",
+    migTitle: "Eski kayıtları projelere ayır",
+    migIntro: "Her eski kayıt, seçtiğin projenin içine bir takvim versiyonu olarak taşınır. Aynı isimle başlayan kayıtları (ör. “Pervaneler”, “Pervaneler_V2”) otomatik grupladım — istediğini değiştirebilirsin. Bölüm notları, senaryo notları ve toplantılar da projeye taşınır. Eski kayıtlar silinmez.",
+    migNewProjects: "OLUŞTURULACAK PROJELER", migOldSaves: "ESKİ KAYITLAR", migAddGroup: "+ Proje ekle",
+    migSkip: "— Aktarma (gizle)", migExisting: "Mevcut proje", migNew: "Yeni proje",
+    migRun: "AKTAR", migRunning: "Aktarılıyor… {i}/{n}", migDone: "Tamam — {n} proje güncellendi.",
+    migNewGroupPrompt: "Yeni proje adı:", cellsShort: "hücre", migNothing: "Aktarılacak bir şey seçilmedi."
+});
+
+Object.assign(App, { versions: [], version: null, legacy: [], migration: null });
+
+// Offline mod için bellekte çalışan, FB ile aynı arayüze sahip depo
+const MemFB = (() => {
+    const ws = {}, vers = {};
+    let n = 0;
+    const newId = (p) => `${p}-${Date.now().toString(36)}-${++n}`;
+    const clone = (o) => JSON.parse(JSON.stringify(o));
+    const now = () => new Date().toISOString();
+    const byUpdatedDesc = (a, b) => new Date(b.data.lastUpdated || 0) - new Date(a.data.lastUpdated || 0);
+    return {
+        async listProjects() { return Object.entries(ws).map(([id, data]) => ({ id, data: clone(data) })).sort(byUpdatedDesc); },
+        async listLegacy() { return []; },
+        async createProject(proj, versions = []) {
+            const pid = newId('p'); const t0 = now(); vers[pid] = {};
+            const list = versions.length ? versions : [{ name: 'V1', startDate: proj.startDate || '', totalEpisodes: parseInt(proj.totalEpisodes) || DEFAULT_EPISODES, cells: [], milestones: [] }];
+            let active = null, activeTime = -1, activeName = '';
+            list.forEach(v => {
+                const vid = newId('v');
+                const data = Object.assign({ cells: [], milestones: [], createdAt: t0, lastUpdated: t0 }, clone(v));
+                vers[pid][vid] = data;
+                const tm = new Date(data.lastUpdated).getTime() || 0;
+                if (tm >= activeTime) { activeTime = tm; active = vid; activeName = data.name; }
+            });
+            ws[pid] = {
+                projectName: proj.projectName || 'Untitled Project', totalEpisodes: parseInt(proj.totalEpisodes) || DEFAULT_EPISODES,
+                notes: clone(proj.notes || {}), episodeNotes: clone(proj.episodeNotes || {}), scripts: clone(proj.scripts || {}), meetings: clone(proj.meetings || []), stats: {},
+                activeVersionId: active, activeVersionName: activeName, versionCount: list.length, createdAt: t0, lastUpdated: t0
+            };
+            return { id: pid, data: clone(ws[pid]) };
+        },
+        async getProject(pid) { return ws[pid] ? clone(ws[pid]) : null; },
+        async saveProject(pid, data) { ws[pid] = Object.assign(ws[pid] || {}, clone(data)); },
+        async renameProject(pid, name) { if (ws[pid]) ws[pid].projectName = name; },
+        async deleteProject(pid) { delete ws[pid]; delete vers[pid]; },
+        async duplicateProject(pid, newName) {
+            return this.createProject(Object.assign({}, ws[pid], { projectName: newName }), Object.values(vers[pid] || {}));
+        },
+        async listVersions(pid) { return Object.entries(vers[pid] || {}).map(([id, data]) => ({ id, data: clone(data) })).sort(byUpdatedDesc); },
+        async getVersion(pid, vid) { return vers[pid] && vers[pid][vid] ? clone(vers[pid][vid]) : null; },
+        async createVersion(pid, data) { const vid = newId('v'); const t0 = now(); (vers[pid] = vers[pid] || {})[vid] = Object.assign({ createdAt: t0, lastUpdated: t0 }, clone(data)); return vid; },
+        async saveVersion(pid, vid, data) { vers[pid][vid] = Object.assign(vers[pid][vid] || {}, clone(data)); },
+        async deleteVersion(pid, vid) { delete vers[pid][vid]; },
+        async markLegacy() {}
+    };
+})();
+
+const api = () => (window.isOfflineMode || !App.user) ? MemFB : window.FB;
+
+// ---------------------------------------------------------------------
+// 5) GİRİŞ / OFFLINE
 // ---------------------------------------------------------------------
 $('loginBtn').onclick = () => window.FB && FB.login();
 $('offlineLoginLink').onclick = (e) => { e.preventDefault(); window.FB && FB.login(); };
 $('offlineBannerClose').onclick = () => { $('offlineBanner').hidden = true; };
 
-$('offlineBtn').onclick = (e) => {
+$('offlineBtn').onclick = async (e) => {
     e.preventDefault();
     window.isOfflineMode = true;
     $('offlineBanner').hidden = false;
-    openProject('offline', {
-        projectName: t('offlineProjectName'),
-        startDate: toLocalISO(new Date()),
-        totalEpisodes: DEFAULT_EPISODES
+    const created = await MemFB.createProject({
+        projectName: t('offlineProjectName'), totalEpisodes: DEFAULT_EPISODES, startDate: toLocalISO(new Date())
     });
+    openProject(created.id, created.data);
 };
 
 // Offline çalışıp sonra giriş yapan kullanıcının işi kaybolmasın
 async function adoptOfflineWork() {
-    if (!App.project || App.project.id !== 'offline') return false;
-    const data = collectFullProject();
-    const hasWork = data.cells.length || data.meetings.length || Object.keys(data.scripts).length ||
-        Object.values(data.notes || {}).some(ep => Object.values(ep || {}).some(v => String(v).trim()));
+    if (!App.project || !window.isOfflineMode) return false;
+    await flushSave();                        // son değişiklikleri belleğe yaz
+    const pid = App.project.id;
+    const proj = await MemFB.getProject(pid);
+    const versions = (await MemFB.listVersions(pid)).map(v => v.data);
     window.isOfflineMode = false;
     $('offlineBanner').hidden = true;
+
+    const notesHaveText = Object.values(proj.notes || {}).some(ep => Object.values(ep || {}).some(v => String(v).trim()));
+    const hasNotes = (o) => Object.values(o || {}).some(s => s && (s.notes || []).length);
+    const hasWork = versions.some(v => (v.cells || []).length) || (proj.meetings || []).length ||
+        hasNotes(proj.scripts) || hasNotes(proj.episodeNotes) || notesHaveText;
     if (!hasWork || !confirm(t('keepOfflineWork'))) return false;
-    const created = await FB.createProject(data);
-    openProject(created.id, created.data);
+
+    const created = await FB.createProject(proj, versions);
+    await openProject(created.id, created.data);
     return true;
 }
 
@@ -2607,10 +2758,11 @@ window.onAuthUser = async function (user) {
 
     if (user) {
         renderProfile();
-        if (App.project && App.project.id === 'offline') {
+        if (window.isOfflineMode && App.project) {
             if (await adoptOfflineWork()) return;
             App.project = null;
         }
+        window.isOfflineMode = false;
         if (App.view !== 'workspace') { showView('dashboard'); refreshDashboard(); }
     } else {
         if (window.isOfflineMode) return;
@@ -2638,13 +2790,18 @@ $('profileBtn').onclick = (e) => {
 };
 
 // ---------------------------------------------------------------------
-// 5) PROJELERİM PANELİ
+// 6) PROJELERİM PANELİ
 // ---------------------------------------------------------------------
 async function refreshDashboard() {
     const grid = $('projectGrid');
     grid.innerHTML = `<div class="dash-loading">${escapeHtml(t('loading'))}</div>`;
     try {
-        App.projects = await FB.listProjects();
+        const [projects, legacy] = await Promise.all([
+            FB.listProjects(),
+            FB.listLegacy().catch(err => { console.warn('Eski kayıtlar okunamadı:', err); return []; })
+        ]);
+        App.projects = projects;
+        App.legacy = legacy;
         renderDashboard();
     } catch (e) {
         console.error(e);
@@ -2654,14 +2811,16 @@ async function refreshDashboard() {
 window.refreshDashboard = refreshDashboard;
 
 function projectStats(d) {
-    const cells = Array.isArray(d.cells) ? d.cells : [];
-    const eps = Math.max(parseInt(d.totalEpisodes) || DEFAULT_EPISODES, ...cells.map(c => parseInt(c.ep) || 0));
     const scripts = d.scripts && typeof d.scripts === 'object' ? Object.values(d.scripts) : [];
+    const stats = d.stats || {};
     return {
-        eps,
-        cells: cells.length,
-        masterLocks: cells.filter(c => c.cutType === 'master').length,
-        scriptNotes: scripts.reduce((n, s) => n + ((s && Array.isArray(s.notes)) ? s.notes.length : 0), 0),
+        eps: parseInt(d.totalEpisodes) || DEFAULT_EPISODES,
+        versions: parseInt(d.versionCount) || 1,
+        activeVersion: d.activeVersionName || '',
+        cells: stats.cells || 0,
+        masterLocks: stats.masterLocks || 0,
+        scriptNotes: ScriptNotes.countAll(d),
+        episodeNotes: EpisodeNotes.countAll(d),
         meetings: Array.isArray(d.meetings) ? d.meetings.length : 0
     };
 }
@@ -2671,8 +2830,16 @@ function renderDashboard() {
     const grid = $('projectGrid');
     $('dashSub').textContent = App.projects.length ? tf('projectsCount', { n: App.projects.length }) : '';
 
+    // Eski sistem kayıtları varsa taşıma çağrısı
+    const banner = $('legacyBanner');
+    banner.hidden = !App.legacy.length;
+    if (App.legacy.length) {
+        banner.innerHTML = `<span>📦 ${escapeHtml(tf('legacyBannerText', { n: App.legacy.length }))}</span>
+            <button class="primary-btn small" onclick="openMigration()">${escapeHtml(t('legacyBannerBtn'))} →</button>`;
+    }
+
     if (!App.projects.length) {
-        grid.innerHTML = `<div class="dash-empty">
+        grid.innerHTML = App.legacy.length ? '' : `<div class="dash-empty">
             <div class="dash-empty-icon">🎬</div>
             <b>${escapeHtml(t('noProjectsYet'))}</b>
             <p>${escapeHtml(t('noProjectsHint'))}</p>
@@ -2684,8 +2851,10 @@ function renderDashboard() {
     grid.innerHTML = App.projects.map(({ id, data: d }) => {
         const s = projectStats(d);
         const chips = [
-            `📅 ${s.cells}`,
+            `🗂 ${s.versions} ${t('versionsShort')}`,
+            s.cells ? `📅 ${s.cells}` : '',
             s.masterLocks ? `🔒 ${s.masterLocks} master lock` : '',
+            s.episodeNotes ? `📝 ${s.episodeNotes}` : '',
             s.scriptNotes ? `🎬 ${s.scriptNotes}` : '',
             s.meetings ? `🤝 ${s.meetings}` : ''
         ].filter(Boolean).map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('');
@@ -2694,7 +2863,7 @@ function renderDashboard() {
                 <div class="pc-title">${escapeHtml(d.projectName || 'Untitled Project')}</div>
                 <button class="pc-menu" data-menu="${escapeHtml(id)}" title="…">⋯</button>
             </div>
-            <div class="pc-meta">${s.eps} ${escapeHtml(t('episodesShort'))}${d.startDate ? ' · ' + escapeHtml(formatDate(d.startDate)) : ''}</div>
+            <div class="pc-meta">${s.eps} ${escapeHtml(t('episodesShort'))}${s.activeVersion ? ' · ' + escapeHtml(t('activeVersion')) + ': <b>' + escapeHtml(s.activeVersion) + '</b>' : ''}</div>
             <div class="pc-chips">${chips}</div>
             <div class="pc-foot">${escapeHtml(t('updated'))}: ${escapeHtml(formatDate(d.lastUpdated, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) || '—')}</div>
         </div>`;
@@ -2741,8 +2910,7 @@ function showProjectMenu(id, anchor, x, y) {
                 await FB.renameProject(id, name.trim());
                 refreshDashboard();
             } else if (act === 'dup') {
-                const copy = Object.assign({}, entry.data, { projectName: `${entry.data.projectName || 'Project'} ${t('copySuffix')}` });
-                await FB.createProject(copy);
+                await FB.duplicateProject(id, `${entry.data.projectName || 'Project'} ${t('copySuffix')}`);
                 refreshDashboard();
             } else if (act === 'del') {
                 if (!confirm(`"${entry.data.projectName}" — ${t('confirmDeleteProject')}`)) return;
@@ -2775,9 +2943,9 @@ $('newProjectForm').onsubmit = async (e) => {
     const btn = e.submitter || $('newProjectForm').querySelector('[type="submit"]');
     btn.disabled = true;
     try {
-        const created = await FB.createProject({ projectName: name, totalEpisodes: eps, startDate: $('npStart').value || toLocalISO(new Date()) });
+        const created = await api().createProject({ projectName: name, totalEpisodes: eps, startDate: $('npStart').value || toLocalISO(new Date()) });
         $('newProjectModal').style.display = 'none';
-        openProject(created.id, created.data);
+        await openProject(created.id, created.data);
     } catch (err) {
         alert(err.message);
     } finally {
@@ -2786,80 +2954,153 @@ $('newProjectForm').onsubmit = async (e) => {
 };
 
 // ---------------------------------------------------------------------
-// 6) PROJE AÇ / KAPAT / KAYDET
+// 7) PROJE AÇ / KAPAT / KAYDET
 // ---------------------------------------------------------------------
 function openProjectById(id) {
     const entry = App.projects.find(p => p.id === id);
     if (entry) openProject(entry.id, entry.data);
 }
 
-function openProject(id, data, { readOnly = false } = {}) {
+function setReadOnlyUI(readOnly, offline) {
     App.readOnly = readOnly;
-    App.project = {
-        id,
-        projectName: data.projectName || 'Untitled Project',
-        scripts: (data.scripts && typeof data.scripts === 'object' && !Array.isArray(data.scripts)) ? data.scripts : {},
-        meetings: Array.isArray(data.meetings) ? data.meetings : [],
-        createdAt: data.createdAt || new Date().toISOString()
-    };
-    currentProjectId = id;
-    App.scriptKey = 'GENEL';
-    App.meetingId = App.project.meetings.length ? sortedMeetings()[0].id : null;
-    // Önceki projeden kalan modül içeriğini temizle
-    $('scriptModule').innerHTML = '';
-    $('meetingsModule').innerHTML = '';
-
     document.body.classList.toggle('read-only-mode', readOnly);
     $('readOnlyBanner').hidden = !readOnly;
     $('backToProjects').hidden = readOnly;
-    $('shareBtn').hidden = readOnly || id === 'offline';
+    $('shareBtn').hidden = readOnly || !!offline;
+    $('versionGroup').hidden = readOnly;
     $('projectName').readOnly = readOnly;
+}
 
-    showView('workspace');         // takvim ölçüm yaptığı için önce görünür olmalı
+const isPlainObject = (o) => !!o && typeof o === 'object' && !Array.isArray(o);
+
+// Bölüm notları: yeni yapı varsa onu kullan, yoksa eski tablo notlarını çevir
+function episodeNotesFrom(data) {
+    if (isPlainObject(data.episodeNotes)) return data.episodeNotes;
+    return notesGridToEpisodeNotes(data.notes);
+}
+
+function resetModulesFor(project) {
+    App.project = project;
+    App.meetingId = project.meetings.length ? sortedMeetings()[0].id : null;
+    ScriptNotes.reset();
+    EpisodeNotes.reset();
+    $('meetingsModule').innerHTML = '';
+}
+
+async function openProject(id, data) {
+    setReadOnlyUI(false, window.isOfflineMode);
+    resetModulesFor({
+        id,
+        projectName: data.projectName || 'Untitled Project',
+        totalEpisodes: parseInt(data.totalEpisodes) || DEFAULT_EPISODES,
+        scripts: isPlainObject(data.scripts) ? data.scripts : {},
+        episodeNotes: episodeNotesFrom(data),
+        meetings: Array.isArray(data.meetings) ? data.meetings : [],
+        createdAt: data.createdAt || new Date().toISOString()
+    });
+    currentProjectId = id;
+    App.versions = [];
+    App.version = null;
+    $('projectName').value = App.project.projectName;
+    showView('workspace');
     showModule('calendar');
-    loadProjectToUI(data);
-    setSaveStatus(readOnly ? 'readonly' : id === 'offline' ? 'offline' : 'saved');
+    renderVersionBar(t('loadingVersion'));
+
+    try {
+        let versions = await api().listVersions(id);
+        if (!versions.length) {
+            // Güvenlik: versiyonsuz proje kalmasın
+            await api().createVersion(id, { name: 'V1', startDate: toLocalISO(new Date()), totalEpisodes: App.project.totalEpisodes, cells: [], milestones: [] });
+            versions = await api().listVersions(id);
+        }
+        if (!App.project || App.project.id !== id) return;   // kullanıcı bu arada başka yere geçti
+        App.versions = versions.map(v => ({ id: v.id, name: v.data.name || 'V1', lastUpdated: v.data.lastUpdated }));
+        const active = versions.find(v => v.id === data.activeVersionId) || versions[0];
+        applyVersion(active.id, active.data, data.notes || {});
+        setSaveStatus(window.isOfflineMode ? 'offline' : 'saved');
+    } catch (e) {
+        console.error(e);
+        alert(t('versionLoadError') + "\n" + e.message);
+    }
 }
 window.openProject = openProject;
 
+// Salt-okunur paylaşım linki: sadece takvim + bölüm notları
+function openSharedView(data) {
+    setReadOnlyUI(true);
+    resetModulesFor({ id: null, projectName: data.projectName || '', totalEpisodes: parseInt(data.totalEpisodes) || DEFAULT_EPISODES, scripts: {}, episodeNotes: episodeNotesFrom(data), meetings: [], createdAt: '' });
+    App.versions = [];
+    App.version = null;
+    showView('workspace');
+    showModule('calendar');
+    loadProjectToUI(data);
+    setSaveStatus('readonly');
+}
+window.openSharedView = openSharedView;
+
+// Bir takvim versiyonunu ekrana yükler (bölüm notları projeye ait, korunur)
+function applyVersion(vid, v, notes) {
+    App.version = { id: vid, name: v.name || 'V1' };
+    loadProjectToUI({
+        projectName: $('projectName').value,
+        startDate: v.startDate,
+        totalEpisodes: Math.max(parseInt(v.totalEpisodes) || 0, App.project.totalEpisodes || 0) || DEFAULT_EPISODES,
+        milestones: v.milestones || [],
+        cells: v.cells || [],
+        notes: notes !== undefined ? notes : notesState
+    });
+    App.project.totalEpisodes = TOTAL_EPISODES;
+    renderVersionBar();
+}
+
 async function backToProjects() {
     await flushSave();
+    App.project = null;
+    App.version = null;
+    currentProjectId = null;
     if (window.isOfflineMode) {
-        App.project = null;
         window.isOfflineMode = false;
         $('offlineBanner').hidden = true;
         showLogin();
         return;
     }
-    App.project = null;
-    currentProjectId = null;
     showView('dashboard');
     refreshDashboard();
 }
 $('backToProjects').onclick = backToProjects;
 
-// Takvim + notlar (calendar.js) ile senaryo + toplantılar birleşik proje verisi
-function collectFullProject() {
-    const name = $('projectName').value.trim() || 'Untitled Project';
-    const data = collectProjectData(name);
-    data.scripts = App.project ? App.project.scripts : {};
-    data.meetings = App.project ? App.project.meetings : [];
-    data.createdAt = App.project ? App.project.createdAt : new Date().toISOString();
-    return data;
-}
-window.collectFullProject = collectFullProject;
-
-// calendar.js'teki otomatik kayıt bunu çağırır
+// calendar.js'teki otomatik kayıt bunu çağırır:
+// aktif takvim versiyonu + proje (bölüm notları, senaryo, toplantılar) kaydedilir
 window.handleSaveAction = async function () {
-    if (App.readOnly || !App.project) return;
-    if (window.isOfflineMode || !App.user || App.project.id === 'offline') { setSaveStatus('offline'); return; }
-    setSaveStatus('saving');
+    if (App.readOnly || !App.project || !App.version) return;
+    const offline = window.isOfflineMode || !App.user;
+    if (!offline) setSaveStatus('saving');
     try {
-        const data = collectFullProject();
-        await FB.saveProject(App.project.id, data);
-        App.project.projectName = data.projectName;
+        const name = $('projectName').value.trim() || 'Untitled Project';
+        const cal = collectProjectData(name);
+        const now = cal.lastUpdated;
+        await api().saveVersion(App.project.id, App.version.id, {
+            name: App.version.name, startDate: cal.startDate, totalEpisodes: cal.totalEpisodes,
+            milestones: cal.milestones, cells: cal.cells, lastUpdated: now
+        });
+        const meta = App.versions.find(v => v.id === App.version.id);
+        if (meta) meta.lastUpdated = now;
+        await api().saveProject(App.project.id, {
+            projectName: name,
+            totalEpisodes: cal.totalEpisodes,
+            notes: cal.notes,
+            episodeNotes: App.project.episodeNotes || {},
+            scripts: App.project.scripts,
+            meetings: App.project.meetings,
+            activeVersionId: App.version.id,
+            activeVersionName: App.version.name,
+            versionCount: App.versions.length,
+            stats: { cells: cal.cells.length, masterLocks: cal.cells.filter(c => c.cutType === 'master').length },
+            lastUpdated: now
+        });
+        App.project.projectName = name;
         App.lastSavedAt = new Date();
-        setSaveStatus('saved');
+        setSaveStatus(offline ? 'offline' : 'saved');
     } catch (e) {
         console.error('Save error:', e);
         setSaveStatus('error');
@@ -2869,9 +3110,8 @@ window.handleSaveAction = async function () {
 function setSaveStatus(state) {
     const el = $('saveStatus');
     if (!el) return;
-    if (state === 'pending' && (App.readOnly || !App.project || App.project.id === 'offline' || window.isOfflineMode)) {
-        state = App.readOnly ? 'readonly' : 'offline';
-    }
+    if (App.readOnly) state = 'readonly';
+    else if ((window.isOfflineMode || !App.user) && (state === 'pending' || state === 'saved' || state === 'saving')) state = 'offline';
     const map = {
         pending: ['● ' + t('pendingSave'), 'pending'],
         saving: ['⟳ ' + t('saving'), 'saving'],
@@ -2893,7 +3133,8 @@ $('projectName').addEventListener('input', () => { if (!App.readOnly) triggerAut
 window.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && App.view === 'workspace') {
         e.preventDefault();
-        flushSave().then(() => { if ($('saveStatus').dataset.state === 'pending') window.handleSaveAction(); });
+        if (hasPendingSave()) flushSave();
+        else window.handleSaveAction();
     }
 });
 
@@ -2906,12 +3147,14 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
-// Paylaşım (sadece takvim + bölüm notları)
+// Paylaşım: aktif takvim versiyonu + bölüm notları
 $('shareBtn').onclick = async () => {
     if (!App.user || !App.project) { alert(t('signInFirst')); return; }
     const data = collectProjectData($('projectName').value.trim() || 'Untitled Project');
     if (!data.cells.length) { alert(t('shareNoData')); return; }
     if (!confirm(t('shareInfo'))) return;
+    data.versionName = App.version ? App.version.name : '';
+    data.episodeNotes = App.project.episodeNotes || {};
     try {
         const url = await FB.shareProject(data);
         try { await navigator.clipboard.writeText(url); } catch (e) {}
@@ -2922,7 +3165,341 @@ $('shareBtn').onclick = async () => {
 };
 
 // ---------------------------------------------------------------------
-// 7) SOL MENÜ & MODÜL GEÇİŞİ
+// 7b) TAKVİM VERSİYONLARI — sadece açık projenin versiyonları listelenir
+// ---------------------------------------------------------------------
+function renderVersionBar(placeholder) {
+    $('versionName').textContent = placeholder || (App.version ? App.version.name : '—');
+}
+
+// Versiyon menüsü açıkken menüye özel genişlik; menü kapanınca normale döner
+const baseCloseMenu = closeMenu;
+closeMenu = function () { baseCloseMenu(); menu.classList.remove('version-menu'); };
+
+$('versionBtn').onclick = (e) => {
+    e.stopPropagation();
+    if (!App.project || !App.version) return;
+    showVersionMenu(e.currentTarget);
+};
+$('newVersionBtn').onclick = () => { if (App.version) newVersion(true); };
+
+function showVersionMenu(anchor) {
+    const list = App.versions.slice().sort((a, b) => String(b.lastUpdated || '').localeCompare(String(a.lastUpdated || '')));
+    const canDelete = list.length > 1;
+    menu.innerHTML =
+        `<div class="menu-label">${escapeHtml(t('calendarVersions'))} · ${escapeHtml(App.project.projectName)}</div>` +
+        list.map(v => `
+            <div class="item ver-item ${v.id === App.version.id ? 'active' : ''}" data-vid="${escapeHtml(v.id)}">
+                <span class="ver-main">
+                    <span class="ver-name">${escapeHtml(v.name)}</span>
+                    <small>${escapeHtml(formatDate(v.lastUpdated, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }))}</small>
+                </span>
+                ${v.id === App.version.id ? '<span class="check">✓</span>' : ''}
+                <span class="ver-actions">
+                    <button class="icon-btn" data-vact="rename" title="${escapeHtml(t('rename'))}">✏️</button>
+                    ${canDelete ? `<button class="icon-btn" data-vact="delete" title="${escapeHtml(t('delete'))}">🗑</button>` : ''}
+                </span>
+            </div>`).join('') +
+        `<div class="menu-sep"></div>
+         <div class="item" data-vact="copy">＋&nbsp; ${escapeHtml(t('newVersionCopy'))}</div>
+         <div class="item" data-vact="blank">＋&nbsp; ${escapeHtml(t('newVersionBlank'))}</div>`;
+    menu.classList.add('version-menu');
+    const r = anchor.getBoundingClientRect();
+    positionMenu(r.left, r.bottom + 4);
+
+    menu.querySelectorAll('[data-vact]').forEach(b => b.onclick = (ev) => {
+        ev.stopPropagation();
+        const vid = b.closest('.ver-item') ? b.closest('.ver-item').dataset.vid : null;
+        const act = b.dataset.vact;
+        closeMenu();
+        if (act === 'rename') renameVersion(vid);
+        else if (act === 'delete') deleteVersion(vid);
+        else if (act === 'copy') newVersion(true);
+        else if (act === 'blank') newVersion(false);
+    });
+    menu.querySelectorAll('.ver-item').forEach(item => item.onclick = () => {
+        closeMenu();
+        if (item.dataset.vid !== App.version.id) switchVersion(item.dataset.vid);
+    });
+}
+
+async function switchVersion(vid) {
+    await flushSave();
+    renderVersionBar(t('loadingVersion'));
+    try {
+        const data = await api().getVersion(App.project.id, vid);
+        if (!data) throw new Error('not found');
+        applyVersion(vid, data);
+        triggerAutoSave();               // projede aktif versiyon bilgisini güncelle
+    } catch (e) {
+        renderVersionBar();
+        alert(t('versionLoadError'));
+    }
+}
+
+async function newVersion(copy) {
+    const name = prompt(t('versionNamePrompt'), 'V' + (App.versions.length + 1));
+    if (!name || !name.trim()) return;
+    await flushSave();
+    const cal = collectProjectData($('projectName').value);
+    const data = {
+        name: name.trim(),
+        startDate: cal.startDate,
+        totalEpisodes: cal.totalEpisodes,
+        milestones: copy ? cal.milestones : [],
+        cells: copy ? cal.cells : []
+    };
+    try {
+        const vid = await api().createVersion(App.project.id, data);
+        App.versions.push({ id: vid, name: data.name, lastUpdated: new Date().toISOString() });
+        applyVersion(vid, data);
+        triggerAutoSave();
+    } catch (e) {
+        alert(e.message);
+    }
+}
+
+async function renameVersion(vid) {
+    const meta = App.versions.find(v => v.id === vid);
+    if (!meta) return;
+    const name = prompt(t('renameVersionPrompt'), meta.name);
+    if (!name || !name.trim()) return;
+    meta.name = name.trim();
+    if (App.version.id === vid) App.version.name = meta.name;
+    try {
+        await api().saveVersion(App.project.id, vid, { name: meta.name });
+        renderVersionBar();
+        triggerAutoSave();
+    } catch (e) { alert(e.message); }
+}
+
+async function deleteVersion(vid) {
+    const meta = App.versions.find(v => v.id === vid);
+    if (!meta || App.versions.length < 2) return;
+    if (!confirm(tf('confirmDeleteVersion', { name: meta.name }))) return;
+    await flushSave();                      // önce bekleyen kaydı bitir, sonra sil
+    try {
+        await api().deleteVersion(App.project.id, vid);
+        App.versions = App.versions.filter(v => v.id !== vid);
+        if (App.version.id === vid) {
+            const next = App.versions.slice().sort((a, b) => String(b.lastUpdated || '').localeCompare(String(a.lastUpdated || '')))[0];
+            const data = await api().getVersion(App.project.id, next.id);
+            applyVersion(next.id, data);
+        }
+        triggerAutoSave();
+    } catch (e) { alert(e.message); }
+}
+
+// ---------------------------------------------------------------------
+// 7c) ESKİ KAYITLARI PROJELERE AYIRMA
+// Eski sistemde her kayıt ayrı bir belgeydi (Pervaneler, Pervaneler_V2…).
+// Burada kullanıcı onayıyla bunlar projelerin içine takvim versiyonu olarak taşınır.
+// ---------------------------------------------------------------------
+function legacyBaseName(name) {
+    let s = String(name || '').trim();
+    s = s.replace(/\s*\((kopya|copy)\)\s*$/i, '');
+    s = s.replace(/[\s_\-.]*(v|ver|version|versiyon)[\s_\-.]*\d+\s*$/i, '');
+    return s.trim() || 'Untitled Project';
+}
+function legacyVersionLabel(name, base) {
+    const n = String(name || '').trim();
+    if (base && n.toLocaleLowerCase('tr').startsWith(base.toLocaleLowerCase('tr'))) {
+        const rest = n.slice(base.length).replace(/^[\s_\-.]+/, '');
+        if (rest) return rest;
+    }
+    return n || 'V1';
+}
+// Eski kayıtlarda bölüm sayısı çoğu zaman yazılmamıştı; o zaman takvim varsayılan 16 bölümdü
+function legacyMaxEp(d) {
+    const maxCellEp = (d.cells || []).reduce((m, c) => Math.max(m, parseInt(c.ep) || 0), 0);
+    return Math.max(parseInt(d.totalEpisodes) || DEFAULT_EPISODES, maxCellEp);
+}
+function notesHaveText(notes) {
+    return Object.values(notes || {}).some(ep => ep && typeof ep === 'object' && Object.values(ep).some(v => String(v || '').trim()));
+}
+
+function openMigration() {
+    const groups = new Map();
+    const rows = App.legacy.slice()
+        .sort((a, b) => new Date(a.data.lastUpdated || 0) - new Date(b.data.lastUpdated || 0))
+        .map(({ id, data }) => {
+            const base = legacyBaseName(data.projectName);
+            const key = 'new:' + base.toLocaleLowerCase('tr');
+            if (!groups.has(key)) groups.set(key, { key, name: base });
+            const cells = Array.isArray(data.cells) ? data.cells.length : 0;
+            const empty = !cells && !notesHaveText(data.notes) && !(data.meetings || []).length;
+            return { id, data, base, cells, target: empty ? 'skip' : key };
+        });
+    App.migration = { groups, rows, running: false };
+    renderMigration();
+    $('migrateModal').style.display = 'flex';
+}
+window.openMigration = openMigration;
+
+function renderMigration() {
+    const m = App.migration;
+    const used = (key) => m.rows.filter(r => r.target === key).length;
+    const groupOptions = [...m.groups.values()];
+    const options = (selected) =>
+        `<optgroup label="${escapeHtml(t('migNew'))}">` +
+        groupOptions.map(g => `<option value="${escapeHtml(g.key)}" ${selected === g.key ? 'selected' : ''}>${escapeHtml(g.name)}</option>`).join('') +
+        `</optgroup>` +
+        (App.projects.length ? `<optgroup label="${escapeHtml(t('migExisting'))}">` +
+            App.projects.map(p => `<option value="ws:${escapeHtml(p.id)}" ${selected === 'ws:' + p.id ? 'selected' : ''}>${escapeHtml(p.data.projectName)}</option>`).join('') +
+            `</optgroup>` : '') +
+        `<option value="skip" ${selected === 'skip' ? 'selected' : ''}>${escapeHtml(t('migSkip'))}</option>`;
+
+    $('migrateBody').innerHTML = `
+        <h3>${escapeHtml(t('migTitle'))}</h3>
+        <p class="hint mig-intro">${escapeHtml(t('migIntro'))}</p>
+
+        <div class="mig-section-title">${escapeHtml(t('migNewProjects'))}</div>
+        <div class="mig-groups">
+            ${groupOptions.filter(g => used(g.key)).map(g => `
+                <div class="mig-group">
+                    <input data-gkey="${escapeHtml(g.key)}" value="${escapeHtml(g.name)}" maxlength="80">
+                    <span class="chip">🗂 ${used(g.key)} ${escapeHtml(t('versionsShort'))}</span>
+                </div>`).join('') || `<div class="muted">—</div>`}
+        </div>
+        <button class="ghost-btn" data-mact="addGroup">${escapeHtml(t('migAddGroup'))}</button>
+
+        <div class="mig-section-title">${escapeHtml(t('migOldSaves'))}</div>
+        <div class="mig-rows">
+            ${m.rows.map(r => `
+                <div class="mig-row ${r.target === 'skip' ? 'skipped' : ''}">
+                    <div class="mig-row-info">
+                        <b>${escapeHtml(r.data.projectName || 'Untitled Project')}</b>
+                        <small>${escapeHtml(formatDate(r.data.lastUpdated, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) || '—')} · ${r.cells} ${escapeHtml(t('cellsShort'))}</small>
+                    </div>
+                    <span class="mig-arrow">→</span>
+                    <select data-rid="${escapeHtml(r.id)}">${options(r.target)}</select>
+                </div>`).join('')}
+        </div>
+
+        <p id="migStatus" class="muted"></p>
+        <div class="modal-buttons">
+            <button class="modal-btn btn-confirm" data-mact="run">${escapeHtml(t('migRun'))}</button>
+            <button class="modal-btn btn-cancel" data-mact="close">${escapeHtml(t('cancel'))}</button>
+        </div>`;
+}
+
+$('migrateModal').addEventListener('change', (e) => {
+    const m = App.migration;
+    if (!m || m.running) return;
+    if (e.target.dataset.rid) {
+        const row = m.rows.find(r => r.id === e.target.dataset.rid);
+        if (row) row.target = e.target.value;
+        renderMigration();
+    } else if (e.target.dataset.gkey) {
+        const g = m.groups.get(e.target.dataset.gkey);
+        if (g && e.target.value.trim()) g.name = e.target.value.trim();
+        renderMigration();
+    }
+});
+
+$('migrateModal').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-mact]');
+    if (!b || !App.migration || App.migration.running) return;
+    const act = b.dataset.mact;
+    if (act === 'close') { $('migrateModal').style.display = 'none'; return; }
+    if (act === 'addGroup') {
+        const name = prompt(t('migNewGroupPrompt'));
+        if (!name || !name.trim()) return;
+        const key = 'new:custom-' + Date.now();
+        App.migration.groups.set(key, { key, name: name.trim() });
+        renderMigration();
+        return;
+    }
+    if (act === 'run') runMigration();
+});
+
+// Aynı projeye giden eski kayıtların proje düzeyindeki verilerini birleştir
+function mergeLegacyProjectData(rows) {
+    const sorted = rows.slice().sort((a, b) => new Date(a.data.lastUpdated || 0) - new Date(b.data.lastUpdated || 0));
+    let notes = {};
+    const scripts = {};
+    const meetings = new Map();
+    let totalEpisodes = 0;
+    sorted.forEach(({ data: d }) => {
+        if (notesHaveText(d.notes)) notes = d.notes;              // en güncel dolu notlar
+        Object.entries(d.scripts || {}).forEach(([k, s]) => {
+            const list = (scripts[k] = scripts[k] || { notes: [] }).notes;
+            (s && s.notes || []).forEach(n => { if (!list.some(x => x.id === n.id)) list.push(n); });
+        });
+        (d.meetings || []).forEach(mt => meetings.set(mt.id, mt));
+        totalEpisodes = Math.max(totalEpisodes, legacyMaxEp(d));
+    });
+    // Eski tablo notları yeni "bölüm notları" yapısına çevrilir; varsa yeni yapıdakiler eklenir
+    const episodeNotes = notesGridToEpisodeNotes(notes);
+    sorted.forEach(({ data: d }) => {
+        if (!isPlainObject(d.episodeNotes)) return;
+        Object.entries(d.episodeNotes).forEach(([k, s]) => {
+            const list = (episodeNotes[k] = episodeNotes[k] || { notes: [] }).notes;
+            (s && s.notes || []).forEach(n => { if (!list.some(x => x.id === n.id)) list.push(n); });
+        });
+    });
+    return { notes, episodeNotes, scripts, meetings: [...meetings.values()], totalEpisodes };
+}
+
+function legacyToVersion(d, base) {
+    const t0 = d.lastUpdated || new Date().toISOString();
+    return {
+        name: legacyVersionLabel(d.projectName, base),
+        startDate: d.startDate || '',
+        totalEpisodes: legacyMaxEp(d),
+        milestones: d.milestones || [],
+        cells: d.cells || [],
+        createdAt: t0,
+        lastUpdated: t0
+    };
+}
+
+async function runMigration() {
+    const m = App.migration;
+    const byTarget = new Map();
+    m.rows.forEach(r => { if (!byTarget.has(r.target)) byTarget.set(r.target, []); byTarget.get(r.target).push(r); });
+    const targets = [...byTarget.keys()].filter(k => k !== 'skip');
+    if (!targets.length && !byTarget.has('skip')) { alert(t('migNothing')); return; }
+
+    m.running = true;
+    $('migrateModal').querySelectorAll('button, select, input').forEach(x => x.disabled = true);
+    const status = $('migStatus');
+    let done = 0;
+    try {
+        for (const target of targets) {
+            status.textContent = tf('migRunning', { i: done + 1, n: targets.length });
+            const rows = byTarget.get(target);
+            let pid;
+            if (target.startsWith('ws:')) {
+                // Mevcut projeye versiyon olarak ekle
+                pid = target.slice(3);
+                const proj = App.projects.find(p => p.id === pid);
+                const base = proj ? proj.data.projectName : '';
+                for (const r of rows) await FB.createVersion(pid, legacyToVersion(r.data, base));
+                const count = (await FB.listVersions(pid)).length;
+                await FB.saveProject(pid, { versionCount: count, lastUpdated: new Date().toISOString() });
+            } else {
+                const g = m.groups.get(target);
+                const merged = mergeLegacyProjectData(rows);
+                const versions = rows.map(r => legacyToVersion(r.data, r.base));
+                const created = await FB.createProject({ projectName: g.name, ...merged }, versions);
+                pid = created.id;
+            }
+            await FB.markLegacy(rows.map(r => r.id), pid);
+            done++;
+        }
+        if (byTarget.has('skip')) await FB.markLegacy(byTarget.get('skip').map(r => r.id), 'skipped');
+        status.textContent = tf('migDone', { n: done });
+        setTimeout(() => { $('migrateModal').style.display = 'none'; App.migration = null; refreshDashboard(); }, 900);
+    } catch (e) {
+        console.error(e);
+        status.textContent = '⚠ ' + e.message;
+        m.running = false;
+        $('migrateModal').querySelectorAll('button, select, input').forEach(x => x.disabled = false);
+    }
+}
+
+// ---------------------------------------------------------------------
+// 8) SOL MENÜ & MODÜL GEÇİŞİ
 // ---------------------------------------------------------------------
 const MODULES = [
     { key: 'calendar', icon: '📅', label: 'modCalendar' },
@@ -2952,8 +3529,8 @@ function showModule(key) {
     $('scriptModule').style.display = key === 'script' ? 'flex' : 'none';
     $('meetingsModule').style.display = key === 'meetings' ? 'flex' : 'none';
     closeMenu();
-    if (key === 'notes') renderNotesBoard();
-    if (key === 'script') renderScriptModule();
+    if (key === 'notes') EpisodeNotes.render();
+    if (key === 'script') ScriptNotes.render();
     if (key === 'meetings') renderMeetingsModule();
     renderModuleNav();
 }
@@ -2964,196 +3541,365 @@ window.onLanguageChange = function () {
     if (App.view === 'dashboard') renderDashboard();
     if (App.view === 'workspace') {
         renderModuleNav();
-        if (App.module === 'script') renderScriptModule();
+        if (App.module === 'script') ScriptNotes.render();
+        if (App.module === 'notes') EpisodeNotes.render();
+        renderVersionBar();
         if (App.module === 'meetings') renderMeetingsModule();
         setSaveStatus($('saveStatus').dataset.state || 'saved');
     }
 };
 
 // ---------------------------------------------------------------------
-// 8) SENARYO NOTLARI MODÜLÜ
-// Senaryoyu okurken alınan teknik notlar: bölüm bazında (ve "Genel"),
-// kategori + sahne/sayfa referansı + not + çözüldü durumu.
-// Veri: project.scripts = { "GENEL": {notes:[...]}, "EP01": {notes:[...]} }
-//       not = { id, cat, ref, text, done, createdAt }
+// 9) NOT MODÜLLERİ — Senaryo Notları ve Bölüm Notları aynı şablonu kullanır:
+// solda Genel + bölüm listesi; her notta kategori, sahne/sayfa, metin, çözüldü durumu.
+//   project.scripts      = { "GENEL": {notes:[…]}, "EP01": {…} }   (senaryo notları)
+//   project.episodeNotes = { "GENEL": {notes:[…]}, "EP01": {…} }   (bölüm notları)
+//   not = { id, cat, ref, text, done, createdAt }
 // ---------------------------------------------------------------------
-const NOTE_CATS = [
+Object.assign(I18N.en, {
+    cat_sound: "Sound / Dubbing", cat_edit: "Edit", cat_cuts: "Cuts", cat_color: "Color", cat_send: "Send",
+    episodeNotesTitle: "Episode notes", refPlaceholderEp: "Scene / TC / page",
+    epNoteHint: "Enter adds the note, Shift+Enter starts a new line. Department and scene stay filled for the next note."
+});
+Object.assign(I18N.tr, {
+    cat_sound: "Ses / Dublaj", cat_edit: "Edit", cat_cuts: "Cuts", cat_color: "Color", cat_send: "Send",
+    episodeNotesTitle: "Bölüm notları", refPlaceholderEp: "Sahne / TC / sayfa",
+    epNoteHint: "Enter notu ekler, Shift+Enter yeni satır açar. Departman ve sahne bir sonraki not için dolu kalır."
+});
+
+Object.assign(I18N.en, {
+    exportPdf: "PDF", pdfThisEpisode: "This episode ({ep})", pdfAllEpisodes: "All episodes",
+    pdfThisMeeting: "This meeting", pdfAllMeetings: "All meetings",
+    pdfNoteCount: "{n} notes · {d} resolved", pdfGenerated: "Generated"
+});
+Object.assign(I18N.tr, {
+    exportPdf: "PDF", pdfThisEpisode: "Bu bölüm ({ep})", pdfAllEpisodes: "Tüm bölümler",
+    pdfThisMeeting: "Bu toplantı", pdfAllMeetings: "Tüm toplantılar",
+    pdfNoteCount: "{n} not · {d} çözüldü", pdfGenerated: "Oluşturulma"
+});
+
+// PDF çıktısı: yazdırılabilir bir sayfa hazırlanır ve tarayıcının yazdırma penceresi açılır.
+// Orada hedef olarak "PDF olarak kaydet" seçilir. (Türkçe karakterler sorunsuz çıkar.)
+function printDocument(title, bodyHtml) {
+    const project = $('projectName').value || (App.project && App.project.projectName) || '';
+    const stamp = new Date().toLocaleString(localeStr(), { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const html = `<!DOCTYPE html><html lang="${currentLang}"><head><meta charset="utf-8">
+<title>${escapeHtml(project + ' - ' + title)}</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1b1b1b; font-size: 11pt; margin: 0; }
+  header { border-bottom: 3px solid #e00; padding-bottom: 10px; margin-bottom: 18px; }
+  .brand { font-weight: 900; letter-spacing: 3px; font-size: 9pt; color: #e00; }
+  h1 { margin: 6px 0 2px; font-size: 20pt; }
+  .sub { color: #666; font-size: 10pt; }
+  section { margin-bottom: 20px; break-inside: auto; }
+  h2 { font-size: 14pt; margin: 0 0 8px; padding: 6px 10px; background: #f1f1f1; border-left: 4px solid #e00; break-after: avoid; }
+  h2 .meta { font-weight: 400; font-size: 9pt; color: #777; margin-left: 8px; }
+  h3 { font-size: 10.5pt; margin: 12px 0 4px; break-after: avoid; }
+  h3 small { color: #888; font-weight: 400; }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; border: 1px solid rgba(0,0,0,.25); vertical-align: -1px; }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 5px 6px; border-bottom: 1px solid #e6e6e6; vertical-align: top; }
+  tr { break-inside: avoid; }
+  td.chk { width: 22px; font-size: 12pt; line-height: 1; }
+  td.ref { width: 90px; font-weight: 700; color: #b00; font-size: 9.5pt; }
+  td.txt { white-space: pre-wrap; word-break: break-word; }
+  tr.done td.txt { color: #888; text-decoration: line-through; }
+  td.owner { width: 130px; color: #555; font-size: 9.5pt; }
+  .mt-meta { color: #555; font-size: 10pt; margin: -2px 0 8px; }
+  .mt-notes { white-space: pre-wrap; word-break: break-word; line-height: 1.5; margin: 4px 0 10px; }
+  .empty { color: #888; font-style: italic; }
+  footer { margin-top: 24px; color: #aaa; font-size: 8pt; text-align: right; }
+</style></head><body>
+<header><div class="brand">POSTPRO LAB</div><h1>${escapeHtml(project)}</h1>
+<div class="sub">${escapeHtml(title)} · ${escapeHtml(t('pdfGenerated'))}: ${escapeHtml(stamp)}</div></header>
+${bodyHtml}
+<footer>PostPro Lab</footer>
+</body></html>`;
+
+    const frame = document.createElement('iframe');
+    frame.setAttribute('aria-hidden', 'true');
+    frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+    document.body.appendChild(frame);
+    const cleanup = () => { if (frame.parentNode) frame.remove(); };
+    frame.onload = () => {
+        const w = frame.contentWindow;
+        w.onafterprint = () => setTimeout(cleanup, 100);
+        setTimeout(() => { w.focus(); w.print(); }, 50);
+        setTimeout(cleanup, 60000);
+    };
+    frame.srcdoc = html;
+}
+window.printDocument = printDocument;
+
+// Senaryo okurken kullanılan teknik kategoriler
+const SCRIPT_CATS = [
     { key: 'vfx',      color: '#8c7ae6' },
     { key: 'sfx',      color: '#ff9f43' },
+    { key: 'sound',    color: '#f78fb3' },
     { key: 'music',    color: '#54a0ff' },
     { key: 'location', color: '#10ac84' },
     { key: 'stunt',    color: '#ff5c5c' },
     { key: 'props',    color: '#c8a165' },
     { key: 'other',    color: '#8a8f99' }
 ];
-const catInfo = (key) => NOTE_CATS.find(c => c.key === key) || NOTE_CATS[NOTE_CATS.length - 1];
-const catLabel = (key) => t('cat_' + catInfo(key).key);
+// Bölüm notları: takvimdeki departmanlar (renkler takvimle aynı)
+const DEPT_CATS = [
+    { key: 'edit',  color: deptColors.edit },
+    { key: 'cuts',  color: deptColors.cuts },
+    { key: 'vfx',   color: deptColors.vfx },
+    { key: 'color', color: deptColors.color },
+    { key: 'sound', color: deptColors.sound },
+    { key: 'music', color: deptColors.music },
+    { key: 'send',  color: deptColors.send },
+    { key: 'other', color: '#8a8f99' }
+];
 
-App.scriptFilter = 'all';      // all | open | <kategori>
-App.scriptLastCat = 'vfx';     // form son seçilen kategoriyi hatırlar
-
-function scriptKeys() {
+function noteKeys() {
     return ['GENEL', ...Array.from({ length: TOTAL_EPISODES }, (_, i) => 'EP' + String(i + 1).padStart(2, '0'))];
 }
-function scriptLabel(key) { return key === 'GENEL' ? t('general') : key; }
-function readScriptNotes(key) {
-    const s = App.project.scripts[key];
-    return (s && Array.isArray(s.notes)) ? s.notes : [];
-}
-function writeScript(key) {
-    const s = App.project.scripts;
-    if (!s[key] || typeof s[key] !== 'object') s[key] = { notes: [] };
-    if (!Array.isArray(s[key].notes)) s[key].notes = [];
-    return s[key];
-}
+function noteKeyLabel(key) { return key === 'GENEL' ? t('general') : key; }
 
-function renderScriptModule() {
-    if (!App.project) return;
-    const keys = scriptKeys();
-    if (!keys.includes(App.scriptKey)) App.scriptKey = 'GENEL';
-
-    const listHtml = keys.map(k => {
-        const notes = readScriptNotes(k);
-        const open = notes.filter(n => !n.done).length;
-        return `<button class="mod-list-item ${k === App.scriptKey ? 'active' : ''}" data-key="${k}">
-            <span>${escapeHtml(scriptLabel(k))}</span>
-            <span class="mli-badges">${open ? `<span class="count">${open}</span>` : notes.length ? '<span class="all-done">✓</span>' : ''}</span>
-        </button>`;
-    }).join('');
-
-    const scroll = $('scriptList') ? $('scriptList').parentElement.scrollTop : 0;
-    $('scriptModule').innerHTML = `
-        <div class="mod-layout">
-            <div class="mod-list">
-                <div class="mod-list-title">${escapeHtml(t('episodesTitle'))}</div>
-                <div id="scriptList">${listHtml}</div>
-            </div>
-            <div class="mod-detail" id="scriptDetail"></div>
-        </div>`;
-    $('scriptList').parentElement.scrollTop = scroll;
-    renderScriptDetail();
-}
-
-function renderScriptDetail() {
-    const key = App.scriptKey;
-    const all = readScriptNotes(key);
-    const openCount = all.filter(n => !n.done).length;
-
-    // Filtre: sadece kullanılan kategoriler gösterilir
-    const usedCats = NOTE_CATS.filter(c => all.some(n => (n.cat || 'other') === c.key));
-    if (App.scriptFilter !== 'all' && App.scriptFilter !== 'open' && !usedCats.some(c => c.key === App.scriptFilter)) App.scriptFilter = 'all';
-
-    const visible = all
-        .filter(n => App.scriptFilter === 'all' ? true : App.scriptFilter === 'open' ? !n.done : (n.cat || 'other') === App.scriptFilter)
-        .sort((a, b) => (a.done - b.done) || String(b.createdAt).localeCompare(String(a.createdAt)));
-
-    const chip = (val, label, count, color) =>
-        `<button class="filter-chip ${App.scriptFilter === val ? 'active' : ''}" data-filter="${val}">
-            ${color ? `<span class="swatch" style="background:${color}"></span>` : ''}${escapeHtml(label)} <b>${count}</b></button>`;
-
-    $('scriptDetail').innerHTML = `
-        <div class="detail-head">
-            <h2>🎬 ${escapeHtml(scriptLabel(key))} — ${escapeHtml(t('scriptNotes'))}</h2>
-            <span class="muted">${openCount} ${escapeHtml(t('openNotes'))} · ${all.length - openCount} ${escapeHtml(t('resolved'))}</span>
-        </div>
-
-        <form class="note-add" id="scriptNoteForm">
-            <select id="snCat" title="${escapeHtml(t('category'))}">
-                ${NOTE_CATS.map(c => `<option value="${c.key}" ${c.key === App.scriptLastCat ? 'selected' : ''}>${escapeHtml(catLabel(c.key))}</option>`).join('')}
-            </select>
-            <input id="snRef" type="text" maxlength="40" placeholder="${escapeHtml(t('sceneRef'))}">
-            <textarea id="snText" rows="2" placeholder="${escapeHtml(t('notePlaceholder'))}"></textarea>
-            <button class="primary-btn small" type="submit">${escapeHtml(t('add'))}</button>
-        </form>
-        <p class="hint">${escapeHtml(t('scriptNoteHint'))}</p>
-
-        ${all.length ? `<div class="filter-chips">
-            ${chip('all', t('filterAll'), all.length)}
-            ${chip('open', t('filterOpen'), openCount)}
-            ${usedCats.map(c => chip(c.key, catLabel(c.key), all.filter(n => (n.cat || 'other') === c.key).length, c.color)).join('')}
-        </div>` : ''}
-
-        <div class="sn-list">
-            ${visible.length ? visible.map(n => {
-                const c = catInfo(n.cat || 'other');
-                return `<div class="sn-item ${n.done ? 'done' : ''}" data-id="${escapeHtml(n.id)}" style="border-left-color:${c.color}">
-                    <input type="checkbox" data-act="toggle" ${n.done ? 'checked' : ''} title="${escapeHtml(t('resolved'))}">
-                    <div class="sn-body">
-                        <div class="sn-tags">
-                            <span class="sn-cat" style="background:${c.color}">${escapeHtml(catLabel(c.key))}</span>
-                            ${n.ref ? `<span class="sn-ref">${escapeHtml(n.ref)}</span>` : ''}
-                        </div>
-                        <span class="sn-text">${escapeHtml(n.text)}</span>
-                        <small>${escapeHtml(formatDate(n.createdAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</small>
-                    </div>
-                    <button class="icon-btn" data-act="edit" title="${escapeHtml(t('rename'))}">✏️</button>
-                    <button class="icon-btn" data-act="del" title="${escapeHtml(t('delete'))}">🗑</button>
-                </div>`;
-            }).join('') : `<div class="viewer-empty">📝<br>${escapeHtml(all.length ? t('noNotesInFilter') : t('noNotesYet'))}</div>`}
-        </div>`;
-}
-
-$('scriptModule').addEventListener('click', (e) => {
-    const item = e.target.closest('.mod-list-item');
-    if (item) { App.scriptKey = item.dataset.key; App.scriptFilter = 'all'; renderScriptModule(); return; }
-
-    const f = e.target.closest('[data-filter]');
-    if (f) { App.scriptFilter = f.dataset.filter; renderScriptDetail(); return; }
-
-    const act = e.target.closest('[data-act]');
-    if (!act || act.dataset.act === 'toggle') return;
-    const id = act.closest('.sn-item') && act.closest('.sn-item').dataset.id;
-    const s = writeScript(App.scriptKey);
-    const note = s.notes.find(n => n.id === id);
-    if (!note) return;
-
-    if (act.dataset.act === 'edit') {
-        const text = prompt(t('editNote'), note.text);
-        if (text === null || !text.trim()) return;
-        note.text = text.trim();
-    } else if (act.dataset.act === 'del') {
-        if (!confirm(t('confirmDeleteNote'))) return;
-        s.notes = s.notes.filter(n => n.id !== id);
-    }
-    triggerAutoSave();
-    renderScriptModule();
-});
-
-$('scriptModule').addEventListener('change', (e) => {
-    if (e.target.id === 'snCat') { App.scriptLastCat = e.target.value; return; }
-    if (e.target.dataset.act !== 'toggle') return;
-    const id = e.target.closest('.sn-item').dataset.id;
-    const note = writeScript(App.scriptKey).notes.find(n => n.id === id);
-    if (note) { note.done = e.target.checked; triggerAutoSave(); renderScriptModule(); }
-});
-
-// Not alanında Enter = ekle, Shift+Enter = yeni satır
-$('scriptModule').addEventListener('keydown', (e) => {
-    if (e.target.id === 'snText' && e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        $('scriptNoteForm').requestSubmit();
-    }
-});
-
-$('scriptModule').addEventListener('submit', (e) => {
-    if (e.target.id !== 'scriptNoteForm') return;
-    e.preventDefault();
-    const text = $('snText').value.trim();
-    if (!text) return;
-    const ref = $('snRef').value.trim();
-    App.scriptLastCat = $('snCat').value;
-    writeScript(App.scriptKey).notes.push({
-        id: uid(), cat: App.scriptLastCat, ref, text, done: false, createdAt: new Date().toISOString()
+// Eski tablo şeklindeki bölüm notlarını (notes[EP01][edit] = "metin") yeni yapıya çevir
+function notesGridToEpisodeNotes(grid) {
+    const out = {};
+    const now = new Date().toISOString();
+    Object.entries(grid || {}).forEach(([ep, depts]) => {
+        if (!depts || typeof depts !== 'object') return;
+        Object.entries(depts).forEach(([dep, text]) => {
+            const s = String(text || '').trim();
+            if (!s) return;
+            (out[ep] = out[ep] || { notes: [] }).notes.push({
+                id: uid(), cat: DEPT_CATS.some(c => c.key === dep) ? dep : 'other', ref: '', text: s, done: false, createdAt: now
+            });
+        });
     });
-    triggerAutoSave();
-    renderScriptModule();
-    // Aynı sahneye art arda not girilebilsin diye kategori ve sahne alanı korunur
-    $('snRef').value = ref;
-    $('snText').focus();
+    return out;
+}
+
+function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey }) {
+    const st = { sel: 'GENEL', filter: 'all', lastCat: cats[0].key };
+    const catInfo = (key) => cats.find(c => c.key === key) || cats[cats.length - 1];
+    const catLabel = (key) => t('cat_' + catInfo(key).key);
+    const store = () => {
+        const s = App.project[dataKey];
+        if (!s || typeof s !== 'object' || Array.isArray(s)) App.project[dataKey] = {};
+        return App.project[dataKey];
+    };
+    const readNotes = (key) => { const s = store()[key]; return (s && Array.isArray(s.notes)) ? s.notes : []; };
+    const writeEntry = (key) => {
+        const s = store();
+        if (!s[key] || typeof s[key] !== 'object') s[key] = { notes: [] };
+        if (!Array.isArray(s[key].notes)) s[key].notes = [];
+        return s[key];
+    };
+    const q = (sel) => el.querySelector(sel);
+
+    function render() {
+        if (!App.project) return;
+        const keys = noteKeys();
+        if (!keys.includes(st.sel)) st.sel = 'GENEL';
+        const listHtml = keys.map(k => {
+            const notes = readNotes(k);
+            const open = notes.filter(n => !n.done).length;
+            return `<button class="mod-list-item ${k === st.sel ? 'active' : ''}" data-key="${k}">
+                <span>${escapeHtml(noteKeyLabel(k))}</span>
+                <span class="mli-badges">${open ? `<span class="count">${open}</span>` : notes.length ? '<span class="all-done">✓</span>' : ''}</span>
+            </button>`;
+        }).join('');
+
+        const prevList = q('.mod-list');
+        const scroll = prevList ? prevList.scrollTop : 0;
+        el.innerHTML = `
+            <div class="mod-layout">
+                <div class="mod-list">
+                    <div class="mod-list-title">${escapeHtml(t('episodesTitle'))}</div>
+                    <div class="mod-list-items">${listHtml}</div>
+                </div>
+                <div class="mod-detail"></div>
+            </div>`;
+        q('.mod-list').scrollTop = scroll;
+        renderDetail();
+    }
+
+    function renderDetail() {
+        const all = readNotes(st.sel);
+        const openCount = all.filter(n => !n.done).length;
+        const ro = App.readOnly;
+        const usedCats = cats.filter(c => all.some(n => catInfo(n.cat).key === c.key));
+        if (st.filter !== 'all' && st.filter !== 'open' && !usedCats.some(c => c.key === st.filter)) st.filter = 'all';
+
+        const visible = all
+            .filter(n => st.filter === 'all' ? true : st.filter === 'open' ? !n.done : catInfo(n.cat).key === st.filter)
+            .sort((a, b) => (a.done - b.done) || String(b.createdAt).localeCompare(String(a.createdAt)));
+
+        const chip = (val, label, count, color) =>
+            `<button class="filter-chip ${st.filter === val ? 'active' : ''}" data-filter="${val}">
+                ${color ? `<span class="swatch" style="background:${color}"></span>` : ''}${escapeHtml(label)} <b>${count}</b></button>`;
+
+        q('.mod-detail').innerHTML = `
+            <div class="detail-head">
+                <h2>${icon} ${escapeHtml(noteKeyLabel(st.sel))} — ${escapeHtml(t(titleKey))}</h2>
+                <div class="detail-tools">
+                    <span class="muted">${openCount} ${escapeHtml(t('openNotes'))} · ${all.length - openCount} ${escapeHtml(t('resolved'))}</span>
+                    <button class="ghost-btn" data-act="pdf">📄 ${escapeHtml(t('exportPdf'))}</button>
+                </div>
+            </div>
+
+            ${ro ? '' : `
+            <form class="note-add">
+                <select data-role="cat" title="${escapeHtml(t('category'))}">
+                    ${cats.map(c => `<option value="${c.key}" ${c.key === st.lastCat ? 'selected' : ''}>${escapeHtml(catLabel(c.key))}</option>`).join('')}
+                </select>
+                <input data-role="ref" type="text" maxlength="40" placeholder="${escapeHtml(t(refKey))}">
+                <textarea data-role="text" rows="2" placeholder="${escapeHtml(t('notePlaceholder'))}"></textarea>
+                <button class="primary-btn small" type="submit">${escapeHtml(t('add'))}</button>
+            </form>
+            <p class="hint">${escapeHtml(t(hintKey))}</p>`}
+
+            ${all.length ? `<div class="filter-chips">
+                ${chip('all', t('filterAll'), all.length)}
+                ${chip('open', t('filterOpen'), openCount)}
+                ${usedCats.map(c => chip(c.key, catLabel(c.key), all.filter(n => catInfo(n.cat).key === c.key).length, c.color)).join('')}
+            </div>` : ''}
+
+            <div class="sn-list">
+                ${visible.length ? visible.map(n => {
+                    const c = catInfo(n.cat);
+                    return `<div class="sn-item ${n.done ? 'done' : ''}" data-id="${escapeHtml(n.id)}" style="border-left-color:${c.color}">
+                        <input type="checkbox" data-act="toggle" ${n.done ? 'checked' : ''} ${ro ? 'disabled' : ''} title="${escapeHtml(t('resolved'))}">
+                        <div class="sn-body">
+                            <div class="sn-tags">
+                                <span class="sn-cat" style="background:${c.color}">${escapeHtml(catLabel(c.key))}</span>
+                                ${n.ref ? `<span class="sn-ref">${escapeHtml(n.ref)}</span>` : ''}
+                            </div>
+                            <span class="sn-text">${escapeHtml(n.text)}</span>
+                            <small>${escapeHtml(formatDate(n.createdAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</small>
+                        </div>
+                        ${ro ? '' : `<button class="icon-btn" data-act="edit" title="${escapeHtml(t('rename'))}">✏️</button>
+                        <button class="icon-btn" data-act="del" title="${escapeHtml(t('delete'))}">🗑</button>`}
+                    </div>`;
+                }).join('') : `<div class="viewer-empty">${icon}<br>${escapeHtml(all.length ? t('noNotesInFilter') : t('noNotesYet'))}</div>`}
+            </div>`;
+    }
+
+    el.addEventListener('click', (e) => {
+        const item = e.target.closest('.mod-list-item');
+        if (item) { st.sel = item.dataset.key; st.filter = 'all'; render(); return; }
+
+        const f = e.target.closest('[data-filter]');
+        if (f) { st.filter = f.dataset.filter; renderDetail(); return; }
+
+        const act = e.target.closest('[data-act]');
+        if (act && act.dataset.act === 'pdf') { showPdfMenu(act); return; }
+        if (App.readOnly) return;
+        if (!act || act.dataset.act === 'toggle') return;
+        const id = act.closest('.sn-item') && act.closest('.sn-item').dataset.id;
+        const entry = writeEntry(st.sel);
+        const note = entry.notes.find(n => n.id === id);
+        if (!note) return;
+
+        if (act.dataset.act === 'edit') {
+            const text = prompt(t('editNote'), note.text);
+            if (text === null || !text.trim()) return;
+            note.text = text.trim();
+        } else if (act.dataset.act === 'del') {
+            if (!confirm(t('confirmDeleteNote'))) return;
+            entry.notes = entry.notes.filter(n => n.id !== id);
+        }
+        triggerAutoSave();
+        render();
+    });
+
+    el.addEventListener('change', (e) => {
+        if (App.readOnly) return;
+        if (e.target.dataset.role === 'cat') { st.lastCat = e.target.value; return; }
+        if (e.target.dataset.act !== 'toggle') return;
+        const id = e.target.closest('.sn-item').dataset.id;
+        const note = writeEntry(st.sel).notes.find(n => n.id === id);
+        if (note) { note.done = e.target.checked; triggerAutoSave(); render(); }
+    });
+
+    // Enter = ekle, Shift+Enter = yeni satır
+    el.addEventListener('keydown', (e) => {
+        if (e.target.dataset.role === 'text' && e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            q('.note-add').requestSubmit();
+        }
+    });
+
+    el.addEventListener('submit', (e) => {
+        if (!e.target.classList.contains('note-add')) return;
+        e.preventDefault();
+        if (App.readOnly) return;
+        const text = q('[data-role="text"]').value.trim();
+        if (!text) return;
+        const ref = q('[data-role="ref"]').value.trim();
+        st.lastCat = q('[data-role="cat"]').value;
+        writeEntry(st.sel).notes.push({ id: uid(), cat: st.lastCat, ref, text, done: false, createdAt: new Date().toISOString() });
+        triggerAutoSave();
+        render();
+        // Aynı sahneye art arda not girilebilsin diye kategori ve sahne alanı korunur
+        q('[data-role="ref"]').value = ref;
+        q('[data-role="text"]').focus();
+    });
+
+    function showPdfMenu(anchor) {
+        menu.innerHTML = `
+            <div class="item" data-scope="one">📄&nbsp; ${escapeHtml(tf('pdfThisEpisode', { ep: noteKeyLabel(st.sel) }))}</div>
+            <div class="item" data-scope="all">📚&nbsp; ${escapeHtml(t('pdfAllEpisodes'))}</div>`;
+        const r = anchor.getBoundingClientRect();
+        positionMenu(r.right - 220, r.bottom + 4);
+        menu.querySelectorAll('[data-scope]').forEach(b => b.onclick = () => { closeMenu(); exportPdf(b.dataset.scope); });
+    }
+
+    function exportPdf(scope) {
+        const keys = scope === 'all' ? noteKeys() : [st.sel];
+        const order = (n) => cats.findIndex(c => c.key === catInfo(n.cat).key);
+        const sections = keys.map(k => {
+            const notes = readNotes(k);
+            if (!notes.length) return '';
+            const done = notes.filter(n => n.done).length;
+            const groups = cats.map(c => {
+                const list = notes.filter(n => catInfo(n.cat).key === c.key)
+                    .sort((a, b) => String(a.ref || '').localeCompare(String(b.ref || ''), undefined, { numeric: true }) ||
+                                    String(a.createdAt).localeCompare(String(b.createdAt)));
+                if (!list.length) return '';
+                return `<h3><span class="sw" style="background:${c.color}"></span>${escapeHtml(catLabel(c.key))} <small>(${list.length})</small></h3>
+                    <table>${list.map(n => `<tr class="${n.done ? 'done' : ''}">
+                        <td class="chk">${n.done ? '☑' : '☐'}</td>
+                        <td class="ref">${escapeHtml(n.ref || '')}</td>
+                        <td class="txt">${escapeHtml(n.text)}</td></tr>`).join('')}</table>`;
+            }).join('');
+            return `<section><h2>${escapeHtml(noteKeyLabel(k))}
+                <span class="meta">${escapeHtml(tf('pdfNoteCount', { n: notes.length, d: done }))}</span></h2>${groups}</section>`;
+        }).join('');
+        const title = `${t(titleKey)} — ${scope === 'all' ? t('pdfAllEpisodes') : noteKeyLabel(st.sel)}`;
+        printDocument(title, sections || `<p class="empty">${escapeHtml(t('noNotesYet'))}</p>`);
+    }
+
+    return {
+        render,
+        reset() { st.sel = 'GENEL'; st.filter = 'all'; el.innerHTML = ''; },
+        countAll(project) {
+            const s = project && project[dataKey];
+            return s && typeof s === 'object' ? Object.values(s).reduce((n, x) => n + ((x && Array.isArray(x.notes)) ? x.notes.length : 0), 0) : 0;
+        }
+    };
+}
+
+const ScriptNotes = createNotesModule({
+    el: $('scriptModule'), dataKey: 'scripts', cats: SCRIPT_CATS, icon: '🎬',
+    titleKey: 'scriptNotes', refKey: 'sceneRef', hintKey: 'scriptNoteHint'
+});
+const EpisodeNotes = createNotesModule({
+    el: $('notesModule'), dataKey: 'episodeNotes', cats: DEPT_CATS, icon: '📝',
+    titleKey: 'episodeNotesTitle', refKey: 'refPlaceholderEp', hintKey: 'epNoteHint'
 });
 
 // ---------------------------------------------------------------------
-// 9) TOPLANTI NOTLARI MODÜLÜ
+// 10) TOPLANTI NOTLARI MODÜLÜ
 // Veri: project.meetings = [{id, title, date, attendees, notes, actions:[{id,text,owner,done}]}]
 // ---------------------------------------------------------------------
 function sortedMeetings() {
@@ -3176,6 +3922,25 @@ function renderMeetingsModule() {
         </div>`;
     renderMeetingList();
     renderMeetingDetail();
+}
+
+function exportMeetingsPdf(list) {
+    const body = list.map(m => {
+        const actions = (m.actions || []).filter(a => (a.text || '').trim());
+        return `<section>
+            <h2>${escapeHtml(m.title || t('untitledMeeting'))}</h2>
+            <div class="mt-meta">📅 ${escapeHtml(formatDate(m.date, { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' }) || '—')}
+                ${m.attendees ? ` · 👥 ${escapeHtml(m.attendees)}` : ''}</div>
+            ${(m.notes || '').trim() ? `<h3>${escapeHtml(t('meetingNotes'))}</h3><div class="mt-notes">${escapeHtml(m.notes)}</div>` : ''}
+            ${actions.length ? `<h3>${escapeHtml(t('actionItems'))}</h3>
+                <table>${actions.map(a => `<tr class="${a.done ? 'done' : ''}">
+                    <td class="chk">${a.done ? '☑' : '☐'}</td>
+                    <td class="txt">${escapeHtml(a.text)}</td>
+                    <td class="owner">${escapeHtml(a.owner || '')}</td></tr>`).join('')}</table>` : ''}
+        </section>`;
+    }).join('');
+    const title = `${t('modMeetings')} — ${list.length === 1 ? (list[0].title || t('untitledMeeting')) : t('pdfAllMeetings')}`;
+    printDocument(title, body || `<p class="empty">${escapeHtml(t('noMeetingsYet'))}</p>`);
 }
 
 function renderMeetingList() {
@@ -3204,6 +3969,9 @@ function renderMeetingDetail() {
     const actions = m.actions || [];
     el.innerHTML = `
         <div class="meeting-form">
+            <div class="detail-tools meeting-tools">
+                <button class="ghost-btn" data-act="pdf">📄 ${escapeHtml(t('exportPdf'))}</button>
+            </div>
             <input class="meeting-title" data-field="title" maxlength="120" placeholder="${escapeHtml(t('meetingTitle'))}" value="${escapeHtml(m.title || '')}">
             <div class="np-row">
                 <label class="np-field"><span>${escapeHtml(t('meetingDate'))}</span>
@@ -3240,6 +4008,19 @@ $('meetingsModule').addEventListener('click', (e) => {
     const act = e.target.closest('[data-act]');
     if (!act) return;
     const m = currentMeeting();
+
+    if (act.dataset.act === 'pdf') {
+        const r = act.getBoundingClientRect();
+        menu.innerHTML = `
+            <div class="item" data-scope="one">📄&nbsp; ${escapeHtml(t('pdfThisMeeting'))}</div>
+            <div class="item" data-scope="all">📚&nbsp; ${escapeHtml(t('pdfAllMeetings'))}</div>`;
+        positionMenu(r.right - 200, r.bottom + 4);
+        menu.querySelectorAll('[data-scope]').forEach(b => b.onclick = () => {
+            closeMenu();
+            exportMeetingsPdf(b.dataset.scope === 'all' ? sortedMeetings() : (m ? [m] : []));
+        });
+        return;
+    }
 
     if (act.dataset.act === 'new') {
         const nm = { id: uid(), title: '', date: toLocalISO(new Date()), attendees: '', notes: '', actions: [], createdAt: new Date().toISOString() };
@@ -3303,18 +4084,25 @@ $('meetingsModule').addEventListener('keydown', (e) => {
 });
 
 // ---------------------------------------------------------------------
-// 10) BAŞLANGIÇ — bu dosyadaki çeviriler eklendikten sonra dili yeniden uygula
+// 11) BAŞLANGIÇ — bu dosyadaki çeviriler eklendikten sonra dili yeniden uygula
 // ---------------------------------------------------------------------
 applyLanguage();
 </script>
 <script type="module">
 // =====================================================================
-// firebase.js — Giriş (Google), proje kaydet/yükle/sil, paylaşım linki.
-// workspace.js'teki ekranlar bu dosyanın window.FB fonksiyonlarını kullanır.
+// firebase.js — Google girişi, Firestore kayıtları, paylaşım linki.
+//
+// Veri yapısı:
+//   users/{uid}/workspaces/{projeId}                    → proje (ad, bölüm notları,
+//                                                          senaryo notları, toplantılar)
+//   users/{uid}/workspaces/{projeId}/versions/{verId}   → takvim versiyonları
+//   users/{uid}/projects/{id}                           → ESKİ sistem kayıtları (sadece
+//                                                          "Projelere ayır" ekranı okur)
+//   sharedProjects/{shareId}                            → salt-okunur paylaşım linkleri
 // =====================================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, setDoc, doc, getDoc, getDocs, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, setDoc, doc, getDoc, getDocs, collection, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDQI87phz2rIGkWNyn_EYRo0MULCpO_6JI",
@@ -3333,15 +4121,25 @@ function requireUser() {
     if (!auth.currentUser) throw new Error(t('signInFirst'));
     return auth.currentUser.uid;
 }
-const projectsCol = (uid) => collection(db, "users", uid, "projects");
-const projectDoc = (uid, id) => doc(db, "users", uid, "projects", id);
+const wsCol = (uid) => collection(db, "users", uid, "workspaces");
+const wsDoc = (uid, pid) => doc(db, "users", uid, "workspaces", pid);
+const verCol = (uid, pid) => collection(db, "users", uid, "workspaces", pid, "versions");
+const verDoc = (uid, pid, vid) => doc(db, "users", uid, "workspaces", pid, "versions", vid);
+const legacyCol = (uid) => collection(db, "users", uid, "projects");
+const nowIso = () => new Date().toISOString();
+const byUpdatedDesc = (a, b) => new Date(b.data.lastUpdated || 0) - new Date(a.data.lastUpdated || 0);
 
-function newProjectId(name) {
-    const slug = String(name || 'project').toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'project';
-    return `${slug.slice(0, 40)}-${Date.now()}`;
+// Firestore tek seferde en fazla 500 yazma kabul ediyor
+async function commitInChunks(ops) {
+    for (let i = 0; i < ops.length; i += 450) {
+        const batch = writeBatch(db);
+        ops.slice(i, i + 450).forEach(op => op(batch));
+        await batch.commit();
+    }
 }
 
 const FB = {
+    // ---------- Giriş ----------
     async login() {
         try { await signInWithPopup(auth, new GoogleAuthProvider()); }
         catch (e) { if (e.code !== 'auth/popup-closed-by-user') showLogin("Giriş hatası: " + e.message); }
@@ -3358,59 +4156,114 @@ const FB = {
         location.reload();
     },
 
+    // ---------- Projeler ----------
     async listProjects() {
-        const uid = requireUser();
-        const snap = await getDocs(projectsCol(uid));
-        return snap.docs
-            .map(d => ({ id: d.id, data: d.data() }))
-            .sort((a, b) => new Date(b.data.lastUpdated || 0) - new Date(a.data.lastUpdated || 0));
+        const snap = await getDocs(wsCol(requireUser()));
+        return snap.docs.map(d => ({ id: d.id, data: d.data() })).sort(byUpdatedDesc);
     },
 
-    // Yeni proje (veya çoğaltma): verilen veriyi temel alır, eksik alanları doldurur
-    async createProject(base) {
+    // Proje + takvim versiyonlarını tek seferde oluşturur.
+    // versions boşsa boş bir "V1" versiyonu açılır. Aktif versiyon = en son güncellenen.
+    async createProject(proj, versions = []) {
         const uid = requireUser();
-        const now = new Date().toISOString();
-        const data = {
-            projectName: base.projectName || 'Untitled Project',
-            startDate: base.startDate || "",
-            totalEpisodes: parseInt(base.totalEpisodes) || 16,
-            totalDays: base.totalDays || null,
-            milestones: base.milestones || [],
-            cells: base.cells || [],
-            notes: base.notes || {},
-            scripts: base.scripts || {},
-            meetings: base.meetings || [],
+        const now = nowIso();
+        const pRef = doc(wsCol(uid));
+        const list = versions.length ? versions : [{
+            name: 'V1', startDate: proj.startDate || '', totalEpisodes: parseInt(proj.totalEpisodes) || 16, cells: [], milestones: []
+        }];
+        const ops = [];
+        let active = null, activeTime = -1, activeName = '';
+        list.forEach(v => {
+            const vRef = doc(verCol(uid, pRef.id));
+            const data = Object.assign({ cells: [], milestones: [], createdAt: now, lastUpdated: now }, v);
+            ops.push(b => b.set(vRef, data));
+            const tm = new Date(data.lastUpdated).getTime() || 0;
+            if (tm >= activeTime) { activeTime = tm; active = vRef.id; activeName = data.name || ''; }
+        });
+        const pdata = {
+            projectName: proj.projectName || 'Untitled Project',
+            totalEpisodes: parseInt(proj.totalEpisodes) || 16,
+            notes: proj.notes || {},
+            episodeNotes: proj.episodeNotes || {},
+            scripts: proj.scripts || {},
+            meetings: proj.meetings || [],
+            stats: proj.stats || {},
+            activeVersionId: active,
+            activeVersionName: activeName,
+            versionCount: list.length,
             createdAt: now,
             lastUpdated: now
         };
-        const id = newProjectId(data.projectName);
-        await setDoc(projectDoc(uid, id), data);
-        return { id, data };
+        ops.push(b => b.set(pRef, pdata));
+        await commitInChunks(ops);
+        return { id: pRef.id, data: pdata };
     },
 
-    async saveProject(id, data) {
+    async getProject(pid) {
+        const s = await getDoc(wsDoc(requireUser(), pid));
+        return s.exists() ? s.data() : null;
+    },
+    async saveProject(pid, data) {
+        await setDoc(wsDoc(requireUser(), pid), data, { merge: true });
+    },
+    async renameProject(pid, name) {
+        await setDoc(wsDoc(requireUser(), pid), { projectName: name, lastUpdated: nowIso() }, { merge: true });
+    },
+    async deleteProject(pid) {
         const uid = requireUser();
-        await setDoc(projectDoc(uid, id), data);
+        const vs = await getDocs(verCol(uid, pid));
+        const ops = vs.docs.map(d => (b => b.delete(d.ref)));
+        ops.push(b => b.delete(wsDoc(uid, pid)));
+        await commitInChunks(ops);
+    },
+    async duplicateProject(pid, newName) {
+        const p = await FB.getProject(pid);
+        const vs = await FB.listVersions(pid);
+        return FB.createProject(Object.assign({}, p, { projectName: newName }), vs.map(v => v.data));
     },
 
-    async renameProject(id, name) {
+    // ---------- Takvim versiyonları ----------
+    async listVersions(pid) {
+        const snap = await getDocs(verCol(requireUser(), pid));
+        return snap.docs.map(d => ({ id: d.id, data: d.data() })).sort(byUpdatedDesc);
+    },
+    async getVersion(pid, vid) {
+        const s = await getDoc(verDoc(requireUser(), pid, vid));
+        return s.exists() ? s.data() : null;
+    },
+    async createVersion(pid, data) {
+        const ref = doc(verCol(requireUser(), pid));
+        const now = nowIso();
+        await setDoc(ref, Object.assign({ createdAt: now, lastUpdated: now }, data));
+        return ref.id;
+    },
+    async saveVersion(pid, vid, data) {
+        await setDoc(verDoc(requireUser(), pid, vid), data, { merge: true });
+    },
+    async deleteVersion(pid, vid) {
+        await deleteDoc(verDoc(requireUser(), pid, vid));
+    },
+
+    // ---------- Eski sistem kayıtları ----------
+    async listLegacy() {
+        const snap = await getDocs(legacyCol(requireUser()));
+        return snap.docs.map(d => ({ id: d.id, data: d.data() })).filter(x => !x.data.migratedTo);
+    },
+    // Taşınan (veya gizlenen) eski kayıtlar silinmez, sadece işaretlenir
+    async markLegacy(ids, target) {
         const uid = requireUser();
-        await setDoc(projectDoc(uid, id), { projectName: name, lastUpdated: new Date().toISOString() }, { merge: true });
+        const now = nowIso();
+        await commitInChunks(ids.map(id => (b => b.set(doc(legacyCol(uid), id), { migratedTo: target, migratedAt: now }, { merge: true }))));
     },
 
-    async deleteProject(id) {
-        const uid = requireUser();
-        await deleteDoc(projectDoc(uid, id));
-    },
-
-    // Salt-okunur paylaşım: sadece takvim + bölüm notları kopyalanır
+    // ---------- Paylaşım (salt-okunur: aktif takvim versiyonu + bölüm notları) ----------
     async shareProject(data) {
         const uid = requireUser();
         const shareId = Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
         await setDoc(doc(db, "sharedProjects", shareId), Object.assign({}, data, {
             lang: window.currentLang || 'en',
             ownerUid: uid,
-            createdAt: new Date().toISOString()
+            createdAt: nowIso()
         }));
         return `${location.origin}${location.pathname}?share=${shareId}`;
     }
@@ -3428,7 +4281,7 @@ if (shareParam) {
             if (!snap.exists()) { showLogin("Bu paylaşım linki geçersiz veya artık mevcut değil."); return; }
             const data = snap.data();
             setLanguageSilent(data.lang || 'en');
-            openProject(null, data, { readOnly: true });
+            openSharedView(data);
             switchToCalendarView(); // yapımcılar için takvim görünümüyle açılır
         } catch (e) {
             showLogin("Paylaşım verisi yüklenemedi: " + e.message);
