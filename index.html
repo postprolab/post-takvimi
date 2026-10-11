@@ -22,7 +22,9 @@
 body {
     margin: 0; background: var(--bg-dark);
     font-family: 'Segoe UI', Arial, sans-serif; color: white;
-    overflow: hidden; display: flex; flex-direction: column; height: 100vh;
+    overflow: hidden; display: flex; flex-direction: column;
+    height: 100vh;
+    height: 100dvh;   /* tablet/telefonda adres çubuğu hariç GERÇEK görünür yükseklik */
 }
 
 /* ---------- ÜST BAR ---------- */
@@ -72,6 +74,7 @@ body {
 /* ---------- ANA DÜZEN / GRID ---------- */
 .main-layout { display: flex; flex: 1; overflow: hidden; width: 100%; }
 .container { flex: 1; overflow: auto; position: relative; box-sizing: border-box; scroll-behavior: smooth; }
+.container, .header, #verticalViewContainer { touch-action: manipulation; -webkit-touch-callout: none; }
 .header, .grid { display: grid; width: max-content; }
 /* ⚡ PERFORMANS: etiket sütunu ve başlık köşesi TEK yapışkan blok.
    Tek tek hücreler artık sticky değil (eskiden ~300 yapışkan katman vardı). */
@@ -698,6 +701,77 @@ body.read-only-mode .cell.timeline { cursor: default; }
     .version-btn { max-width: 160px; }
 }
 
+/* ---------- KİŞİLER (ortak çalışma) ---------- */
+.sb-btn-people { border-color: #4a7bd8; color: #b8cdf5; }
+.sb-btn-people:hover { background: #141b2a; }
+.save-status.remote { color: #8ab4ff; }
+.project-card.shared { border-color: #2a3550; }
+.chip-shared { background: #172238; border-color: #2c3f66; color: #b8cdf5; }
+.chip-people { background: #1b2230; border-color: #2c3542; color: #c8d3e6; }
+.people-content { max-width: 560px !important; text-align: left !important; }
+.people-content h3 { text-align: center; margin-bottom: 4px; }
+.people-project { text-align: center; color: #ddd; font-weight: 800; margin: 0 0 6px; }
+.people-add { display: grid; grid-template-columns: 1fr 150px auto; gap: 8px; margin: 14px 0 6px; }
+.people-add input, .people-add select, .people-role {
+    background: #1d1f23; border: 1px solid #333; color: #fff; padding: 9px 10px; border-radius: 8px;
+    font-size: 13px; font-family: inherit; outline: none;
+}
+.people-add input:focus { border-color: var(--neon-green); }
+.people-list { display: flex; flex-direction: column; gap: 4px; margin: 14px 0 6px; max-height: 45vh; overflow-y: auto; }
+.people-row { display: flex; align-items: center; gap: 10px; background: #15171c; border: 1px solid #23262d; border-radius: 8px; padding: 8px 10px; }
+.people-row .avatar {
+    width: 30px; height: 30px; border-radius: 50%; background: #2a2d35; color: #fff; display: flex;
+    align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0;
+}
+.people-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.people-info b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.people-info small { color: #777; font-size: 11px; }
+.people-badge { font-size: 11px; color: #aaa; background: #1e2128; border: 1px solid #2b2f38; border-radius: 12px; padding: 3px 9px; white-space: nowrap; }
+.people-role { padding: 6px 8px; font-size: 12px; }
+#peopleStatus { min-height: 16px; margin: 4px 0 10px; text-align: center; }
+body.read-only-mode #newVersionBtn { display: none !important; }
+@media (max-width: 820px) { .people-add { grid-template-columns: 1fr; } }
+
+/* ---------- TABLET (yatay ve dikey) ---------- */
+.app-sidebar { min-height: 0; }
+.sb-footer { padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)); }
+.dash-main { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+@media (max-width: 1180px) and (min-width: 821px) {
+    .app-sidebar { width: 180px; padding: 10px 8px; }
+    .sb-nav-item { padding: 9px 8px; font-size: 12px; gap: 8px; }
+    .sb-project-input { font-size: 14px; }
+    .top-bar { gap: 6px; padding: 6px 10px; }
+    .nav-btn { padding: 6px 8px; font-size: 9.5px; }
+    .filter-bar { padding: 6px 10px; gap: 6px; }
+    .dept-filter-btn { padding: 4px 9px; font-size: 10px; }
+    .mod-list { width: 180px; }
+    .mod-detail { padding: 18px 18px 60px; }
+    .note-add { grid-template-columns: 130px 110px 1fr auto; }
+}
+/* Kısa ekranlarda (yatay tablet) kenar çubuğu sıkışmasın */
+@media (max-height: 700px) and (min-width: 821px) {
+    .sb-project { padding: 4px 8px 8px; }
+    .sb-nav-item { padding: 7px 8px; }
+    .sb-footer { gap: 6px; padding-top: 8px; }
+}
+/* Dar ekran (dikey tablet / telefon): üst çubuk iki satır — 1) proje + düğmeler, 2) modüller */
+@media (max-width: 820px) {
+    .app-sidebar { flex-wrap: wrap; overflow: visible; row-gap: 6px; }
+    .sb-project { flex: 1; min-width: 120px; }
+    .sb-footer { margin-left: auto; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+    .sb-btn { padding: 7px 9px; }
+    .save-status { font-size: 10px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+    .sb-nav { order: 10; width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+    .top-bar { flex-wrap: wrap; overflow: visible; row-gap: 6px; }
+    .top-bar .nav-spacer, .top-bar .tb-sep { display: none; }
+}
+/* Dokunmatik ekranlarda tıklanabilir alanlar biraz daha büyük */
+@media (pointer: coarse) {
+    .context-menu .item { padding: 11px 16px; font-size: 13px; }
+    .icon-btn { padding: 8px 10px; }
+    .ver-actions { opacity: 1; }
+}
+
 /* ---------- BANNER'LAR ---------- */
 .banner { position: fixed; left: 0; width: 100%; box-sizing: border-box; padding: 9px 16px; font-size: 12px; text-align: center; z-index: 19000; }
 .banner-readonly { top: 0; background: #1a2e1a; color: #a8e6a1; border-bottom: 1px solid #4CAF50; }
@@ -798,7 +872,8 @@ body.read-only-mode .cell.timeline { cursor: default; }
         <nav id="moduleNav" class="sb-nav"></nav>
         <div class="nav-spacer"></div>
         <div class="sb-footer">
-            <button id="shareBtn" class="sb-btn">🔗 <span data-i18n="shareBtn">SHARE</span></button>
+            <button id="peopleBtn" class="sb-btn sb-btn-people">👥 <span data-i18n="people">People</span></button>
+            <button id="shareBtn" class="sb-btn">🔗 <span data-i18n="linkShare">Read-only link</span></button>
             <div id="saveStatus" class="save-status"></div>
             <div class="lang-switch"><span data-lang="en">EN</span><span data-lang="tr">TR</span></div>
         </div>
@@ -866,7 +941,7 @@ body.read-only-mode .cell.timeline { cursor: default; }
 
 <!-- ============ ORTAK PENCERELER ============ -->
 <div id="readOnlyBanner" class="banner banner-readonly" hidden>
-    👁️ <span data-i18n="readOnlyBannerText">This is a read-only shared view — editing is disabled.</span>
+    👁️ <span id="readOnlyText">This is a read-only shared view — editing is disabled.</span>
 </div>
 
 <div id="offlineBanner" class="banner banner-offline" hidden>
@@ -908,6 +983,10 @@ body.read-only-mode .cell.timeline { cursor: default; }
             <button type="button" id="npCancel" class="modal-btn btn-cancel" data-i18n="cancel">CANCEL</button>
         </div>
     </form>
+</div>
+
+<div id="peopleModal" class="modal-overlay">
+    <div id="peopleBody" class="modal-content people-content"></div>
 </div>
 
 <div id="migrateModal" class="modal-overlay">
@@ -1014,6 +1093,15 @@ PLATFORM_CUTS.forEach(p => {
     }
 });
 
+// 📦 SEND satırına özel türler (sağ tık menüsü). Yeni tür eklemek için buraya bir satır yeter.
+const SEND_TYPES = {
+    qc: { label: "QC", bg: "#FF9800", fg: "#000000" }
+};
+Object.entries(SEND_TYPES).forEach(([k, v]) => { CUT_TYPES[k] = Object.assign({ row: 'send' }, v); });
+
+// Her türün hangi satıra ait olduğu (varsayılan: cuts)
+const typeRow = (key) => (CUT_TYPES[key] && CUT_TYPES[key].row) || 'cuts';
+
 let columnWidths = { episode: 120, edit: 260, cuts: 260, vfx: 260, color: 260, sound: 260, music: 260, send: 260 };
 
 // ---------------------------------------------------------------------
@@ -1057,6 +1145,7 @@ const I18N = {
         myProjects: "MY PROJECTS", deleteAll: "DELETE ALL", close: "CLOSE", deleteProject: "Delete Project",
         selectStartDate: "SELECT START DATE", apply: "APPLY", cancel: "CANCEL",
         rename: "Rename", color: "Color", delete: "Delete", cutType: "CUT TYPE", normalCut: "Back to normal CUT", platformCuts: "PLATFORM CUTS",
+        sendType: "SEND TYPE", normalSend: "Back to normal SEND",
         askProjectName: "Enter project name:", nameRequired: "Project name is required.", savedAs: "Saved as",
         signInFirst: "⚠️ Please sign in first.", shareLinkPrompt: "Share this link (read-only, nobody can edit):",
         newName: "New name:", noSchedule: "No schedule.", loading: "Loading...", noProjects: "No saved projects.",
@@ -1078,6 +1167,7 @@ const I18N = {
         myProjects: "PROJELERİM", deleteAll: "TÜMÜNÜ SİL", close: "KAPAT", deleteProject: "Projeyi Sil",
         selectStartDate: "BAŞLANGIÇ TARİHİ SEÇ", apply: "UYGULA", cancel: "VAZGEÇ",
         rename: "Yeniden Adlandır", color: "Renk", delete: "Sil", cutType: "CUT TÜRÜ", normalCut: "Normal CUT'a döndür", platformCuts: "PLATFORM CUT'LARI",
+        sendType: "SEND TÜRÜ", normalSend: "Normal SEND'e döndür",
         askProjectName: "Proje adını girin:", nameRequired: "Proje adı gerekli.", savedAs: "Kaydedildi:",
         signInFirst: "⚠️ Önce giriş yapmalısınız.", shareLinkPrompt: "Bu linki paylaşabilirsiniz (salt-okunur, kimse düzenleyemez):",
         newName: "Yeni isim:", noSchedule: "Plan yok.", loading: "Yükleniyor...", noProjects: "Kayıt bulunamadı.",
@@ -1634,10 +1724,15 @@ const gridEl = document.getElementById('grid');
 const timelineCellFrom = (e) => e.target.closest && e.target.closest('.cell.timeline');
 
 // Çift tık: boşsa doldur, doluysa menüyü aç
+let lastDbl = { cell: null, t: 0 };
 gridEl.addEventListener('dblclick', (e) => {
     const cell = timelineCellFrom(e);
     if (!cell) return;
     e.stopPropagation();
+    // Dokunmatikte hem tarayıcının hem bizim çift dokunma algımız tetiklenebilir; ikinciyi yok say
+    const now = Date.now();
+    if (lastDbl.cell === cell && now - lastDbl.t < 450) return;
+    lastDbl = { cell, t: now };
     if (cell.classList.contains('filled')) {
         contextTarget = cell;
         showGridMenu(e.clientX, e.clientY);
@@ -1704,6 +1799,53 @@ gridEl.addEventListener('click', (e) => {
         }
     }
 });
+
+// ---------------------------------------------------------------------
+// DOKUNMATİK EKRAN (tablet/telefon)
+// • Basılı tutmak = sağ tık (hücre, proje kartı, tarih menüleri açılır)
+// • Hücreye çift dokunmak = çift tıklama (boş hücreyi doldurur)
+// ---------------------------------------------------------------------
+(function setupTouch() {
+    let timer = null, sx = 0, sy = 0, target = null, nativeMenu = false, suppressNext = false;
+    let lastTap = { cell: null, t: 0 };
+
+    document.addEventListener('contextmenu', () => { nativeMenu = true; }, true);
+
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) { clearTimeout(timer); timer = null; return; }
+        const tc = e.touches[0];
+        sx = tc.clientX; sy = tc.clientY; target = e.target; nativeMenu = false;
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            timer = null;
+            suppressNext = true;
+            if (nativeMenu) return;     // tarayıcı zaten sağ tık menüsünü tetikledi
+            target.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: sx, clientY: sy, button: 2 }));
+        }, 550);
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!timer) return;
+        const tc = e.touches[0];
+        if (Math.hypot(tc.clientX - sx, tc.clientY - sy) > 10) { clearTimeout(timer); timer = null; }
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+        clearTimeout(timer); timer = null;
+        // Uzun basmadan sonra parmak kalkınca menü hemen kapanmasın
+        if (suppressNext) { suppressNext = false; if (e.cancelable) e.preventDefault(); return; }
+        // Çift dokunma → çift tıklama (takvim hücreleri)
+        const cell = e.target.closest && e.target.closest('.cell.timeline');
+        if (!cell || window.isReadOnlyShare) return;
+        const now = Date.now();
+        if (lastTap.cell === cell && now - lastTap.t < 350) {
+            lastTap = { cell: null, t: 0 };
+            cell.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true, clientX: sx, clientY: sy }));
+        } else {
+            lastTap = { cell, t: now };
+        }
+    }, { passive: false });
+})();
 
 // Salt-okunur modda hücre düzenlemeyi engelle (kaydırma çalışmaya devam eder)
 ['click', 'dblclick', 'contextmenu', 'mousedown'].forEach(evName => {
@@ -1774,6 +1916,23 @@ window.showGridMenu = function (x, y) {
         }
     }
 
+    // SEND satırı: QC
+    if (contextTarget.dataset.proc_type === 'send') {
+        html += `<div class="menu-sep"></div><div class="menu-label">${escapeHtml(t('sendType'))}</div>`;
+        Object.keys(SEND_TYPES).forEach(key => {
+            const ct = CUT_TYPES[key];
+            html += `<div class="item" data-act="cut" data-cut="${key}">
+                        <span class="swatch" style="background:${ct.bg}"></span>${escapeHtml(ct.label)}
+                        ${currentType === key ? '<span class="check">✓</span>' : ''}
+                     </div>`;
+        });
+        if (currentType) {
+            html += `<div class="item" data-act="cut" data-cut="">
+                        <span class="swatch" style="background:${deptColors.send}"></span>↩ ${escapeHtml(t('normalSend'))}
+                     </div>`;
+        }
+    }
+
     html += `<div class="menu-sep"></div><div class="item" data-act="delete" style="color:#ff6b6b;">🗑&nbsp; ${escapeHtml(t('delete'))}</div>`;
 
     menu.innerHTML = html;
@@ -1810,14 +1969,17 @@ window.showGridMenu = function (x, y) {
     });
 };
 
+// Seçili hücrelere özel tür uygular (CUTS: director/platform…, SEND: QC).
+// Tür sadece kendi satırındaki hücrelere uygulanır; boş tür = satırın normal hâline döner.
 function applyCutType(type) {
-    const targets = getMenuTargets().filter(c => c.dataset.proc_type === 'cuts' && c.classList.contains('filled'));
+    const row = type ? typeRow(type) : (contextTarget ? contextTarget.dataset.proc_type : 'cuts');
+    const targets = getMenuTargets().filter(c => c.dataset.proc_type === row && c.classList.contains('filled'));
     targets.forEach(c => {
         if (type && CUT_TYPES[type]) {
             const ct = CUT_TYPES[type];
             fillCell(c, { text: ct.label, bg: ct.bg, cutType: type });
         } else {
-            fillCell(c, { text: "CUT", bg: deptColors.cuts, cutType: "" });
+            fillCell(c, { text: row === 'cuts' ? "CUT" : row.toUpperCase(), bg: deptColors[row], cutType: "" });
         }
     });
     closeMenu();
@@ -2759,7 +2921,19 @@ Object.assign(I18N.en, {
     migNewProjects: "PROJECTS TO CREATE", migOldSaves: "OLD SAVES", migAddGroup: "+ Add project",
     migSkip: "— Don't import (hide)", migExisting: "Existing project", migNew: "New project",
     migRun: "IMPORT", migRunning: "Importing… {i}/{n}", migDone: "Done — {n} projects updated.",
-    migNewGroupPrompt: "New project name:", cellsShort: "cells", migNothing: "Nothing selected to import."
+    migNewGroupPrompt: "New project name:", cellsShort: "cells", migNothing: "Nothing selected to import.",
+    // Paylaşım / ortak çalışma
+    people: "People", peopleTitle: "People with access", shareWithPeople: "Share with people",
+    peopleHint: "When the person signs in to this site with this Google account, the project appears in their Projects. Changes show up for everyone within seconds.",
+    emailPlaceholder: "Email address", roleEditor: "Can edit", roleViewer: "Can view", roleOwner: "Owner",
+    addPerson: "Add", removePerson: "Remove access", invalidEmail: "Please enter a valid email address.",
+    alreadyMember: "This person already has access.", cannotAddSelf: "You already own this project.",
+    confirmRemovePerson: "Remove {email} from this project?",
+    sharedWithYou: "Shared by {name}", membersCount: "{n} people", youAreViewer: "You can view this project but not edit it.",
+    accessRemoved: "You no longer have access to this project.", projectDeleted: "This project was deleted.",
+    versionRemoved: "This calendar version was deleted by someone else. Opening the latest version.",
+    remoteUpdate: "Updated by {name}", movingProjects: "Moving your projects to the new sharing structure…",
+    linkShare: "Read-only link", onlyOwnerManages: "Only the owner can change who has access."
 });
 Object.assign(I18N.tr, {
     versionLabel: "VERSİYON", newVersionBtn: "YENİ VERSİYON", calendarVersions: "TAKVİM VERSİYONLARI",
@@ -2775,29 +2949,104 @@ Object.assign(I18N.tr, {
     migNewProjects: "OLUŞTURULACAK PROJELER", migOldSaves: "ESKİ KAYITLAR", migAddGroup: "+ Proje ekle",
     migSkip: "— Aktarma (gizle)", migExisting: "Mevcut proje", migNew: "Yeni proje",
     migRun: "AKTAR", migRunning: "Aktarılıyor… {i}/{n}", migDone: "Tamam — {n} proje güncellendi.",
-    migNewGroupPrompt: "Yeni proje adı:", cellsShort: "hücre", migNothing: "Aktarılacak bir şey seçilmedi."
+    migNewGroupPrompt: "Yeni proje adı:", cellsShort: "hücre", migNothing: "Aktarılacak bir şey seçilmedi.",
+    people: "Kişiler", peopleTitle: "Erişimi olan kişiler", shareWithPeople: "Kişilerle paylaş",
+    peopleHint: "Eklediğin kişi bu siteye bu Google hesabıyla girdiğinde proje kendi “Projelerim” ekranında görünür. Yapılan değişiklikler birkaç saniye içinde herkeste güncellenir.",
+    emailPlaceholder: "E-posta adresi", roleEditor: "Düzenleyebilir", roleViewer: "Görüntüleyebilir", roleOwner: "Sahip",
+    addPerson: "Ekle", removePerson: "Erişimi kaldır", invalidEmail: "Lütfen geçerli bir e-posta adresi gir.",
+    alreadyMember: "Bu kişinin zaten erişimi var.", cannotAddSelf: "Bu projenin sahibi zaten sensin.",
+    confirmRemovePerson: "{email} bu projeden çıkarılsın mı?",
+    sharedWithYou: "{name} paylaştı", membersCount: "{n} kişi", youAreViewer: "Bu projeyi görüntüleyebilirsin ama düzenleyemezsin.",
+    accessRemoved: "Bu projeye artık erişimin yok.", projectDeleted: "Bu proje silindi.",
+    versionRemoved: "Açık olan takvim versiyonu başka biri tarafından silindi. En son versiyon açılıyor.",
+    remoteUpdate: "{name} güncelledi", movingProjects: "Projelerin yeni paylaşım yapısına taşınıyor…",
+    linkShare: "Salt-okunur link", onlyOwnerManages: "Erişimi sadece proje sahibi değiştirebilir."
 });
 
-Object.assign(App, { versions: [], version: null, legacy: [], migration: null });
+Object.assign(App, {
+    versions: [], version: null, legacy: [], migration: null,
+    role: 'owner',          // owner | editor | viewer
+    publicShare: false,     // ?share= linkiyle açıldıysa (senaryo/toplantı gizli)
+    sync: null              // canlı senkron için "son eşitlenen" durum
+});
+
+// Firestore'da bir alanı silmek için kullanılan işaret (firebase.js deleteField()'e çevirir)
+const DEL_FIELD = window.DEL_FIELD = { __delete: true };
+
+// Sıralı anahtarlarla JSON (iki tarafın verisini güvenle karşılaştırmak için)
+function stableJ(v) {
+    if (v === undefined) return 'null';
+    if (v === null || typeof v !== 'object') return JSON.stringify(v);
+    if (Array.isArray(v)) return '[' + v.map(stableJ).join(',') + ']';
+    return '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + stableJ(v[k])).join(',') + '}';
+}
+const clone = (o) => JSON.parse(JSON.stringify(o === undefined ? null : o));
+
+// Renkleri tarayıcının kullandığı tek biçime çevir (#cccccc → rgb(204, 204, 204))
+const _colorProbe = document.createElement('div');
+const _colorCache = new Map();
+function canonColor(c) {
+    const s = safeColor(c);
+    if (_colorCache.has(s)) return _colorCache.get(s);
+    _colorProbe.style.backgroundColor = '';
+    _colorProbe.style.backgroundColor = s;
+    const out = _colorProbe.style.backgroundColor || s;
+    _colorCache.set(s, out);
+    return out;
+}
+
+// Takvim hücreleri: liste ↔ { "col_ep_proc": hücre } haritası
+function normCell(c) {
+    return { col: String(c.col), ep: String(c.ep), procType: c.procType, text: String(c.text ?? ''), bg: canonColor(c.bg), cutType: c.cutType || '' };
+}
+function cellsToMap(list) {
+    const m = {};
+    (list || []).forEach(c => { const n = normCell(c); m[cellKey(n.col, n.ep, n.procType)] = n; });
+    return m;
+}
+window.cellsToMap = cellsToMap;
+function versionCells(v) {
+    if (!v) return [];
+    if (isPlainObject(v.cellMap)) return Object.values(v.cellMap);
+    return Array.isArray(v.cells) ? v.cells : [];
+}
+window.versionCells = versionCells;
+// Kaydetmeden önce versiyon verisini yeni biçime (cellMap) çevir
+function normalizeVersionData(v) {
+    const out = Object.assign({}, v);
+    if (!isPlainObject(out.cellMap)) out.cellMap = cellsToMap(versionCells(v));
+    delete out.cells;
+    return out;
+}
+window.normalizeVersionData = normalizeVersionData;
+
+// "a.b.c" yolundaki alanı ayarla / sil (offline depo için)
+function setPath(obj, path, val) {
+    const parts = path.split('.');
+    let o = obj;
+    for (let i = 0; i < parts.length - 1; i++) { if (!isPlainObject(o[parts[i]])) o[parts[i]] = {}; o = o[parts[i]]; }
+    if (val === DEL_FIELD) delete o[parts[parts.length - 1]];
+    else o[parts[parts.length - 1]] = clone(val);
+}
 
 // Offline mod için bellekte çalışan, FB ile aynı arayüze sahip depo
 const MemFB = (() => {
     const ws = {}, vers = {};
     let n = 0;
     const newId = (p) => `${p}-${Date.now().toString(36)}-${++n}`;
-    const clone = (o) => JSON.parse(JSON.stringify(o));
     const now = () => new Date().toISOString();
     const byUpdatedDesc = (a, b) => new Date(b.data.lastUpdated || 0) - new Date(a.data.lastUpdated || 0);
     return {
         async listProjects() { return Object.entries(ws).map(([id, data]) => ({ id, data: clone(data) })).sort(byUpdatedDesc); },
         async listLegacy() { return []; },
+        async migrateOldWorkspaces() { return 0; },
         async createProject(proj, versions = []) {
             const pid = newId('p'); const t0 = now(); vers[pid] = {};
             const list = versions.length ? versions : [{ name: 'V1', startDate: proj.startDate || '', totalEpisodes: parseInt(proj.totalEpisodes) || DEFAULT_EPISODES, cells: [], milestones: [] }];
             let active = null, activeTime = -1, activeName = '';
             list.forEach(v => {
                 const vid = newId('v');
-                const data = Object.assign({ cells: [], milestones: [], createdAt: t0, lastUpdated: t0 }, clone(v));
+                const data = Object.assign({ milestones: [], createdAt: t0, lastUpdated: t0 }, normalizeVersionData(clone(v)));
                 vers[pid][vid] = data;
                 const tm = new Date(data.lastUpdated).getTime() || 0;
                 if (tm >= activeTime) { activeTime = tm; active = vid; activeName = data.name; }
@@ -2805,27 +3054,41 @@ const MemFB = (() => {
             ws[pid] = {
                 projectName: proj.projectName || 'Untitled Project', totalEpisodes: parseInt(proj.totalEpisodes) || DEFAULT_EPISODES,
                 notes: clone(proj.notes || {}), episodeNotes: clone(proj.episodeNotes || {}), scripts: clone(proj.scripts || {}), meetings: clone(proj.meetings || []), stats: {},
-                activeVersionId: active, activeVersionName: activeName, versionCount: list.length, createdAt: t0, lastUpdated: t0
+                activeVersionId: active, activeVersionName: activeName, versionCount: list.length, createdAt: t0, lastUpdated: t0,
+                ownerUid: 'offline', members: {}, memberEmails: []
             };
             return { id: pid, data: clone(ws[pid]) };
         },
         async getProject(pid) { return ws[pid] ? clone(ws[pid]) : null; },
-        async saveProject(pid, data) { ws[pid] = Object.assign(ws[pid] || {}, clone(data)); },
+        async updateProject(pid, upd) { Object.entries(upd).forEach(([k, v]) => setPath(ws[pid], k, v)); },
         async renameProject(pid, name) { if (ws[pid]) ws[pid].projectName = name; },
         async deleteProject(pid) { delete ws[pid]; delete vers[pid]; },
         async duplicateProject(pid, newName) {
             return this.createProject(Object.assign({}, ws[pid], { projectName: newName }), Object.values(vers[pid] || {}));
         },
+        async setMembers() {},
         async listVersions(pid) { return Object.entries(vers[pid] || {}).map(([id, data]) => ({ id, data: clone(data) })).sort(byUpdatedDesc); },
         async getVersion(pid, vid) { return vers[pid] && vers[pid][vid] ? clone(vers[pid][vid]) : null; },
-        async createVersion(pid, data) { const vid = newId('v'); const t0 = now(); (vers[pid] = vers[pid] || {})[vid] = Object.assign({ createdAt: t0, lastUpdated: t0 }, clone(data)); return vid; },
-        async saveVersion(pid, vid, data) { vers[pid][vid] = Object.assign(vers[pid][vid] || {}, clone(data)); },
+        async createVersion(pid, data) { const vid = newId('v'); const t0 = now(); (vers[pid] = vers[pid] || {})[vid] = Object.assign({ createdAt: t0, lastUpdated: t0 }, normalizeVersionData(clone(data))); return vid; },
+        async updateVersion(pid, vid, upd) { Object.entries(upd).forEach(([k, v]) => setPath(vers[pid][vid], k, v)); },
         async deleteVersion(pid, vid) { delete vers[pid][vid]; },
+        watchProject() { return () => {}; },
+        watchVersion() { return () => {}; },
         async markLegacy() {}
     };
 })();
 
 const api = () => (window.isOfflineMode || !App.user) ? MemFB : window.FB;
+const myEmail = () => String((App.user && App.user.email) || '').toLowerCase();
+
+// Kullanıcının projedeki rolü
+function roleFor(d) {
+    if (window.isOfflineMode || !App.user) return 'owner';
+    if (!d) return null;
+    if (!d.ownerUid || d.ownerUid === App.user.uid) return 'owner';
+    const r = d.members && d.members[myEmail()];
+    return r === 'editor' || r === 'viewer' ? r : null;
+}
 
 // ---------------------------------------------------------------------
 // 5) GİRİŞ / OFFLINE
@@ -2856,8 +3119,9 @@ async function adoptOfflineWork() {
 
     const notesHaveText = Object.values(proj.notes || {}).some(ep => Object.values(ep || {}).some(v => String(v).trim()));
     const hasNotes = (o) => Object.values(o || {}).some(s => s && (s.notes || []).length);
-    const hasWork = versions.some(v => (v.cells || []).length) || (proj.meetings || []).length ||
+    const hasWork = versions.some(v => versionCells(v).length) || (proj.meetings || []).length ||
         hasNotes(proj.scripts) || hasNotes(proj.episodeNotes) || notesHaveText;
+    stopWatching();
     if (!hasWork || !confirm(t('keepOfflineWork'))) return false;
 
     const created = await FB.createProject(proj, versions);
@@ -2868,7 +3132,7 @@ async function adoptOfflineWork() {
 // Firebase giriş durumu değişince çağrılır
 window.onAuthUser = async function (user) {
     App.user = user;
-    if (App.readOnly) return;
+    if (App.publicShare) return;
 
     if (user) {
         renderProfile();
@@ -2880,6 +3144,7 @@ window.onAuthUser = async function (user) {
         if (App.view !== 'workspace') { showView('dashboard'); refreshDashboard(); }
     } else {
         if (window.isOfflineMode) return;
+        stopWatching();
         App.project = null;
         showLogin();
     }
@@ -2906,10 +3171,23 @@ $('profileBtn').onclick = (e) => {
 // ---------------------------------------------------------------------
 // 6) PROJELERİM PANELİ
 // ---------------------------------------------------------------------
+let movedOldWorkspaces = false;
+
 async function refreshDashboard() {
     const grid = $('projectGrid');
     grid.innerHTML = `<div class="dash-loading">${escapeHtml(t('loading'))}</div>`;
     try {
+        // Bir kereye mahsus: kendi hesabın altındaki projeleri ortak yapıya taşı
+        if (!movedOldWorkspaces) {
+            movedOldWorkspaces = true;
+            try {
+                const n = await FB.migrateOldWorkspaces((msg) => { grid.innerHTML = `<div class="dash-loading">${escapeHtml(t('movingProjects'))} ${escapeHtml(msg || '')}</div>`; });
+                if (n) console.log(`${n} proje ortak yapıya taşındı`);
+            } catch (err) {
+                movedOldWorkspaces = false;
+                console.warn('Proje taşıma hatası:', err);
+            }
+        }
         const [projects, legacy] = await Promise.all([
             FB.listProjects(),
             FB.listLegacy().catch(err => { console.warn('Eski kayıtlar okunamadı:', err); return []; })
@@ -2925,7 +3203,6 @@ async function refreshDashboard() {
 window.refreshDashboard = refreshDashboard;
 
 function projectStats(d) {
-    const scripts = d.scripts && typeof d.scripts === 'object' ? Object.values(d.scripts) : [];
     const stats = d.stats || {};
     return {
         eps: parseInt(d.totalEpisodes) || DEFAULT_EPISODES,
@@ -2935,7 +3212,8 @@ function projectStats(d) {
         masterLocks: stats.masterLocks || 0,
         scriptNotes: ScriptNotes.countAll(d),
         episodeNotes: EpisodeNotes.countAll(d),
-        meetings: Array.isArray(d.meetings) ? d.meetings.length : 0
+        meetings: Array.isArray(d.meetings) ? d.meetings.length : 0,
+        members: Object.keys(d.members || {}).length
     };
 }
 
@@ -2964,6 +3242,10 @@ function renderDashboard() {
 
     grid.innerHTML = App.projects.map(({ id, data: d }) => {
         const s = projectStats(d);
+        const role = roleFor(d);
+        const roleChip = role === 'owner'
+            ? (s.members ? `<span class="chip chip-people">👥 ${escapeHtml(tf('membersCount', { n: s.members + 1 }))}</span>` : '')
+            : `<span class="chip chip-shared">👥 ${escapeHtml(tf('sharedWithYou', { name: d.ownerName || d.ownerEmail || '' }))} · ${escapeHtml(t(role === 'editor' ? 'roleEditor' : 'roleViewer'))}</span>`;
         const chips = [
             `🗂 ${s.versions} ${t('versionsShort')}`,
             s.cells ? `📅 ${s.cells}` : '',
@@ -2972,14 +3254,14 @@ function renderDashboard() {
             s.scriptNotes ? `🎬 ${s.scriptNotes}` : '',
             s.meetings ? `🤝 ${s.meetings}` : ''
         ].filter(Boolean).map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('');
-        return `<div class="project-card" data-id="${escapeHtml(id)}" tabindex="0">
+        return `<div class="project-card ${role !== 'owner' ? 'shared' : ''}" data-id="${escapeHtml(id)}" tabindex="0">
             <div class="pc-top">
                 <div class="pc-title">${escapeHtml(d.projectName || 'Untitled Project')}</div>
                 <button class="pc-menu" data-menu="${escapeHtml(id)}" title="…">⋯</button>
             </div>
             <div class="pc-meta">${s.eps} ${escapeHtml(t('episodesShort'))}${s.activeVersion ? ' · ' + escapeHtml(t('activeVersion')) + ': <b>' + escapeHtml(s.activeVersion) + '</b>' : ''}</div>
-            <div class="pc-chips">${chips}</div>
-            <div class="pc-foot">${escapeHtml(t('updated'))}: ${escapeHtml(formatDate(d.lastUpdated, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) || '—')}</div>
+            <div class="pc-chips">${roleChip}${chips}</div>
+            <div class="pc-foot">${escapeHtml(t('updated'))}: ${escapeHtml(formatDate(d.lastUpdated, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) || '—')}${d.lastEditedBy && d.lastEditedBy.name ? ' · ' + escapeHtml(d.lastEditedBy.name) : ''}</div>
         </div>`;
     }).join('');
 }
@@ -3004,13 +3286,15 @@ $('projectGrid').addEventListener('contextmenu', (e) => {
 function showProjectMenu(id, anchor, x, y) {
     const entry = App.projects.find(p => p.id === id);
     if (!entry) return;
+    const role = roleFor(entry.data);
     menu.innerHTML = `
         <div class="item" data-act="open">📂&nbsp; ${escapeHtml(t('open'))}</div>
-        <div class="item" data-act="rename">✏️&nbsp; ${escapeHtml(t('renameProject'))}</div>
+        <div class="item" data-act="people">👥&nbsp; ${escapeHtml(role === 'owner' ? t('shareWithPeople') : t('people'))}</div>
+        ${role !== 'viewer' ? `<div class="item" data-act="rename">✏️&nbsp; ${escapeHtml(t('renameProject'))}</div>` : ''}
         <div class="item" data-act="dup">📑&nbsp; ${escapeHtml(t('duplicate'))}</div>
-        <div class="menu-sep"></div>
-        <div class="item" data-act="del" style="color:#ff6b6b;">🗑&nbsp; ${escapeHtml(t('deleteProjectShort'))}</div>`;
-    if (anchor) { const r = anchor.getBoundingClientRect(); positionMenu(r.right - 170, r.bottom + 4); }
+        ${role === 'owner' ? `<div class="menu-sep"></div>
+        <div class="item" data-act="del" style="color:#ff6b6b;">🗑&nbsp; ${escapeHtml(t('deleteProjectShort'))}</div>` : ''}`;
+    if (anchor) { const r = anchor.getBoundingClientRect(); positionMenu(r.right - 190, r.bottom + 4); }
     else positionMenu(x, y);
 
     menu.querySelectorAll('.item').forEach(item => item.onclick = async () => {
@@ -3018,6 +3302,7 @@ function showProjectMenu(id, anchor, x, y) {
         const act = item.dataset.act;
         try {
             if (act === 'open') openProjectById(id);
+            else if (act === 'people') openPeopleModal(id, entry.data);
             else if (act === 'rename') {
                 const name = prompt(t('askProjectName'), entry.data.projectName || '');
                 if (!name || !name.trim()) return;
@@ -3068,20 +3353,123 @@ $('newProjectForm').onsubmit = async (e) => {
 };
 
 // ---------------------------------------------------------------------
-// 7) PROJE AÇ / KAPAT / KAYDET
+// 6b) KİŞİLER — projeyi e-postayla paylaş (düzenleyici / görüntüleyici)
+// ---------------------------------------------------------------------
+let peopleCtx = null;   // { id, data }
+
+function openPeopleModal(id, data) {
+    peopleCtx = { id, data: clone(data) };
+    renderPeople();
+    $('peopleModal').style.display = 'flex';
+}
+window.openPeopleModal = openPeopleModal;
+
+function renderPeople() {
+    const { data } = peopleCtx;
+    const isOwner = roleFor(data) === 'owner';
+    const members = Object.entries(data.members || {}).sort((a, b) => a[0].localeCompare(b[0]));
+    const initial = (s) => escapeHtml(String(s || '?').trim().charAt(0).toUpperCase() || '?');
+    const roleSel = (email, role) => `<select data-email="${escapeHtml(email)}" class="people-role">
+            <option value="editor" ${role === 'editor' ? 'selected' : ''}>${escapeHtml(t('roleEditor'))}</option>
+            <option value="viewer" ${role === 'viewer' ? 'selected' : ''}>${escapeHtml(t('roleViewer'))}</option>
+        </select>`;
+
+    $('peopleBody').innerHTML = `
+        <h3>👥 ${escapeHtml(t('peopleTitle'))}</h3>
+        <p class="people-project">${escapeHtml(data.projectName || '')}</p>
+        <p class="hint">${escapeHtml(t('peopleHint'))}</p>
+        ${isOwner ? `
+        <form class="people-add" id="peopleAddForm" autocomplete="off">
+            <input type="email" id="peopleEmail" placeholder="${escapeHtml(t('emailPlaceholder'))}" required>
+            <select id="peopleRole">
+                <option value="editor">${escapeHtml(t('roleEditor'))}</option>
+                <option value="viewer">${escapeHtml(t('roleViewer'))}</option>
+            </select>
+            <button class="primary-btn small" type="submit">${escapeHtml(t('addPerson'))}</button>
+        </form>` : `<p class="muted">${escapeHtml(t('onlyOwnerManages'))}</p>`}
+        <div class="people-list">
+            <div class="people-row">
+                <span class="avatar">${initial(data.ownerName || data.ownerEmail)}</span>
+                <span class="people-info"><b>${escapeHtml(data.ownerName || data.ownerEmail || '')}</b><small>${escapeHtml(data.ownerEmail || '')}</small></span>
+                <span class="people-badge">${escapeHtml(t('roleOwner'))}</span>
+            </div>
+            ${members.map(([email, role]) => `
+            <div class="people-row">
+                <span class="avatar">${initial(email)}</span>
+                <span class="people-info"><b>${escapeHtml(email)}</b></span>
+                ${isOwner ? roleSel(email, role) + `<button class="icon-btn" data-remove="${escapeHtml(email)}" title="${escapeHtml(t('removePerson'))}">✕</button>`
+                          : `<span class="people-badge">${escapeHtml(t(role === 'editor' ? 'roleEditor' : 'roleViewer'))}</span>`}
+            </div>`).join('')}
+        </div>
+        <p id="peopleStatus" class="muted"></p>
+        <div class="modal-buttons"><button class="modal-btn btn-cancel" data-close="1">${escapeHtml(t('close'))}</button></div>`;
+}
+
+async function savePeople(members) {
+    const status = $('peopleStatus');
+    status.textContent = '⟳ ' + t('saving');
+    try {
+        await FB.setMembers(peopleCtx.id, members, peopleCtx.data.ownerEmail);
+        peopleCtx.data.members = members;
+        const entry = App.projects.find(p => p.id === peopleCtx.id);
+        if (entry) entry.data.members = clone(members);
+        if (App.project && App.project.id === peopleCtx.id) App.project.members = clone(members);
+        renderPeople();
+        $('peopleStatus').textContent = '✓ ' + t('saved');
+        renderDashboard();
+    } catch (e) {
+        status.textContent = '⚠ ' + e.message;
+    }
+}
+
+$('peopleModal').addEventListener('submit', (e) => {
+    if (e.target.id !== 'peopleAddForm') return;
+    e.preventDefault();
+    const email = $('peopleEmail').value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert(t('invalidEmail')); return; }
+    if (email === String(peopleCtx.data.ownerEmail || '').toLowerCase()) { alert(t('cannotAddSelf')); return; }
+    const members = Object.assign({}, peopleCtx.data.members || {});
+    if (members[email]) { alert(t('alreadyMember')); return; }
+    members[email] = $('peopleRole').value;
+    savePeople(members);
+});
+$('peopleModal').addEventListener('change', (e) => {
+    if (!e.target.classList.contains('people-role')) return;
+    const members = Object.assign({}, peopleCtx.data.members || {});
+    members[e.target.dataset.email] = e.target.value;
+    savePeople(members);
+});
+$('peopleModal').addEventListener('click', (e) => {
+    if (e.target.dataset.close || e.target === $('peopleModal')) { $('peopleModal').style.display = 'none'; return; }
+    const rm = e.target.closest('[data-remove]');
+    if (!rm) return;
+    const email = rm.dataset.remove;
+    if (!confirm(tf('confirmRemovePerson', { email }))) return;
+    const members = Object.assign({}, peopleCtx.data.members || {});
+    delete members[email];
+    savePeople(members);
+});
+
+// ---------------------------------------------------------------------
+// 7) PROJE AÇ / KAPAT / KAYDET + CANLI SENKRON
 // ---------------------------------------------------------------------
 function openProjectById(id) {
     const entry = App.projects.find(p => p.id === id);
     if (entry) openProject(entry.id, entry.data);
 }
 
-function setReadOnlyUI(readOnly, offline) {
+// Salt-okunur durumlar: herkese açık link (publicShare) veya "görüntüleyici" rolü
+function setReadOnlyUI({ readOnly = false, publicShare = false, offline = false } = {}) {
     App.readOnly = readOnly;
+    App.publicShare = publicShare;
+    window.isReadOnlyShare = readOnly;                 // takvim düzenlemeyi kapatır (calendar.js)
     document.body.classList.toggle('read-only-mode', readOnly);
     $('readOnlyBanner').hidden = !readOnly;
-    $('backToProjects').hidden = readOnly;
-    $('shareBtn').hidden = readOnly || !!offline;
-    $('versionGroup').hidden = readOnly;
+    $('readOnlyText').textContent = publicShare ? t('readOnlyBannerText') : t('youAreViewer');
+    $('backToProjects').hidden = publicShare;
+    $('shareBtn').hidden = readOnly || offline;
+    $('peopleBtn').hidden = publicShare || offline;
+    $('versionGroup').hidden = publicShare;
     $('projectName').readOnly = readOnly;
 }
 
@@ -3101,8 +3489,47 @@ function resetModulesFor(project) {
     $('meetingsModule').innerHTML = '';
 }
 
+// --- Canlı senkron: "son eşitlenen" durum ve dinleyiciler ---
+function flatProject(src) {
+    const m = new Map();
+    m.set('projectName', { j: stableJ(src.projectName || ''), v: src.projectName || '' });
+    m.set('meetings', { j: stableJ(src.meetings || []), v: src.meetings || [] });
+    ['episodeNotes', 'scripts'].forEach(f => Object.entries(src[f] || {}).forEach(([k, v]) => m.set(f + '.' + k, { j: stableJ(v), v })));
+    return m;
+}
+function localProjectState() {
+    return {
+        projectName: $('projectName').value.trim() || 'Untitled Project',
+        meetings: App.project.meetings, episodeNotes: App.project.episodeNotes || {}, scripts: App.project.scripts || {}
+    };
+}
+function remoteProjectState(d) {
+    return { projectName: d.projectName || '', meetings: d.meetings || [], episodeNotes: isPlainObject(d.episodeNotes) ? d.episodeNotes : {}, scripts: isPlainObject(d.scripts) ? d.scripts : {} };
+}
+const jsonMap = (m) => new Map([...m].map(([k, x]) => [k, x.j]));
+
+function stopWatching() {
+    if (App.sync) {
+        if (App.sync.unP) App.sync.unP();
+        if (App.sync.unV) App.sync.unV();
+    }
+    App.sync = null;
+}
+
+function watchVersion() {
+    if (!App.sync || !App.version) return;
+    if (App.sync.unV) App.sync.unV();
+    const pid = App.project.id, vid = App.version.id;
+    App.sync.unV = api().watchVersion(pid, vid, (v) => {
+        if (!App.project || App.project.id !== pid || !App.version || App.version.id !== vid) return;
+        onRemoteVersion(v);
+    });
+}
+
 async function openProject(id, data) {
-    setReadOnlyUI(false, window.isOfflineMode);
+    stopWatching();
+    App.role = roleFor(data) || 'viewer';
+    setReadOnlyUI({ readOnly: App.role === 'viewer', offline: window.isOfflineMode });
     resetModulesFor({
         id,
         projectName: data.projectName || 'Untitled Project',
@@ -3110,11 +3537,14 @@ async function openProject(id, data) {
         scripts: isPlainObject(data.scripts) ? data.scripts : {},
         episodeNotes: episodeNotesFrom(data),
         meetings: Array.isArray(data.meetings) ? data.meetings : [],
-        createdAt: data.createdAt || new Date().toISOString()
+        createdAt: data.createdAt || new Date().toISOString(),
+        ownerUid: data.ownerUid, ownerEmail: data.ownerEmail, ownerName: data.ownerName,
+        members: clone(data.members || {})
     });
     currentProjectId = id;
     App.versions = [];
     App.version = null;
+    App.sync = { proj: jsonMap(flatProject(remoteProjectState(data))), cells: new Map(), ver: {}, unP: null, unV: null };
     $('projectName').value = App.project.projectName;
     showView('workspace');
     showModule('calendar');
@@ -3122,7 +3552,7 @@ async function openProject(id, data) {
 
     try {
         let versions = await api().listVersions(id);
-        if (!versions.length) {
+        if (!versions.length && App.role !== 'viewer') {
             // Güvenlik: versiyonsuz proje kalmasın
             await api().createVersion(id, { name: 'V1', startDate: toLocalISO(new Date()), totalEpisodes: App.project.totalEpisodes, cells: [], milestones: [] });
             versions = await api().listVersions(id);
@@ -3130,8 +3560,15 @@ async function openProject(id, data) {
         if (!App.project || App.project.id !== id) return;   // kullanıcı bu arada başka yere geçti
         App.versions = versions.map(v => ({ id: v.id, name: v.data.name || 'V1', lastUpdated: v.data.lastUpdated }));
         const active = versions.find(v => v.id === data.activeVersionId) || versions[0];
-        applyVersion(active.id, active.data, data.notes || {});
+        if (active) applyVersion(active.id, active.data, data.notes || {});
         setSaveStatus(window.isOfflineMode ? 'offline' : 'saved');
+
+        // Canlı senkron: proje ve açık versiyondaki değişiklikleri dinle
+        App.sync.unP = api().watchProject(id, (d, reason) => {
+            if (!App.project || App.project.id !== id) return;
+            onRemoteProject(d, reason);
+        });
+        watchVersion();
     } catch (e) {
         console.error(e);
         alert(t('versionLoadError') + "\n" + e.message);
@@ -3139,9 +3576,10 @@ async function openProject(id, data) {
 }
 window.openProject = openProject;
 
-// Salt-okunur paylaşım linki: sadece takvim + bölüm notları
+// Herkese açık salt-okunur link: sadece takvim + bölüm notları
 function openSharedView(data) {
-    setReadOnlyUI(true);
+    stopWatching();
+    setReadOnlyUI({ readOnly: true, publicShare: true });
     resetModulesFor({ id: null, projectName: data.projectName || '', totalEpisodes: parseInt(data.totalEpisodes) || DEFAULT_EPISODES, scripts: {}, episodeNotes: episodeNotesFrom(data), meetings: [], createdAt: '' });
     App.versions = [];
     App.version = null;
@@ -3160,18 +3598,30 @@ function applyVersion(vid, v, notes) {
         startDate: v.startDate,
         totalEpisodes: Math.max(parseInt(v.totalEpisodes) || 0, App.project.totalEpisodes || 0) || DEFAULT_EPISODES,
         milestones: v.milestones || [],
-        cells: v.cells || [],
+        cells: versionCells(v),
         notes: notes !== undefined ? notes : notesState
     });
     App.project.totalEpisodes = TOTAL_EPISODES;
+    if (App.sync) {
+        // Eşitleme başlangıcı: ekrandaki hâl = sunucudaki hâl
+        App.sync.cells = new Map(Object.entries(cellsToMap(serializeCells())).map(([k, c]) => [k, stableJ(c)]));
+        App.sync.needsFullCells = !isPlainObject(v.cellMap);     // eski biçim → ilk kayıtta yeni biçime çevir
+        App.sync.ver = {
+            name: stableJ(v.name || 'V1'), startDate: stableJ(v.startDate || ''),
+            totalEpisodes: stableJ(parseInt(v.totalEpisodes) || TOTAL_EPISODES),
+            milestones: stableJ((v.milestones || []).map(Number))
+        };
+    }
     renderVersionBar();
 }
 
 async function backToProjects() {
     await flushSave();
+    stopWatching();
     App.project = null;
     App.version = null;
     currentProjectId = null;
+    setReadOnlyUI({});
     if (window.isOfflineMode) {
         window.isOfflineMode = false;
         $('offlineBanner').hidden = true;
@@ -3183,35 +3633,71 @@ async function backToProjects() {
 }
 $('backToProjects').onclick = backToProjects;
 
-// calendar.js'teki otomatik kayıt bunu çağırır:
-// aktif takvim versiyonu + proje (bölüm notları, senaryo, toplantılar) kaydedilir
+function editedBy() {
+    const u = App.user || {};
+    return { name: u.displayName || u.email || '', email: myEmail(), at: new Date().toISOString() };
+}
+
+// calendar.js'teki otomatik kayıt bunu çağırır.
+// ⚡ Sadece DEĞİŞEN hücreler / notlar yazılır; böylece iki kişi aynı anda farklı
+// yerleri değiştirdiğinde birbirinin işini ezmez.
 window.handleSaveAction = async function () {
-    if (App.readOnly || !App.project || !App.version) return;
+    if (App.readOnly || !App.project || !App.version || !App.sync) return;
     const offline = window.isOfflineMode || !App.user;
     if (!offline) setSaveStatus('saving');
+    const pid = App.project.id, vid = App.version.id, sync = App.sync;
     try {
         const name = $('projectName').value.trim() || 'Untitled Project';
         const cal = collectProjectData(name);
         const now = cal.lastUpdated;
-        await api().saveVersion(App.project.id, App.version.id, {
+
+        // --- Takvim versiyonu ---
+        const cur = cellsToMap(cal.cells);
+        const curJ = new Map(Object.entries(cur).map(([k, c]) => [k, stableJ(c)]));
+        const vUpd = {};
+        if (sync.needsFullCells) {
+            vUpd.cellMap = cur;
+            vUpd.cells = DEL_FIELD;
+        } else {
+            new Set([...curJ.keys(), ...sync.cells.keys()]).forEach(k => {
+                if (curJ.get(k) !== sync.cells.get(k)) vUpd['cellMap.' + k] = cur[k] || DEL_FIELD;
+            });
+        }
+        const verNow = {
             name: App.version.name, startDate: cal.startDate, totalEpisodes: cal.totalEpisodes,
-            milestones: cal.milestones, cells: cal.cells, lastUpdated: now
+            milestones: cal.milestones.map(Number)
+        };
+        Object.entries(verNow).forEach(([k, v]) => { if (stableJ(v) !== sync.ver[k]) vUpd[k] = v; });
+        vUpd.lastUpdated = now;
+        vUpd.lastEditedBy = editedBy();
+        await api().updateVersion(pid, vid, vUpd);
+        if (App.sync !== sync) return;
+        sync.cells = curJ;
+        sync.needsFullCells = false;
+        Object.entries(verNow).forEach(([k, v]) => { sync.ver[k] = stableJ(v); });
+        const meta = App.versions.find(v => v.id === vid);
+        if (meta) { meta.lastUpdated = now; meta.name = App.version.name; }
+
+        // --- Proje (ad, bölüm notları, senaryo notları, toplantılar) ---
+        const local = flatProject(localProjectState());
+        const pUpd = {};
+        new Set([...local.keys(), ...sync.proj.keys()]).forEach(k => {
+            const l = local.get(k);
+            if ((l ? l.j : undefined) !== sync.proj.get(k)) pUpd[k] = l ? l.v : DEL_FIELD;
         });
-        const meta = App.versions.find(v => v.id === App.version.id);
-        if (meta) meta.lastUpdated = now;
-        await api().saveProject(App.project.id, {
-            projectName: name,
+        Object.assign(pUpd, {
             totalEpisodes: cal.totalEpisodes,
-            notes: cal.notes,
-            episodeNotes: App.project.episodeNotes || {},
-            scripts: App.project.scripts,
-            meetings: App.project.meetings,
-            activeVersionId: App.version.id,
+            activeVersionId: vid,
             activeVersionName: App.version.name,
             versionCount: App.versions.length,
             stats: { cells: cal.cells.length, masterLocks: cal.cells.filter(c => c.cutType === 'master').length },
-            lastUpdated: now
+            lastUpdated: now,
+            lastEditedBy: editedBy()
         });
+        await api().updateProject(pid, pUpd);
+        if (App.sync !== sync) return;
+        sync.proj = jsonMap(local);
+
         App.project.projectName = name;
         App.lastSavedAt = new Date();
         setSaveStatus(offline ? 'offline' : 'saved');
@@ -3220,6 +3706,148 @@ window.handleSaveAction = async function () {
         setSaveStatus('error');
     }
 };
+
+// --- Karşı taraftan gelen değişiklikleri uygula ---
+// Kural: Bir hücre/not sende kaydedilmemiş bir değişiklik içeriyorsa seninki korunur;
+// aksi hâlde karşı tarafın değişikliği ekrana yansır.
+function onRemoteVersion(v) {
+    const sync = App.sync;
+    if (!sync) return;
+    if (!v) {
+        alert(t('versionRemoved'));
+        reopenLatestVersion();
+        return;
+    }
+    let changed = false;
+
+    // Başlangıç tarihi değiştiyse takvimi baştan kur
+    const rStart = stableJ(v.startDate || '');
+    if (rStart !== sync.ver.startDate && stableJ(startDateInput.value || '') === sync.ver.startDate) {
+        applyVersion(App.version.id, v);
+        resetHistory();
+        if (isVerticalActive) renderVerticalDashboard();
+        showRemoteStatus(v.lastEditedBy);
+        return;
+    }
+
+    const remote = cellsToMap(versionCells(v));
+    const localNow = cellsToMap(serializeCells());
+    const toApply = [];
+    new Set([...Object.keys(remote), ...sync.cells.keys()]).forEach(k => {
+        const r = remote[k] ? stableJ(remote[k]) : undefined;
+        const b = sync.cells.get(k);
+        if (r === b) return;
+        const l = localNow[k] ? stableJ(localNow[k]) : undefined;
+        if (l === b) toApply.push([k, remote[k] || null]);
+        if (r === undefined) sync.cells.delete(k); else sync.cells.set(k, r);
+    });
+    if (toApply.length) {
+        const maxCol = toApply.reduce((m, [, c]) => c ? Math.max(m, parseInt(c.col) || 0) : m, 0);
+        if (maxCol >= TOTAL_DAYS) ensureDays(maxCol);
+        toApply.forEach(([k, c]) => {
+            if (c) { const cell = getCell(c.col, c.ep, c.procType); if (cell) fillCell(cell, c); }
+            else { const [col, ep, ...rest] = k.split('_'); const cell = getCell(col, ep, rest.join('_')); if (cell) clearCell(cell); }
+        });
+        changed = true;
+    }
+
+    // Milestone'lar, versiyon adı
+    const rMs = stableJ((v.milestones || []).map(Number));
+    if (rMs !== sync.ver.milestones) {
+        if (stableJ(Array.from(milestoneCols)) === sync.ver.milestones) {
+            milestoneCols = new Set((v.milestones || []).map(Number));
+            buildHeader();
+            changed = true;
+        }
+        sync.ver.milestones = rMs;
+    }
+    const rName = stableJ(v.name || 'V1');
+    if (rName !== sync.ver.name) {
+        sync.ver.name = rName;
+        App.version.name = v.name || 'V1';
+        const meta = App.versions.find(x => x.id === App.version.id);
+        if (meta) meta.name = App.version.name;
+        renderVersionBar();
+    }
+
+    if (changed) {
+        resetHistory();   // başkasının değişikliği Ctrl+Z ile geri alınmasın
+        if (isVerticalActive) renderVerticalDashboard();
+        showRemoteStatus(v.lastEditedBy);
+    }
+}
+
+async function reopenLatestVersion() {
+    try {
+        const versions = await api().listVersions(App.project.id);
+        App.versions = versions.map(v => ({ id: v.id, name: v.data.name || 'V1', lastUpdated: v.data.lastUpdated }));
+        if (!versions.length) { backToProjects(); return; }
+        applyVersion(versions[0].id, versions[0].data);
+        watchVersion();
+    } catch (e) { console.error(e); }
+}
+
+function onRemoteProject(d, reason) {
+    const sync = App.sync;
+    if (!sync) return;
+    if (!d) {
+        alert(reason === 'denied' ? t('accessRemoved') : t('projectDeleted'));
+        stopWatching();
+        App.project = null;
+        setReadOnlyUI({});
+        showView('dashboard');
+        refreshDashboard();
+        return;
+    }
+
+    // Rol değiştiyse (ör. düzenleyiciden görüntüleyiciye) arayüzü güncelle
+    const role = roleFor(d);
+    if (!role) { onRemoteProject(null, 'denied'); return; }
+    App.project.members = clone(d.members || {});
+    if (role !== App.role) {
+        App.role = role;
+        setReadOnlyUI({ readOnly: role === 'viewer', offline: window.isOfflineMode });
+        ScriptNotes.render && App.module === 'script' && ScriptNotes.render();
+        App.module === 'notes' && EpisodeNotes.render();
+        App.module === 'meetings' && renderMeetingsModule();
+    }
+
+    const remote = flatProject(remoteProjectState(d));
+    const local = flatProject(localProjectState());
+    const changedKeys = [];
+    new Set([...remote.keys(), ...sync.proj.keys()]).forEach(k => {
+        const r = remote.get(k), b = sync.proj.get(k), l = local.get(k);
+        const rj = r ? r.j : undefined;
+        if (rj === b) return;
+        if ((l ? l.j : undefined) === b) {
+            const val = r ? clone(r.v) : undefined;
+            if (k === 'projectName') { if (document.activeElement !== $('projectName')) { $('projectName').value = val || ''; App.project.projectName = val || ''; } }
+            else if (k === 'meetings') App.project.meetings = val || [];
+            else {
+                const [field, sub] = [k.slice(0, k.indexOf('.')), k.slice(k.indexOf('.') + 1)];
+                if (!isPlainObject(App.project[field])) App.project[field] = {};
+                if (val === undefined) delete App.project[field][sub]; else App.project[field][sub] = val;
+            }
+            changedKeys.push(k);
+        }
+        if (rj === undefined) sync.proj.delete(k); else sync.proj.set(k, rj);
+    });
+
+    if (changedKeys.length) {
+        if (App.module === 'notes' && changedKeys.some(k => k.startsWith('episodeNotes.'))) EpisodeNotes.render();
+        if (App.module === 'script' && changedKeys.some(k => k.startsWith('scripts.'))) ScriptNotes.render();
+        if (App.module === 'meetings' && changedKeys.includes('meetings')) refreshMeetingsSafely();
+        showRemoteStatus(d.lastEditedBy);
+    }
+}
+
+function showRemoteStatus(by) {
+    if (!by || !by.email || by.email === myEmail()) return;
+    const el = $('saveStatus');
+    el.textContent = '↻ ' + tf('remoteUpdate', { name: by.name || by.email }) + ' · ' + formatTime(new Date());
+    el.className = 'save-status remote';
+    el.dataset.state = 'remote';
+}
 
 function setSaveStatus(state) {
     const el = $('saveStatus');
@@ -3261,7 +3889,16 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
-// Paylaşım: aktif takvim versiyonu + bölüm notları
+// Kenar çubuğu: Kişiler
+$('peopleBtn').onclick = async () => {
+    if (!App.project || !App.user) return;
+    try {
+        const d = await FB.getProject(App.project.id);
+        if (d) openPeopleModal(App.project.id, d);
+    } catch (e) { alert(e.message); }
+};
+
+// Herkese açık salt-okunur link: aktif takvim versiyonu + bölüm notları
 $('shareBtn').onclick = async () => {
     if (!App.user || !App.project) { alert(t('signInFirst')); return; }
     const data = collectProjectData($('projectName').value.trim() || 'Untitled Project');
@@ -3289,16 +3926,23 @@ function renderVersionBar(placeholder) {
 const baseCloseMenu = closeMenu;
 closeMenu = function () { baseCloseMenu(); menu.classList.remove('version-menu'); };
 
-$('versionBtn').onclick = (e) => {
+$('versionBtn').onclick = async (e) => {
     e.stopPropagation();
     if (!App.project || !App.version) return;
-    showVersionMenu(e.currentTarget);
+    const anchor = e.currentTarget;
+    // Başkalarının eklediği versiyonlar da görünsün diye listeyi tazele
+    try {
+        const versions = await api().listVersions(App.project.id);
+        App.versions = versions.map(v => ({ id: v.id, name: v.data.name || 'V1', lastUpdated: v.data.lastUpdated }));
+    } catch (err) { /* çevrimdışı: eldeki liste */ }
+    showVersionMenu(anchor);
 };
-$('newVersionBtn').onclick = () => { if (App.version) newVersion(true); };
+$('newVersionBtn').onclick = () => { if (App.version && !App.readOnly) newVersion(true); };
 
 function showVersionMenu(anchor) {
     const list = App.versions.slice().sort((a, b) => String(b.lastUpdated || '').localeCompare(String(a.lastUpdated || '')));
-    const canDelete = list.length > 1;
+    const canEdit = !App.readOnly;
+    const canDelete = canEdit && list.length > 1;
     menu.innerHTML =
         `<div class="menu-label">${escapeHtml(t('calendarVersions'))} · ${escapeHtml(App.project.projectName)}</div>` +
         list.map(v => `
@@ -3308,14 +3952,14 @@ function showVersionMenu(anchor) {
                     <small>${escapeHtml(formatDate(v.lastUpdated, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }))}</small>
                 </span>
                 ${v.id === App.version.id ? '<span class="check">✓</span>' : ''}
-                <span class="ver-actions">
+                ${canEdit ? `<span class="ver-actions">
                     <button class="icon-btn" data-vact="rename" title="${escapeHtml(t('rename'))}">✏️</button>
                     ${canDelete ? `<button class="icon-btn" data-vact="delete" title="${escapeHtml(t('delete'))}">🗑</button>` : ''}
-                </span>
+                </span>` : ''}
             </div>`).join('') +
-        `<div class="menu-sep"></div>
+        (canEdit ? `<div class="menu-sep"></div>
          <div class="item" data-vact="copy">＋&nbsp; ${escapeHtml(t('newVersionCopy'))}</div>
-         <div class="item" data-vact="blank">＋&nbsp; ${escapeHtml(t('newVersionBlank'))}</div>`;
+         <div class="item" data-vact="blank">＋&nbsp; ${escapeHtml(t('newVersionBlank'))}</div>` : '');
     menu.classList.add('version-menu');
     const r = anchor.getBoundingClientRect();
     positionMenu(r.left, r.bottom + 4);
@@ -3343,7 +3987,8 @@ async function switchVersion(vid) {
         const data = await api().getVersion(App.project.id, vid);
         if (!data) throw new Error('not found');
         applyVersion(vid, data);
-        triggerAutoSave();               // projede aktif versiyon bilgisini güncelle
+        watchVersion();
+        if (!App.readOnly) triggerAutoSave();     // projede aktif versiyon bilgisini güncelle
     } catch (e) {
         renderVersionBar();
         alert(t('versionLoadError'));
@@ -3365,7 +4010,8 @@ async function newVersion(copy) {
     try {
         const vid = await api().createVersion(App.project.id, data);
         App.versions.push({ id: vid, name: data.name, lastUpdated: new Date().toISOString() });
-        applyVersion(vid, data);
+        applyVersion(vid, normalizeVersionData(data));
+        watchVersion();
         triggerAutoSave();
     } catch (e) {
         alert(e.message);
@@ -3380,7 +4026,8 @@ async function renameVersion(vid) {
     meta.name = name.trim();
     if (App.version.id === vid) App.version.name = meta.name;
     try {
-        await api().saveVersion(App.project.id, vid, { name: meta.name });
+        await api().updateVersion(App.project.id, vid, { name: meta.name });
+        if (App.version.id === vid && App.sync) App.sync.ver.name = stableJ(meta.name);
         renderVersionBar();
         triggerAutoSave();
     } catch (e) { alert(e.message); }
@@ -3392,12 +4039,14 @@ async function deleteVersion(vid) {
     if (!confirm(tf('confirmDeleteVersion', { name: meta.name }))) return;
     await flushSave();                      // önce bekleyen kaydı bitir, sonra sil
     try {
+        if (App.version.id === vid && App.sync && App.sync.unV) { App.sync.unV(); App.sync.unV = null; }
         await api().deleteVersion(App.project.id, vid);
         App.versions = App.versions.filter(v => v.id !== vid);
         if (App.version.id === vid) {
             const next = App.versions.slice().sort((a, b) => String(b.lastUpdated || '').localeCompare(String(a.lastUpdated || '')))[0];
             const data = await api().getVersion(App.project.id, next.id);
             applyVersion(next.id, data);
+            watchVersion();
         }
         triggerAutoSave();
     } catch (e) { alert(e.message); }
@@ -3590,7 +4239,7 @@ async function runMigration() {
                 const base = proj ? proj.data.projectName : '';
                 for (const r of rows) await FB.createVersion(pid, legacyToVersion(r.data, base));
                 const count = (await FB.listVersions(pid)).length;
-                await FB.saveProject(pid, { versionCount: count, lastUpdated: new Date().toISOString() });
+                await FB.updateProject(pid, { versionCount: count, lastUpdated: new Date().toISOString() });
             } else {
                 const g = m.groups.get(target);
                 const merged = mergeLegacyProjectData(rows);
@@ -3624,7 +4273,7 @@ const MODULES = [
 
 function renderModuleNav() {
     $('moduleNav').innerHTML = MODULES
-        .filter(m => !(App.readOnly && m.private))
+        .filter(m => !(App.publicShare && m.private))
         .map(m => `<button class="sb-nav-item ${App.module === m.key ? 'active' : ''}" data-module="${m.key}">
             <span class="sb-icon">${m.icon}</span><span>${escapeHtml(t(m.label))}</span></button>`)
         .join('');
@@ -3636,7 +4285,7 @@ $('moduleNav').addEventListener('click', (e) => {
 });
 
 function showModule(key) {
-    if (App.readOnly && MODULES.find(m => m.key === key && m.private)) key = 'calendar';
+    if (App.publicShare && MODULES.find(m => m.key === key && m.private)) key = 'calendar';
     App.module = key;
     $('calendarModule').style.display = key === 'calendar' ? 'flex' : 'none';
     $('notesModule').style.display = key === 'notes' ? 'flex' : 'none';
@@ -3825,6 +4474,15 @@ function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey 
 
         const prevList = q('.mod-list');
         const scroll = prevList ? prevList.scrollTop : 0;
+        const prevDetail = q('.mod-detail');
+        const detailScroll = prevDetail ? prevDetail.scrollTop : 0;
+        // Yazılmakta olan not kaybolmasın (ör. başkasının değişikliği gelince ekran yenilenirse)
+        const keep = {};
+        el.querySelectorAll('[data-role]').forEach(x => { keep[x.dataset.role] = x.value; });
+        const act = document.activeElement;
+        const focusRole = act && el.contains(act) ? act.dataset.role : null;
+        const caret = focusRole && typeof act.selectionStart === 'number' ? [act.selectionStart, act.selectionEnd] : null;
+
         el.innerHTML = `
             <div class="mod-layout">
                 <div class="mod-list">
@@ -3835,6 +4493,13 @@ function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey 
             </div>`;
         q('.mod-list').scrollTop = scroll;
         renderDetail();
+        q('.mod-detail').scrollTop = detailScroll;
+
+        Object.entries(keep).forEach(([role, val]) => { const x = q(`[data-role="${role}"]`); if (x && val !== undefined) x.value = val; });
+        if (focusRole) {
+            const x = q(`[data-role="${focusRole}"]`);
+            if (x) { x.focus(); if (caret) try { x.setSelectionRange(caret[0], caret[1]); } catch (e) {} }
+        }
     }
 
     function renderDetail() {
@@ -3952,6 +4617,7 @@ function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey 
         const ref = q('[data-role="ref"]').value.trim();
         st.lastCat = q('[data-role="cat"]').value;
         writeEntry(st.sel).notes.push({ id: uid(), cat: st.lastCat, ref, text, done: false, createdAt: new Date().toISOString() });
+        q('[data-role="text"]').value = '';
         triggerAutoSave();
         render();
         // Aynı sahneye art arda not girilebilsin diye kategori ve sahne alanı korunur
@@ -4029,7 +4695,7 @@ function renderMeetingsModule() {
     $('meetingsModule').innerHTML = `
         <div class="mod-layout">
             <div class="mod-list">
-                <button class="primary-btn small wide" data-act="new">+ ${escapeHtml(t('newMeeting'))}</button>
+                ${App.readOnly ? '' : `<button class="primary-btn small wide" data-act="new">+ ${escapeHtml(t('newMeeting'))}</button>`}
                 <div id="meetingList"></div>
             </div>
             <div class="mod-detail" id="meetingDetail"></div>
@@ -4057,6 +4723,26 @@ function exportMeetingsPdf(list) {
     printDocument(title, body || `<p class="empty">${escapeHtml(t('noMeetingsYet'))}</p>`);
 }
 
+// Başkasının değişikliği geldiğinde: yazdığın alan varsa detayı bozma, sadece listeyi yenile;
+// alandan çıkınca detay güncellenir.
+let meetingsStale = false;
+function refreshMeetingsSafely() {
+    const mod = $('meetingsModule');
+    if (!currentMeeting()) App.meetingId = App.project.meetings.length ? sortedMeetings()[0].id : null;
+    if (document.activeElement && mod.contains(document.activeElement) && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+        renderMeetingList();
+        meetingsStale = true;
+    } else {
+        renderMeetingsModule();
+    }
+}
+$('meetingsModule').addEventListener('focusout', (e) => {
+    if (!meetingsStale) return;
+    if (e.relatedTarget && $('meetingsModule').contains(e.relatedTarget)) return;
+    meetingsStale = false;
+    setTimeout(() => { if (App.module === 'meetings') renderMeetingsModule(); }, 0);
+});
+
 function renderMeetingList() {
     const el = $('meetingList');
     if (!el) return;
@@ -4081,36 +4767,38 @@ function renderMeetingDetail() {
         return;
     }
     const actions = m.actions || [];
+    const ro = App.readOnly ? 'readonly' : '';
+    const dis = App.readOnly ? 'disabled' : '';
     el.innerHTML = `
         <div class="meeting-form">
             <div class="detail-tools meeting-tools">
                 <button class="ghost-btn" data-act="pdf">📄 ${escapeHtml(t('exportPdf'))}</button>
             </div>
-            <input class="meeting-title" data-field="title" maxlength="120" placeholder="${escapeHtml(t('meetingTitle'))}" value="${escapeHtml(m.title || '')}">
+            <input class="meeting-title" data-field="title" ${ro} maxlength="120" placeholder="${escapeHtml(t('meetingTitle'))}" value="${escapeHtml(m.title || '')}">
             <div class="np-row">
                 <label class="np-field"><span>${escapeHtml(t('meetingDate'))}</span>
-                    <input type="date" data-field="date" value="${escapeHtml(m.date || '')}"></label>
+                    <input type="date" data-field="date" ${dis} value="${escapeHtml(m.date || '')}"></label>
                 <label class="np-field grow"><span>${escapeHtml(t('attendees'))}</span>
-                    <input type="text" data-field="attendees" placeholder="${escapeHtml(t('attendeesPlaceholder'))}" value="${escapeHtml(m.attendees || '')}"></label>
+                    <input type="text" data-field="attendees" ${ro} placeholder="${escapeHtml(t('attendeesPlaceholder'))}" value="${escapeHtml(m.attendees || '')}"></label>
             </div>
             <label class="np-field"><span>${escapeHtml(t('meetingNotes'))}</span>
-                <textarea data-field="notes" class="autogrow" rows="6" placeholder="${escapeHtml(t('meetingNotesPlaceholder'))}">${escapeHtml(m.notes || '')}</textarea></label>
+                <textarea data-field="notes" class="autogrow" ${ro} rows="6" placeholder="${escapeHtml(t('meetingNotesPlaceholder'))}">${escapeHtml(m.notes || '')}</textarea></label>
 
             <div class="section-head"><h3>${escapeHtml(t('actionItems'))}</h3></div>
             <div class="action-list">
                 ${actions.map(a => `
                     <div class="action-item ${a.done ? 'done' : ''}" data-aid="${escapeHtml(a.id)}">
-                        <input type="checkbox" data-afield="done" ${a.done ? 'checked' : ''}>
-                        <input type="text" data-afield="text" placeholder="${escapeHtml(t('actionPlaceholder'))}" value="${escapeHtml(a.text || '')}">
-                        <input type="text" data-afield="owner" class="owner" placeholder="${escapeHtml(t('owner'))}" value="${escapeHtml(a.owner || '')}">
-                        <button class="icon-btn" data-act="delAction" title="${escapeHtml(t('delete'))}">✕</button>
+                        <input type="checkbox" data-afield="done" ${dis} ${a.done ? 'checked' : ''}>
+                        <input type="text" data-afield="text" ${ro} placeholder="${escapeHtml(t('actionPlaceholder'))}" value="${escapeHtml(a.text || '')}">
+                        <input type="text" data-afield="owner" class="owner" ${ro} placeholder="${escapeHtml(t('owner'))}" value="${escapeHtml(a.owner || '')}">
+                        ${App.readOnly ? '' : `<button class="icon-btn" data-act="delAction" title="${escapeHtml(t('delete'))}">✕</button>`}
                     </div>`).join('')}
             </div>
-            <button class="ghost-btn" data-act="addAction">${escapeHtml(t('addAction'))}</button>
+            ${App.readOnly ? '' : `<button class="ghost-btn" data-act="addAction">${escapeHtml(t('addAction'))}</button>
 
             <div class="meeting-foot">
                 <button class="ghost-btn danger" data-act="delMeeting">🗑 ${escapeHtml(t('deleteMeeting'))}</button>
-            </div>
+            </div>`}
         </div>`;
     el.querySelectorAll('textarea.autogrow').forEach(autoGrow);
 }
@@ -4167,6 +4855,7 @@ $('meetingsModule').addEventListener('click', (e) => {
 
 // Yazarken detayı yeniden çizmiyoruz (odak kaybolmasın); sadece veriyi ve listeyi güncelliyoruz
 function onMeetingEdit(e) {
+    if (App.readOnly) return;
     const m = currentMeeting();
     if (!m) return;
     const f = e.target.dataset.field;
@@ -4204,19 +4893,26 @@ applyLanguage();
 </script>
 <script type="module">
 // =====================================================================
-// firebase.js — Google girişi, Firestore kayıtları, paylaşım linki.
+// firebase.js — Google girişi, Firestore kayıtları, canlı senkron, paylaşım.
 //
 // Veri yapısı:
-//   users/{uid}/workspaces/{projeId}                    → proje (ad, bölüm notları,
-//                                                          senaryo notları, toplantılar)
-//   users/{uid}/workspaces/{projeId}/versions/{verId}   → takvim versiyonları
-//   users/{uid}/projects/{id}                           → ESKİ sistem kayıtları (sadece
-//                                                          "Projelere ayır" ekranı okur)
-//   sharedProjects/{shareId}                            → salt-okunur paylaşım linkleri
+//   workspaces/{projeId}                      → proje (ad, bölüm notları, senaryo notları,
+//                                               toplantılar, sahip, üyeler)
+//       ownerUid, ownerEmail, ownerName       → proje sahibi
+//       members: { "kisi@mail.com": "editor" | "viewer" }
+//       memberEmails: [sahip + üyelerin e-postaları]  → "benimle paylaşılanlar" sorgusu için
+//   workspaces/{projeId}/versions/{verId}     → takvim versiyonları
+//       cellMap: { "col_ep_dept": hücre }     → hücre bazında kayıt (çakışmasız ortak çalışma)
+//   users/{uid}/workspaces/…                  → ÖNCEKİ yapı (otomatik taşınır)
+//   users/{uid}/projects/{id}                 → EN ESKİ sistem kayıtları ("Projelere ayır")
+//   sharedProjects/{shareId}                  → herkese açık salt-okunur linkler
 // =====================================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, setDoc, doc, getDoc, getDocs, collection, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+    getFirestore, setDoc, doc, getDoc, getDocs, collection, deleteDoc, writeBatch,
+    updateDoc, deleteField, query, where, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDQI87phz2rIGkWNyn_EYRo0MULCpO_6JI",
@@ -4231,17 +4927,27 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-function requireUser() {
-    if (!auth.currentUser) throw new Error(t('signInFirst'));
-    return auth.currentUser.uid;
+function me() {
+    const u = auth.currentUser;
+    if (!u) throw new Error(t('signInFirst'));
+    return { uid: u.uid, email: String(u.email || '').toLowerCase(), name: u.displayName || u.email || '' };
 }
-const wsCol = (uid) => collection(db, "users", uid, "workspaces");
-const wsDoc = (uid, pid) => doc(db, "users", uid, "workspaces", pid);
-const verCol = (uid, pid) => collection(db, "users", uid, "workspaces", pid, "versions");
-const verDoc = (uid, pid, vid) => doc(db, "users", uid, "workspaces", pid, "versions", vid);
+const wsCol = () => collection(db, "workspaces");
+const wsDoc = (pid) => doc(db, "workspaces", pid);
+const verCol = (pid) => collection(db, "workspaces", pid, "versions");
+const verDoc = (pid, vid) => doc(db, "workspaces", pid, "versions", vid);
+const oldWsCol = (uid) => collection(db, "users", uid, "workspaces");
+const oldVerCol = (uid, pid) => collection(db, "users", uid, "workspaces", pid, "versions");
 const legacyCol = (uid) => collection(db, "users", uid, "projects");
 const nowIso = () => new Date().toISOString();
 const byUpdatedDesc = (a, b) => new Date(b.data.lastUpdated || 0) - new Date(a.data.lastUpdated || 0);
+
+// Uygulamadaki "sil" işaretini Firestore'un deleteField()'ine çevir
+function toUpdates(upd) {
+    const out = {};
+    Object.entries(upd).forEach(([k, v]) => { out[k] = (v === window.DEL_FIELD) ? deleteField() : v; });
+    return out;
+}
 
 // Firestore tek seferde en fazla 500 yazma kabul ediyor
 async function commitInChunks(ops) {
@@ -4270,26 +4976,27 @@ const FB = {
         location.reload();
     },
 
-    // ---------- Projeler ----------
+    // ---------- Projeler (sahibi olduğum + benimle paylaşılan) ----------
     async listProjects() {
-        const snap = await getDocs(wsCol(requireUser()));
+        const { email } = me();
+        const snap = await getDocs(query(wsCol(), where('memberEmails', 'array-contains', email)));
         return snap.docs.map(d => ({ id: d.id, data: d.data() })).sort(byUpdatedDesc);
     },
 
-    // Proje + takvim versiyonlarını tek seferde oluşturur.
-    // versions boşsa boş bir "V1" versiyonu açılır. Aktif versiyon = en son güncellenen.
+    // Proje + takvim versiyonlarını tek seferde oluşturur (sahibi: giriş yapan kişi).
+    // versions boşsa boş bir "V1" açılır. Aktif versiyon = en son güncellenen.
     async createProject(proj, versions = []) {
-        const uid = requireUser();
+        const u = me();
         const now = nowIso();
-        const pRef = doc(wsCol(uid));
+        const pRef = doc(wsCol());
         const list = versions.length ? versions : [{
             name: 'V1', startDate: proj.startDate || '', totalEpisodes: parseInt(proj.totalEpisodes) || 16, cells: [], milestones: []
         }];
         const ops = [];
         let active = null, activeTime = -1, activeName = '';
         list.forEach(v => {
-            const vRef = doc(verCol(uid, pRef.id));
-            const data = Object.assign({ cells: [], milestones: [], createdAt: now, lastUpdated: now }, v);
+            const vRef = doc(verCol(pRef.id));
+            const data = Object.assign({ milestones: [], createdAt: now, lastUpdated: now }, window.normalizeVersionData(v));
             ops.push(b => b.set(vRef, data));
             const tm = new Date(data.lastUpdated).getTime() || 0;
             if (tm >= activeTime) { activeTime = tm; active = vRef.id; activeName = data.name || ''; }
@@ -4305,29 +5012,34 @@ const FB = {
             activeVersionId: active,
             activeVersionName: activeName,
             versionCount: list.length,
+            ownerUid: u.uid,
+            ownerEmail: u.email,
+            ownerName: u.name,
+            members: {},
+            memberEmails: [u.email],
             createdAt: now,
             lastUpdated: now
         };
-        ops.push(b => b.set(pRef, pdata));
+        // Proje önce yazılır (versiyon kuralları projeyi kontrol eder), sonra versiyonlar
+        ops.unshift(b => b.set(pRef, pdata));
         await commitInChunks(ops);
         return { id: pRef.id, data: pdata };
     },
 
     async getProject(pid) {
-        const s = await getDoc(wsDoc(requireUser(), pid));
+        const s = await getDoc(wsDoc(pid));
         return s.exists() ? s.data() : null;
     },
-    async saveProject(pid, data) {
-        await setDoc(wsDoc(requireUser(), pid), data, { merge: true });
+    async updateProject(pid, upd) {
+        await updateDoc(wsDoc(pid), toUpdates(upd));
     },
     async renameProject(pid, name) {
-        await setDoc(wsDoc(requireUser(), pid), { projectName: name, lastUpdated: nowIso() }, { merge: true });
+        await updateDoc(wsDoc(pid), { projectName: name, lastUpdated: nowIso() });
     },
     async deleteProject(pid) {
-        const uid = requireUser();
-        const vs = await getDocs(verCol(uid, pid));
+        const vs = await getDocs(verCol(pid));
         const ops = vs.docs.map(d => (b => b.delete(d.ref)));
-        ops.push(b => b.delete(wsDoc(uid, pid)));
+        ops.push(b => b.delete(wsDoc(pid)));
         await commitInChunks(ops);
     },
     async duplicateProject(pid, newName) {
@@ -4335,44 +5047,86 @@ const FB = {
         const vs = await FB.listVersions(pid);
         return FB.createProject(Object.assign({}, p, { projectName: newName }), vs.map(v => v.data));
     },
+    // Erişimi olan kişiler (sadece sahip değiştirebilir — Firestore kuralları da bunu zorunlu kılar)
+    async setMembers(pid, members, ownerEmail) {
+        const owner = String(ownerEmail || me().email).toLowerCase();
+        const clean = {};
+        Object.entries(members || {}).forEach(([e, r]) => { clean[String(e).toLowerCase()] = r === 'viewer' ? 'viewer' : 'editor'; });
+        await updateDoc(wsDoc(pid), { members: clean, memberEmails: [owner, ...Object.keys(clean).filter(e => e !== owner)] });
+    },
 
     // ---------- Takvim versiyonları ----------
     async listVersions(pid) {
-        const snap = await getDocs(verCol(requireUser(), pid));
+        const snap = await getDocs(verCol(pid));
         return snap.docs.map(d => ({ id: d.id, data: d.data() })).sort(byUpdatedDesc);
     },
     async getVersion(pid, vid) {
-        const s = await getDoc(verDoc(requireUser(), pid, vid));
+        const s = await getDoc(verDoc(pid, vid));
         return s.exists() ? s.data() : null;
     },
     async createVersion(pid, data) {
-        const ref = doc(verCol(requireUser(), pid));
+        const ref = doc(verCol(pid));
         const now = nowIso();
-        await setDoc(ref, Object.assign({ createdAt: now, lastUpdated: now }, data));
+        await setDoc(ref, Object.assign({ createdAt: now, lastUpdated: now }, window.normalizeVersionData(data)));
         return ref.id;
     },
-    async saveVersion(pid, vid, data) {
-        await setDoc(verDoc(requireUser(), pid, vid), data, { merge: true });
+    async updateVersion(pid, vid, upd) {
+        await updateDoc(verDoc(pid, vid), toUpdates(upd));
     },
     async deleteVersion(pid, vid) {
-        await deleteDoc(verDoc(requireUser(), pid, vid));
+        await deleteDoc(verDoc(pid, vid));
     },
 
-    // ---------- Eski sistem kayıtları ----------
+    // ---------- Canlı senkron ----------
+    // Kendi yaptığın (henüz sunucuya ulaşmamış) değişiklikler geri bildirilmez;
+    // sadece sunucudan gelen (başkalarının) değişiklikler iletilir.
+    watchProject(pid, cb) {
+        return onSnapshot(wsDoc(pid), (snap) => {
+            if (snap.metadata.hasPendingWrites) return;
+            cb(snap.exists() ? snap.data() : null);
+        }, (err) => {
+            if (err.code === 'permission-denied') cb(null, 'denied');
+            else console.warn('Proje dinleme hatası:', err);
+        });
+    },
+    watchVersion(pid, vid, cb) {
+        return onSnapshot(verDoc(pid, vid), (snap) => {
+            if (snap.metadata.hasPendingWrites) return;
+            cb(snap.exists() ? snap.data() : null);
+        }, (err) => console.warn('Versiyon dinleme hatası:', err));
+    },
+
+    // ---------- Önceki yapıdan otomatik taşıma (users/{uid}/workspaces → workspaces) ----------
+    async migrateOldWorkspaces(progress) {
+        const { uid } = me();
+        const snap = await getDocs(oldWsCol(uid));
+        const todo = snap.docs.filter(d => !d.data().movedTo);
+        let n = 0;
+        for (const d of todo) {
+            if (progress) progress(`${n + 1}/${todo.length}`);
+            const vs = await getDocs(oldVerCol(uid, d.id));
+            const created = await FB.createProject(d.data(), vs.docs.map(v => v.data()));
+            await setDoc(d.ref, { movedTo: created.id, movedAt: nowIso() }, { merge: true });
+            n++;
+        }
+        return n;
+    },
+
+    // ---------- En eski sistem kayıtları ----------
     async listLegacy() {
-        const snap = await getDocs(legacyCol(requireUser()));
+        const snap = await getDocs(legacyCol(me().uid));
         return snap.docs.map(d => ({ id: d.id, data: d.data() })).filter(x => !x.data.migratedTo);
     },
     // Taşınan (veya gizlenen) eski kayıtlar silinmez, sadece işaretlenir
     async markLegacy(ids, target) {
-        const uid = requireUser();
+        const { uid } = me();
         const now = nowIso();
         await commitInChunks(ids.map(id => (b => b.set(doc(legacyCol(uid), id), { migratedTo: target, migratedAt: now }, { merge: true }))));
     },
 
-    // ---------- Paylaşım (salt-okunur: aktif takvim versiyonu + bölüm notları) ----------
+    // ---------- Herkese açık salt-okunur link (aktif takvim versiyonu + bölüm notları) ----------
     async shareProject(data) {
-        const uid = requireUser();
+        const { uid } = me();
         const shareId = Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
         await setDoc(doc(db, "sharedProjects", shareId), Object.assign({}, data, {
             lang: window.currentLang || 'en',
