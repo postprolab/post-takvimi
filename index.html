@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Post Prodüksiyon Takvimi</title>
-
+<title>PostPro Lab</title>
 <style>
+/* ===== TAKVİM STİLLERİ ===== */
 :root {
     --bg-dark: #0F1115;
     --bg-panel: #15171c;
@@ -318,83 +318,473 @@ body.read-only-mode .cell.timeline { cursor: default; }
 .notes-dept[data-dep="send"]  { box-shadow: inset 0 -2px #10ac84; }
 .resize-handle { position: absolute; top: 0; right: 0; width: 6px; height: 100%; cursor: col-resize; background: transparent; }
 .resize-handle:hover { background: #00ff99; }
-</style>
 
+/* ===== ÇALIŞMA ALANI STİLLERİ ===== */
+/* =====================================================================
+   workspace.css — Giriş ekranı, Projelerim paneli, çalışma alanı,
+   Senaryo ve Toplantı Notları modülleri. (Takvim stilleri: style.css)
+   ===================================================================== */
+
+[hidden] { display: none !important; }
+
+.view { flex: 1; min-height: 0; }
+
+/* ---------- MARKA ---------- */
+.brand-mark {
+    font-weight: 900; letter-spacing: 3px; font-size: 15px; color: #fff; user-select: none;
+}
+.brand-mark span { color: var(--accent); margin-left: 4px; }
+.brand-mark.big { font-size: 30px; letter-spacing: 6px; }
+
+/* ---------- ORTAK BUTONLAR ---------- */
+.primary-btn {
+    background: var(--neon-green); color: #000; border: none; border-radius: 8px;
+    padding: 11px 20px; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit;
+    transition: transform 0.15s, box-shadow 0.15s; white-space: nowrap;
+}
+.primary-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(57, 255, 20, 0.25); }
+.primary-btn:disabled { opacity: 0.5; cursor: wait; transform: none; }
+.primary-btn.small { padding: 8px 14px; font-size: 12px; }
+.primary-btn.wide { width: 100%; }
+
+.ghost-btn {
+    background: transparent; color: #ccc; border: 1px solid #333; border-radius: 6px;
+    padding: 7px 12px; font-size: 12px; cursor: pointer; font-family: inherit; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.ghost-btn:hover { border-color: #666; color: #fff; }
+.ghost-btn.danger { color: #ff6b6b; border-color: #4a2323; }
+.ghost-btn.danger:hover { border-color: #ff6b6b; }
+
+.icon-btn { background: none; border: none; color: #777; cursor: pointer; font-size: 14px; padding: 4px 6px; border-radius: 4px; }
+.icon-btn:hover { color: #fff; background: #222; }
+
+.link-btn { color: #888; font-size: 12px; text-decoration: underline; cursor: pointer; }
+.link-btn:hover { color: #ccc; }
+
+.muted { color: #666; font-size: 12px; }
+
+/* ---------- DİL ANAHTARI ---------- */
+.lang-switch {
+    display: inline-flex; gap: 2px; background: #1c1f26; border: 1px solid #333;
+    border-radius: 20px; padding: 3px; user-select: none;
+}
+.lang-switch span {
+    padding: 4px 10px; border-radius: 16px; font-size: 11px; font-weight: bold;
+    color: #888; cursor: pointer; transition: 0.15s;
+}
+.lang-switch span.active { background: var(--neon-green); color: #000; }
+
+/* ---------- AÇILIŞ ---------- */
+.boot-splash { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; }
+.boot-bar { width: 160px; height: 2px; background: #222; overflow: hidden; border-radius: 2px; }
+.boot-bar i { display: block; width: 40%; height: 100%; background: var(--accent); animation: bootSlide 1s ease-in-out infinite; }
+@keyframes bootSlide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+
+/* ---------- GİRİŞ EKRANI ---------- */
+.login-view {
+    display: flex; align-items: center; justify-content: center; padding: 20px; overflow: auto;
+    background:
+        radial-gradient(ellipse at 20% 0%, rgba(255, 0, 0, 0.10), transparent 55%),
+        radial-gradient(ellipse at 80% 100%, rgba(57, 255, 20, 0.06), transparent 50%),
+        var(--bg-dark);
+}
+.login-card {
+    width: 100%; max-width: 400px; background: #121417; border: 1px solid #2a2d32; border-radius: 16px;
+    padding: 40px 32px; display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+}
+.login-tag { color: #999; margin: -6px 0 4px; font-size: 14px; }
+.login-features { list-style: none; padding: 0; margin: 0 0 8px; width: 100%; text-align: left; display: grid; gap: 8px; }
+.login-features li { background: #181b21; border: 1px solid #23262d; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #ccc; }
+.login-error { color: #ff8a80; font-size: 12px; margin: 0; max-width: 360px; text-align: center; }
+
+/* ---------- PROJELERİM ---------- */
+.dashboard-view { display: flex; flex-direction: column; overflow: hidden; }
+.app-header {
+    display: flex; align-items: center; gap: 12px; padding: 12px 24px;
+    background: #111318; border-bottom: 1px solid #2a2d35; flex-shrink: 0;
+}
+.profile-btn {
+    display: flex; align-items: center; gap: 8px; background: none; border: 1px solid transparent;
+    color: #ddd; cursor: pointer; padding: 4px 8px; border-radius: 20px; font-family: inherit; font-size: 12px; font-weight: bold;
+}
+.profile-btn:hover { border-color: #333; }
+.profile-btn img { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #555; object-fit: cover; }
+.profile-btn .caret { color: #666; }
+
+.dash-main { flex: 1; overflow: auto; padding: 32px 24px 60px; width: 100%; max-width: 1200px; margin: 0 auto; box-sizing: border-box; }
+.dash-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.dash-head h1 { margin: 0; font-size: 22px; letter-spacing: 2px; }
+.dash-sub { margin: 6px 0 0; color: #666; font-size: 13px; }
+
+.project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.project-card {
+    background: #15171c; border: 1px solid #262931; border-radius: 12px; padding: 18px;
+    display: flex; flex-direction: column; gap: 10px; cursor: pointer; position: relative;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s; outline: none; min-height: 150px;
+}
+.project-card::before {
+    content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px;
+    background: var(--accent); border-radius: 0 3px 3px 0; opacity: 0; transition: opacity 0.15s;
+}
+.project-card:hover, .project-card:focus-visible { border-color: #3d424d; transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4); }
+.project-card:hover::before, .project-card:focus-visible::before { opacity: 1; }
+.pc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.pc-title { font-weight: 800; font-size: 16px; line-height: 1.3; word-break: break-word; }
+.pc-menu { background: none; border: none; color: #777; font-size: 18px; cursor: pointer; padding: 0 6px; border-radius: 4px; line-height: 1; }
+.pc-menu:hover { color: #fff; background: #262931; }
+.pc-meta { color: #888; font-size: 12px; }
+.pc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { background: #1e2128; border: 1px solid #2b2f38; border-radius: 12px; padding: 3px 8px; font-size: 11px; color: #bbb; }
+.pc-foot { margin-top: auto; color: #555; font-size: 11px; }
+
+.dash-loading { color: #666; padding: 40px 0; }
+.dash-empty { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #aaa; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.dash-empty b { font-size: 16px; color: #ddd; }
+.dash-empty p { margin: 0 0 8px; color: #777; font-size: 13px; }
+.dash-empty-icon { font-size: 40px; opacity: 0.7; }
+
+/* Yeni proje formu */
+.np-form { text-align: left; display: flex; flex-direction: column; gap: 16px; }
+.np-form h3 { text-align: center; }
+.np-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.np-row > .np-field { flex: 1; min-width: 140px; }
+.np-field { display: flex; flex-direction: column; gap: 6px; }
+.np-field.grow { flex: 2; }
+.np-field > span { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+.np-field input, .np-field textarea {
+    background: #1d1f23; border: 1px solid #333; color: #fff; padding: 10px 12px; border-radius: 8px;
+    font-size: 14px; outline: none; font-family: inherit; box-sizing: border-box; width: 100%;
+}
+.np-field input:focus, .np-field textarea:focus { border-color: var(--neon-green); background: #000; }
+.np-field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+/* ---------- ÇALIŞMA ALANI ---------- */
+.workspace-view { display: flex; overflow: hidden; }
+
+.app-sidebar {
+    width: 220px; flex-shrink: 0; background: #0b0c10; border-right: 1px solid #22252c;
+    display: flex; flex-direction: column; padding: 14px 10px; gap: 6px; overflow-y: auto; box-sizing: border-box;
+}
+.sb-back {
+    background: none; border: none; color: #888; text-align: left; cursor: pointer; font-family: inherit;
+    font-size: 12px; padding: 6px 8px; border-radius: 6px; font-weight: 600;
+}
+.sb-back:hover { color: #fff; background: #16181d; }
+.sb-project { padding: 8px 8px 14px; border-bottom: 1px solid #1d2026; margin-bottom: 6px; }
+.sb-label { display: block; font-size: 10px; color: #555; letter-spacing: 1.5px; font-weight: bold; margin-bottom: 6px; }
+.sb-project-input {
+    width: 100%; box-sizing: border-box; background: transparent; border: 1px solid transparent; color: #fff;
+    font-size: 15px; font-weight: 800; padding: 6px 8px; margin-left: -8px; border-radius: 6px; font-family: inherit;
+}
+.sb-project-input:hover { border-color: #2a2d35; }
+.sb-project-input:focus { border-color: var(--accent); outline: none; background: #000; }
+.sb-project-input[readonly] { pointer-events: none; }
+
+.sb-nav { display: flex; flex-direction: column; gap: 2px; }
+.sb-nav-item {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    background: none; border: none; color: #aaa; padding: 10px 10px; border-radius: 8px;
+    cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; position: relative;
+}
+.sb-nav-item:hover { background: #16181d; color: #fff; }
+.sb-nav-item.active { background: #1a1d24; color: #fff; }
+.sb-nav-item.active::before {
+    content: ""; position: absolute; left: -10px; top: 8px; bottom: 8px; width: 3px; background: var(--accent); border-radius: 0 3px 3px 0;
+}
+.sb-icon { width: 20px; text-align: center; }
+
+.sb-footer { display: flex; flex-direction: column; gap: 10px; padding: 12px 8px 4px; border-top: 1px solid #1d2026; align-items: flex-start; }
+.sb-btn {
+    width: 100%; background: #16181d; border: 1px solid #FFA000; color: #ffcc80; border-radius: 6px; padding: 8px 10px;
+    font-size: 11px; font-weight: 700; cursor: pointer; text-align: left; font-family: inherit; letter-spacing: 0.5px;
+}
+.sb-btn:hover { background: #221c10; }
+.save-status { font-size: 11px; color: #777; min-height: 14px; line-height: 1.4; }
+.save-status.saved { color: #6fbf73; }
+.save-status.pending { color: #aaa; }
+.save-status.saving { color: #ffcc80; }
+.save-status.error { color: #ff8a80; }
+
+.ws-main { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+.ws-module { flex: 1; min-height: 0; display: none; flex-direction: column; overflow: hidden; }
+
+/* Takvim modülü içindeki eski sayfa düzeni */
+#calendarModule .main-layout { flex: 1; min-height: 0; }
+#notesModule #notesPage { display: flex; flex: 1; min-height: 0; }
+
+/* ---------- MODÜL DÜZENİ (Senaryo & Toplantılar) ---------- */
+.mod-layout { flex: 1; min-height: 0; display: flex; }
+.mod-list {
+    width: 230px; flex-shrink: 0; border-right: 1px solid #1f2228; background: #0d0e12;
+    overflow-y: auto; padding: 14px 10px; display: flex; flex-direction: column; gap: 4px; box-sizing: border-box;
+}
+.mod-list-title { font-size: 10px; color: #555; letter-spacing: 1.5px; font-weight: bold; padding: 4px 8px 8px; }
+#scriptList, #meetingList { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+.mod-list-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+    background: none; border: 1px solid transparent; color: #bbb; text-align: left; padding: 9px 10px;
+    border-radius: 7px; cursor: pointer; font-size: 13px; font-family: inherit; font-weight: 600;
+}
+.mod-list-item:hover { background: #16181d; color: #fff; }
+.mod-list-item.active { background: #1a1d24; border-color: #2c3038; color: #fff; }
+.mli-badges { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.mli-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mli-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mli-main small { color: #666; font-weight: 400; font-size: 11px; }
+.count { background: var(--accent); color: #fff; border-radius: 10px; font-size: 10px; font-weight: 800; padding: 1px 7px; }
+
+.mod-detail { flex: 1; min-width: 0; overflow-y: auto; padding: 24px 28px 60px; box-sizing: border-box; }
+.detail-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.detail-head h2 { margin: 0; font-size: 20px; letter-spacing: 1px; }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 28px 0 12px; border-bottom: 1px solid #1f2228; padding-bottom: 8px; }
+.section-head h3 { margin: 0; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: #ddd; }
+.hint { color: #666; font-size: 12px; margin: 8px 0 14px; }
+
+/* Senaryo notları */
+.viewer-empty {
+    border: 1px dashed #2f333b; border-radius: 10px; padding: 40px 20px; text-align: center;
+    color: #777; font-size: 13px; line-height: 2; background: #0f1115;
+}
+.all-done { color: #6fbf73; font-size: 12px; font-weight: 800; }
+
+.note-add { display: grid; grid-template-columns: 150px 130px 1fr auto; gap: 8px; align-items: start; }
+.note-add input, .note-add textarea, .note-add select {
+    background: #1d1f23; border: 1px solid #333; color: #fff; padding: 9px 12px; border-radius: 8px;
+    font-size: 13px; outline: none; font-family: inherit; resize: vertical; min-height: 38px; box-sizing: border-box;
+}
+.note-add select { cursor: pointer; }
+.note-add input:focus, .note-add textarea:focus, .note-add select:focus { border-color: var(--neon-green); background: #000; }
+
+.filter-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+.filter-chip {
+    display: inline-flex; align-items: center; gap: 6px; background: #15171c; border: 1px solid #2b2f38;
+    color: #aaa; border-radius: 16px; padding: 5px 11px; font-size: 12px; cursor: pointer; font-family: inherit;
+}
+.filter-chip b { color: #666; font-weight: 700; }
+.filter-chip:hover { border-color: #555; color: #fff; }
+.filter-chip.active { border-color: var(--accent); color: #fff; background: #1d1416; }
+.filter-chip .swatch { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+.sn-tags { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.sn-cat { color: #000; font-size: 10px; font-weight: 800; border-radius: 4px; padding: 2px 7px; letter-spacing: 0.3px; text-transform: uppercase; }
+
+.sn-list { display: flex; flex-direction: column; gap: 6px; }
+.sn-item {
+    display: flex; gap: 10px; align-items: flex-start; background: #15171c; border: 1px solid #23262d;
+    border-left: 3px solid #ff9800; border-radius: 6px; padding: 10px 12px;
+}
+.sn-item.done { opacity: 0.5; }
+.sn-item.done .sn-text { text-decoration: line-through; }
+.sn-item input[type="checkbox"] { margin-top: 3px; accent-color: #4caf50; cursor: pointer; }
+.sn-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.sn-ref { background: #2a1d1d; color: #ff8a80; font-size: 11px; font-weight: 800; border-radius: 4px; padding: 1px 6px; }
+.sn-text { font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.sn-body small { color: #555; font-size: 11px; }
+
+/* Toplantılar */
+.meeting-form { display: flex; flex-direction: column; gap: 16px; max-width: 900px; }
+.meeting-title {
+    background: transparent; border: 1px solid transparent; color: #fff; font-size: 22px; font-weight: 800;
+    padding: 6px 8px; margin-left: -8px; border-radius: 6px; font-family: inherit; outline: none;
+}
+.meeting-title:hover { border-color: #2a2d35; }
+.meeting-title:focus { border-color: var(--accent); background: #000; }
+.meeting-form textarea.autogrow { resize: none; overflow: hidden; line-height: 1.6; min-height: 140px; }
+.action-list { display: flex; flex-direction: column; gap: 6px; }
+.action-item { display: flex; gap: 8px; align-items: center; }
+.action-item input[type="checkbox"] { accent-color: #4caf50; width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+.action-item input[type="text"] {
+    flex: 1; min-width: 0; background: #15171c; border: 1px solid #262931; color: #fff; padding: 8px 10px;
+    border-radius: 6px; font-size: 13px; outline: none; font-family: inherit;
+}
+.action-item input.owner { flex: 0 0 150px; }
+.action-item input[type="text"]:focus { border-color: var(--neon-green); }
+.action-item.done input[type="text"] { text-decoration: line-through; opacity: 0.5; }
+.meeting-foot { margin-top: 20px; padding-top: 16px; border-top: 1px solid #1f2228; }
+
+/* ---------- BANNER'LAR ---------- */
+.banner { position: fixed; left: 0; width: 100%; box-sizing: border-box; padding: 9px 16px; font-size: 12px; text-align: center; z-index: 19000; }
+.banner-readonly { top: 0; background: #1a2e1a; color: #a8e6a1; border-bottom: 1px solid #4CAF50; }
+.banner-offline { bottom: 0; background: #3a1f1f; color: #ffb3b3; border-top: 1px solid #ff4d4d; }
+.banner-offline a { color: #fff; }
+.banner-close { float: right; cursor: pointer; margin-left: 15px; }
+
+/* ---------- MOBİL ---------- */
+@media (max-width: 820px) {
+    .workspace-view { flex-direction: column; }
+    .app-sidebar {
+        width: 100%; flex-direction: row; align-items: center; padding: 8px 10px; gap: 8px;
+        overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid #22252c;
+    }
+    .sb-project { border: none; padding: 0; margin: 0; min-width: 140px; }
+    .sb-label, .app-sidebar > .nav-spacer { display: none; }
+    .sb-nav { flex-direction: row; }
+    .sb-nav-item { white-space: nowrap; padding: 8px 10px; }
+    .sb-nav-item.active::before { display: none; }
+    .sb-footer { flex-direction: row; border: none; padding: 0; align-items: center; }
+    .sb-btn { width: auto; white-space: nowrap; }
+    .save-status { white-space: nowrap; }
+    .mod-layout { flex-direction: column; }
+    .mod-list { width: 100%; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid #1f2228; padding: 8px; }
+    .mod-list-title { display: none; }
+    #scriptList, #meetingList { flex-direction: row; margin: 0; }
+    .mod-list-item { white-space: nowrap; width: auto; }
+    .mod-list .primary-btn.wide { width: auto; }
+    .mod-detail { padding: 16px; }
+    .note-add { grid-template-columns: 1fr; }
+    .action-item input.owner { flex-basis: 90px; }
+    .app-header { padding: 10px 14px; }
+    .profile-btn #profileName { display: none; }
+}
+</style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
 <body>
 
-<!-- ================= ÜST BAR ================= -->
-<div class="top-bar">
-    <input type="text" id="projectName" class="project-input" placeholder="PROJECT NAME..." data-i18n-placeholder="projectNamePlaceholder">
-
-    <button id="openModalBtn" class="nav-btn nav-btn-primary"><span>📅</span> <span data-i18n="setStartDate">SET START DATE</span></button>
-    <button id="toggleTodayBtn" class="nav-btn"><span>📍</span> <span data-i18n="todayLine">TODAY LINE</span></button>
-    <button id="toggleViewBtn" class="nav-btn">🔄 CALENDAR VIEW</button>
-    <button id="openAutoModalBtn" class="nav-btn" style="background:#2a2d35 !important; border-color:var(--neon-green) !important;"><span>🤖</span> <span data-i18n="autoSchedule">AUTO SCHEDULE</span></button>
-
-    <div class="nav-spacer"></div>
-
-    <div id="userMenuWrapper" style="position:relative; display:none;">
-        <div id="userBox" style="display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="toggleUserDropdown()">
-            <img id="userPhoto" alt="" style="width:30px; height:30px; border-radius:50%; border:1px solid #555;">
-            <span id="userName" style="font-size:12px; font-weight:bold;"></span>
-        </div>
-        <div id="userDropdown" style="display:none; position:absolute; top:40px; right:0; background:#1c1f26; border:1px solid #444; border-radius:6px; min-width:180px; z-index:9999; box-shadow:0 10px 20px rgba(0,0,0,0.5);">
-            <div onclick="switchAccount()" style="padding:10px; cursor:pointer; border-bottom:1px solid #333;">🔄 <span data-i18n="switchAccount">Switch Account</span></div>
-            <div onclick="logout()" style="padding:10px; cursor:pointer; color:#ff5555;">🚪 <span data-i18n="logOut">Log Out</span></div>
-        </div>
-    </div>
-
-    <button id="saveBtn" class="nav-btn"><span>💾</span> <span data-i18n="save">SAVE</span></button>
-    <button id="saveAsBtn" class="nav-btn"><span>🗂️</span> <span data-i18n="saveAs">SAVE AS</span></button>
-    <button id="loadBtn" class="nav-btn"><span>📂</span> <span data-i18n="load">LOAD</span></button>
-    <button id="exportVerticalBtn" class="nav-btn"><span>📄</span> <span data-i18n="verticalView">VERTICAL VIEW</span></button>
-    <button id="exportExcelBtn" class="nav-btn" style="border-color:#1D6F42;"><span>📊</span> <span data-i18n="exportExcel">EXPORT TO EXCEL</span></button>
-    <button id="shareBtn" class="nav-btn" style="border-color:#FFA000;"><span>🔗</span> <span data-i18n="shareBtn">SHARE</span></button>
-    <button id="googleLoginBtn" onclick="loginWithGoogle()" class="nav-btn" style="border-color:#4285F4;">⚡ <span data-i18n="logIn">Log In</span></button>
-
-    <div id="langSwitch" style="display:flex; align-items:center; gap:2px; margin-left:10px; background:#1c1f26; border:1px solid #444; border-radius:20px; padding:3px; cursor:pointer; user-select:none;">
-        <span id="langEnBtn" style="padding:4px 10px; border-radius:16px; font-size:11px; font-weight:bold; transition:0.15s;">EN</span>
-        <span id="langTrBtn" style="padding:4px 10px; border-radius:16px; font-size:11px; font-weight:bold; transition:0.15s;">TR</span>
-    </div>
+<!-- ============ AÇILIŞ ============ -->
+<div id="bootSplash" class="boot-splash">
+    <div class="brand-mark big">POSTPRO<span>LAB</span></div>
+    <div class="boot-bar"><i></i></div>
+    <p id="bootError" class="login-error" hidden></p>
 </div>
 
-<!-- ================= PROJELER PANELİ ================= -->
-<div id="projectsPanel" class="modal-overlay">
-    <div class="modal-content" style="max-height:80vh; overflow-y:auto;">
-        <h3 style="color:var(--neon-green)">📁 <span data-i18n="myProjects">MY PROJECTS</span></h3>
-        <div id="projectsList" style="text-align:left; margin:20px 0;"></div>
-        <div style="display:flex; gap:10px; justify-content:center;">
-            <button id="deleteAllProjectsBtn" class="modal-btn btn-cancel" style="background:#ff3333; color:white;">🗑 <span data-i18n="deleteAll">DELETE ALL</span></button>
-            <button id="closeProjectsBtn" class="modal-btn btn-cancel" data-i18n="close">CLOSE</button>
-        </div>
+<!-- ============ GİRİŞ EKRANI ============ -->
+<section id="loginView" class="view login-view" hidden>
+    <div class="login-card">
+        <div class="brand-mark big">POSTPRO<span>LAB</span></div>
+        <p class="login-tag" data-i18n="loginTagline">A workshop for post-production</p>
+        <ul class="login-features">
+            <li>📅 <span data-i18n="featCalendar">Post-production calendar</span></li>
+            <li>📝 <span data-i18n="featNotes">Episode notes by department</span></li>
+            <li>🎬 <span data-i18n="featScript">Technical script notes</span></li>
+            <li>🤝 <span data-i18n="featMeetings">Meeting notes and action items</span></li>
+        </ul>
+        <button id="loginBtn" class="primary-btn wide">🔑 <span data-i18n="welcomeLoginBtn">Sign in with Google</span></button>
+        <a href="#" id="offlineBtn" class="link-btn" data-i18n="tryOffline">Try without signing in</a>
+        <p id="loginError" class="login-error" hidden></p>
+        <div class="lang-switch"><span data-lang="en">EN</span><span data-lang="tr">TR</span></div>
     </div>
-</div>
+</section>
 
-<div id="projectContextMenu" style="display:none; position:fixed; background:#1c1f26; border:1px solid #444; border-radius:4px; z-index:999999; box-shadow:0 4px 15px rgba(0,0,0,0.5); min-width:120px;">
-    <button id="deleteProjectBtn" style="background:none; border:none; color:#ff4d4d; padding:12px 15px; cursor:pointer; width:100%; text-align:left; font-size:14px; font-weight:bold;">🗑️ <span data-i18n="deleteProject">Delete Project</span></button>
-</div>
+<!-- ============ PROJELERİM ============ -->
+<section id="dashboardView" class="view dashboard-view" hidden>
+    <header class="app-header">
+        <div class="brand-mark">POSTPRO<span>LAB</span></div>
+        <div class="nav-spacer"></div>
+        <div class="lang-switch"><span data-lang="en">EN</span><span data-lang="tr">TR</span></div>
+        <button id="profileBtn" class="profile-btn">
+            <img id="profilePhoto" alt="">
+            <span id="profileName"></span>
+            <span class="caret">▾</span>
+        </button>
+    </header>
+    <main class="dash-main">
+        <div class="dash-head">
+            <div>
+                <h1 data-i18n="myProjects">MY PROJECTS</h1>
+                <p id="dashSub" class="dash-sub"></p>
+            </div>
+            <button id="newProjectBtn" class="primary-btn">+ <span data-i18n="newProject">New project</span></button>
+        </div>
+        <div id="projectGrid" class="project-grid"></div>
+    </main>
+</section>
 
-<div id="readOnlyBanner" style="display:none; position:fixed; top:0; left:0; width:100%; box-sizing:border-box; background:#1a2e1a; color:#a8e6a1; padding:8px 16px; font-size:12px; text-align:center; z-index:19000; border-bottom:1px solid #4CAF50;">
+<!-- ============ ÇALIŞMA ALANI ============ -->
+<section id="workspaceView" class="view workspace-view" hidden>
+    <aside class="app-sidebar">
+        <button id="backToProjects" class="sb-back">← <span data-i18n="backToProjects">Projects</span></button>
+        <div class="sb-project">
+            <label for="projectName" class="sb-label" data-i18n="projectLabel">PROJECT</label>
+            <input type="text" id="projectName" class="sb-project-input" placeholder="PROJECT NAME..." data-i18n-placeholder="projectNamePlaceholder" autocomplete="off">
+        </div>
+        <nav id="moduleNav" class="sb-nav"></nav>
+        <div class="nav-spacer"></div>
+        <div class="sb-footer">
+            <button id="shareBtn" class="sb-btn">🔗 <span data-i18n="shareBtn">SHARE</span></button>
+            <div id="saveStatus" class="save-status"></div>
+            <div class="lang-switch"><span data-lang="en">EN</span><span data-lang="tr">TR</span></div>
+        </div>
+    </aside>
+
+    <main class="ws-main">
+
+        <!-- TAKVİM -->
+        <div id="calendarModule" class="ws-module">
+            <div class="top-bar">
+                <button id="openModalBtn" class="nav-btn nav-btn-primary"><span>📅</span> <span data-i18n="setStartDate">SET START DATE</span></button>
+                <button id="toggleTodayBtn" class="nav-btn"><span>📍</span> <span data-i18n="todayLine">TODAY LINE</span></button>
+                <button id="toggleViewBtn" class="nav-btn">🔄 CALENDAR VIEW</button>
+                <button id="openAutoModalBtn" class="nav-btn" style="background:#2a2d35 !important; border-color:var(--neon-green) !important;"><span>🤖</span> <span data-i18n="autoSchedule">AUTO SCHEDULE</span></button>
+                <div class="nav-spacer"></div>
+                <button id="exportVerticalBtn" class="nav-btn"><span>📄</span> <span data-i18n="verticalView">VERTICAL VIEW</span></button>
+                <button id="exportExcelBtn" class="nav-btn" style="border-color:#1D6F42;"><span>📊</span> <span data-i18n="exportExcel">EXPORT TO EXCEL</span></button>
+            </div>
+
+            <div class="filter-bar" id="deptFilters">
+                <div class="filter-label">FOCUS MODE:</div>
+                <button class="dept-filter-btn active" id="btn-all" onclick="filterDept('all', this)"><span>🌐</span> ALL</button>
+                <button class="dept-filter-btn" onclick="filterDept('set', this)"><span>🎬</span> SET</button>
+                <button class="dept-filter-btn" onclick="filterDept('edit', this)"><span>✂️</span> EDIT</button>
+                <button class="dept-filter-btn" onclick="filterDept('cuts', this)"><span>🎞️</span> CUTS</button>
+                <button class="dept-filter-btn" onclick="filterDept('vfx', this)"><span>🎆</span> VFX</button>
+                <button class="dept-filter-btn" onclick="filterDept('color', this)"><span>🎨</span> COLOR</button>
+                <button class="dept-filter-btn" onclick="filterDept('sound', this)"><span>🔊</span> SOUND</button>
+                <button class="dept-filter-btn" onclick="filterDept('music', this)"><span>🎵</span> MUSIC</button>
+                <button class="dept-filter-btn" onclick="filterDept('send', this)"><span>📦</span> SEND</button>
+            </div>
+
+            <div class="main-layout">
+                <div id="timelinePage" class="tab-page active">
+                    <div class="container" id="mainContainer">
+                        <div id="selection-box"></div>
+                        <div id="todayLine" class="today-line"></div>
+                        <div class="header" id="header"></div>
+                        <div class="grid" id="grid"></div>
+                    </div>
+                    <div id="verticalViewContainer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BÖLÜM NOTLARI -->
+        <div id="notesModule" class="ws-module">
+            <div id="notesPage" class="tab-page">
+                <div class="notes-board">
+                    <div class="notes-grid-header">
+                        <div class="notes-ep-col header-cell">EPISODES</div>
+                        <div class="notes-dept header-cell" data-dep="edit">🎬 EDIT<div class="resize-handle"></div></div>
+                        <div class="notes-dept header-cell" data-dep="cuts">✂ CUTS<div class="resize-handle"></div></div>
+                        <div class="notes-dept header-cell" data-dep="vfx">✨ VFX<div class="resize-handle"></div></div>
+                        <div class="notes-dept header-cell" data-dep="color">🎨 COLOR<div class="resize-handle"></div></div>
+                        <div class="notes-dept header-cell" data-dep="sound">🔊 SOUND<div class="resize-handle"></div></div>
+                        <div class="notes-dept header-cell" data-dep="music">🎵 MUSIC<div class="resize-handle"></div></div>
+                        <div class="notes-dept header-cell" data-dep="send">📦 SEND<div class="resize-handle"></div></div>
+                    </div>
+                    <div id="notesGridBody"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SENARYO (workspace.js çizer) -->
+        <div id="scriptModule" class="ws-module"></div>
+
+        <!-- TOPLANTI NOTLARI (workspace.js çizer) -->
+        <div id="meetingsModule" class="ws-module"></div>
+    </main>
+</section>
+
+<!-- ============ ORTAK PENCERELER ============ -->
+<div id="readOnlyBanner" class="banner banner-readonly" hidden>
     👁️ <span data-i18n="readOnlyBannerText">This is a read-only shared view — editing is disabled.</span>
 </div>
 
-<div id="welcomeModal" class="modal-overlay">
-    <div class="modal-content" style="max-width:380px;">
-        <h3>👋 <span data-i18n="welcomeTitle">WELCOME</span></h3>
-        <p style="color:#bbb; font-size:13px; line-height:1.6; margin:0 0 20px;" data-i18n="welcomeDesc">It's recommended to sign in with Google so you can save your projects to the cloud and continue anytime.</p>
-        <div class="modal-buttons" style="margin-bottom:16px;">
-            <button id="welcomeLoginBtn" class="modal-btn btn-confirm">🔑 <span data-i18n="welcomeLoginBtn">Sign in with Google</span></button>
-        </div>
-        <a href="#" id="welcomeOfflineBtn" style="color:#888; font-size:12px; text-decoration:underline; cursor:pointer;" data-i18n="welcomeOfflineBtn">Use offline (continue without signing in)</a>
-    </div>
-</div>
-
-<div id="offlineBanner" style="display:none; position:fixed; bottom:0; left:0; width:100%; box-sizing:border-box; background:#3a1f1f; color:#ffb3b3; padding:10px 16px; font-size:12px; text-align:center; z-index:19000; border-top:1px solid #ff4d4d;">
+<div id="offlineBanner" class="banner banner-offline" hidden>
     ⚠️ <span data-i18n="offlineBannerText">You're in offline mode — your changes will NOT be saved.</span>
-    <span data-i18n="offlineBannerPrefix">To save,</span> <a href="#" id="offlineLoginLink" style="color:#fff; text-decoration:underline;" data-i18n="offlineBannerLink">sign in</a>.
-    <span id="offlineBannerClose" style="float:right; cursor:pointer; margin-left:15px;">✕</span>
+    <span data-i18n="offlineBannerPrefix">To save,</span> <a href="#" id="offlineLoginLink" data-i18n="offlineBannerLink">sign in</a>.
+    <span id="offlineBannerClose" class="banner-close">✕</span>
 </div>
 
 <div id="dateModal" class="modal-overlay">
@@ -408,60 +798,33 @@ body.read-only-mode .cell.timeline { cursor: default; }
     </div>
 </div>
 
-<!-- ================= ODAK MODU FİLTRESİ ================= -->
-<div class="filter-bar" id="deptFilters">
-    <div class="filter-label">FOCUS MODE:</div>
-    <button class="dept-filter-btn active" id="btn-all" onclick="filterDept('all', this)"><span>🌐</span> ALL</button>
-    <button class="dept-filter-btn" onclick="filterDept('set', this)"><span>🎬</span> SET</button>
-    <button class="dept-filter-btn" onclick="filterDept('edit', this)"><span>✂️</span> EDIT</button>
-    <button class="dept-filter-btn" onclick="filterDept('cuts', this)"><span>🎞️</span> CUTS</button>
-    <button class="dept-filter-btn" onclick="filterDept('vfx', this)"><span>🎆</span> VFX</button>
-    <button class="dept-filter-btn" onclick="filterDept('color', this)"><span>🎨</span> COLOR</button>
-    <button class="dept-filter-btn" onclick="filterDept('sound', this)"><span>🔊</span> SOUND</button>
-    <button class="dept-filter-btn" onclick="filterDept('music', this)"><span>🎵</span> MUSIC</button>
-    <button class="dept-filter-btn" onclick="filterDept('send', this)"><span>📦</span> SEND</button>
+<div id="newProjectModal" class="modal-overlay">
+    <form id="newProjectForm" class="modal-content np-form" style="max-width:440px;" autocomplete="off">
+        <h3 data-i18n="newProject">New project</h3>
+        <label class="np-field">
+            <span data-i18n="projectNameLabel">Project name</span>
+            <input id="npName" type="text" required maxlength="80">
+        </label>
+        <div class="np-row">
+            <label class="np-field">
+                <span data-i18n="episodeCount">Episodes</span>
+                <input id="npEpisodes" type="number" min="1" max="200" value="16" required>
+            </label>
+            <label class="np-field">
+                <span data-i18n="startDateLabel">Start date</span>
+                <input id="npStart" type="date" required>
+            </label>
+        </div>
+        <div class="modal-buttons">
+            <button type="submit" class="modal-btn btn-confirm" data-i18n="create">CREATE</button>
+            <button type="button" id="npCancel" class="modal-btn btn-cancel" data-i18n="cancel">CANCEL</button>
+        </div>
+    </form>
 </div>
 
 <div id="dateSummaryPop" class="date-summary-pop"></div>
-
-<!-- ================= ANA DÜZEN ================= -->
-<div class="main-layout">
-
-    <div id="timelinePage" class="tab-page active">
-        <div class="container" id="mainContainer">
-            <div id="selection-box"></div>
-            <div id="todayLine" class="today-line"></div>
-            <div class="header" id="header"></div>
-            <div class="grid" id="grid"></div>
-        </div>
-        <div id="verticalViewContainer"></div>
-    </div>
-
-    <div id="notesPage" class="tab-page">
-        <div class="notes-board">
-            <div class="notes-grid-header">
-                <div class="notes-ep-col header-cell">EPISODES</div>
-                <div class="notes-dept header-cell" data-dep="edit">🎬 EDIT<div class="resize-handle"></div></div>
-                <div class="notes-dept header-cell" data-dep="cuts">✂ CUTS<div class="resize-handle"></div></div>
-                <div class="notes-dept header-cell" data-dep="vfx">✨ VFX<div class="resize-handle"></div></div>
-                <div class="notes-dept header-cell" data-dep="color">🎨 COLOR<div class="resize-handle"></div></div>
-                <div class="notes-dept header-cell" data-dep="sound">🔊 SOUND<div class="resize-handle"></div></div>
-                <div class="notes-dept header-cell" data-dep="music">🎵 MUSIC<div class="resize-handle"></div></div>
-                <div class="notes-dept header-cell" data-dep="send">📦 SEND<div class="resize-handle"></div></div>
-            </div>
-            <div id="notesGridBody"></div>
-        </div>
-    </div>
-</div>
-
-<div class="bottom-tabs">
-    <button class="tab-btn active" onclick="switchTab('timeline', this)">TIMELINE</button>
-    <button class="tab-btn" onclick="switchTab('notes', this)">NOTES</button>
-</div>
-
 <div id="contextMenu" class="context-menu"></div>
 
-<!-- ================= OTOMATİK TAKVİM ================= -->
 <div id="autoSetupModal" class="modal">
     <div class="modal-content">
         <h2 class="modal-title">AUTO SCHEDULER ⭐</h2>
@@ -494,11 +857,14 @@ body.read-only-mode .cell.timeline { cursor: default; }
     </div>
 </div>
 
-
-<!-- =====================================================================
-     ANA UYGULAMA SCRIPT'İ
-     ===================================================================== -->
+<!-- =========================================================
+     SCRIPTLER — sıra önemli: önce takvim, sonra çalışma alanı, en son Firebase
+     ========================================================= -->
 <script>
+// =====================================================================
+// calendar.js — Takvim (timeline + takvim görünümü), bölüm notları,
+// dışa aktarma ve otomatik takvim. Ortak yardımcılar ve dil desteği de burada.
+// =====================================================================
 // ---------------------------------------------------------------------
 // 1) GLOBAL DURUM & SABİTLER
 // ---------------------------------------------------------------------
@@ -615,7 +981,9 @@ const I18N = {
     }
 };
 
-let currentLang = window.currentLang = (() => { try { return localStorage.getItem('appLang') || 'en'; } catch (e) { return 'en'; } })();
+// Kayıtlı tercih yoksa tarayıcı dili Türkçeyse TR, değilse EN ile başla
+const browserLang = String(navigator.language || '').toLowerCase().startsWith('tr') ? 'tr' : 'en';
+let currentLang = window.currentLang = (() => { try { return localStorage.getItem('appLang') || browserLang; } catch (e) { return browserLang; } })();
 
 function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key; }
 function localeStr() { return currentLang === 'tr' ? 'tr-TR' : 'en-US'; }
@@ -637,14 +1005,14 @@ function applyLanguage() {
         if (val !== undefined) el.placeholder = val;
     });
     updateToggleViewBtnText();
-    const enBtn = document.getElementById('langEnBtn');
-    const trBtn = document.getElementById('langTrBtn');
-    enBtn.style.background = currentLang === 'en' ? 'var(--neon-green)' : 'transparent';
-    enBtn.style.color = currentLang === 'en' ? '#000' : '#888';
-    trBtn.style.background = currentLang === 'tr' ? 'var(--neon-green)' : 'transparent';
-    trBtn.style.color = currentLang === 'tr' ? '#000' : '#888';
+    // Sayfada birden fazla EN/TR anahtarı olabilir (giriş, proje paneli, kenar çubuğu)
+    document.querySelectorAll('.lang-switch [data-lang]').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === currentLang);
+    });
+    document.documentElement.lang = currentLang;
     if (dates.length) buildHeader();
     if (isVerticalActive) renderVerticalDashboard();
+    if (typeof window.onLanguageChange === 'function') window.onLanguageChange();
 }
 
 function setLanguage(lang) {
@@ -658,8 +1026,10 @@ function setLanguageSilent(lang) {
     applyLanguage();
 }
 
-document.getElementById('langEnBtn').onclick = () => setLanguage('en');
-document.getElementById('langTrBtn').onclick = () => setLanguage('tr');
+document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('.lang-switch [data-lang]');
+    if (b) setLanguage(b.dataset.lang);
+});
 
 // ---------------------------------------------------------------------
 // 4) DOM REFERANSLARI
@@ -765,14 +1135,31 @@ function commitChange() {
 
 function triggerAutoSave() {
     if (window.isReadOnlyShare) return;
+    if (typeof window.setSaveStatus === 'function') window.setSaveStatus('pending');
     clearTimeout(autoSaveTimer);
     autoSaveTimer = setTimeout(async () => {
+        autoSaveTimer = null;
         if (isSaving) { triggerAutoSave(); return; } // kayıt sürerken gelen değişiklik kaybolmasın
         if (typeof window.handleSaveAction !== 'function') return;
         isSaving = true;
         try { await window.handleSaveAction('auto'); }
         finally { isSaving = false; }
     }, 2000);
+}
+
+function hasPendingSave() { return !!autoSaveTimer; }
+
+// Bekleyen kaydı hemen yap (projeden çıkarken, Ctrl+S'de)
+async function flushSave() {
+    if (window.isReadOnlyShare) return;
+    const pending = !!autoSaveTimer;
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = null;
+    while (isSaving) await new Promise(r => setTimeout(r, 50));
+    if (!pending || typeof window.handleSaveAction !== 'function') return;
+    isSaving = true;
+    try { await window.handleSaveAction('auto'); }
+    finally { isSaving = false; }
 }
 
 // ---------------------------------------------------------------------
@@ -824,16 +1211,11 @@ function loadProjectToUI(data) {
 // ---------------------------------------------------------------------
 // 8) SEKMELER & NOTLAR
 // ---------------------------------------------------------------------
-window.switchTab = function (tab, btn) {
-    document.getElementById('timelinePage').style.display = tab === 'timeline' ? 'flex' : 'none';
-    document.getElementById('notesPage').style.display = tab === 'notes' ? 'flex' : 'none';
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    if (tab === 'notes') renderNotesBoard();
-    btn.classList.add('active');
-};
-
+// Sekme geçişi artık çalışma alanının sol menüsünden yapılıyor (workspace.js → showModule)
 function goTimelineTab() {
-    switchTab('timeline', document.querySelectorAll('.tab-btn')[0]);
+    if (typeof window.showModule === 'function' && window.App && window.App.module !== 'calendar') {
+        window.showModule('calendar');
+    }
 }
 
 function autoGrow(textarea) {
@@ -1404,6 +1786,7 @@ window.addEventListener('keydown', (e) => {
     const el = document.activeElement;
     const isTyping = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
     if (isTyping || window.isReadOnlyShare) return; // yazı yazarken grid'e dokunma
+    if (window.App && window.App.module !== 'calendar') return; // başka modüldeyken takvime dokunma
 
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault();
@@ -2037,20 +2420,898 @@ document.getElementById('runAutoSetupBtn').onclick = function () {
 
 // ---------------------------------------------------------------------
 // 16) BAŞLANGIÇ
+// Takvim artık bir proje açıldığında çiziliyor (workspace.js → openProject)
 // ---------------------------------------------------------------------
 applyLanguage();
-if (!window.isReadOnlyShare) {
-    const today = toLocalISO(new Date());
-    startDateInput.value = today;
-    createCalendarAction(today);
-}
 </script>
+<script>
+// =====================================================================
+// workspace.js — Giriş ekranı, Projelerim paneli, çalışma alanı (sol menü),
+// Senaryo ve Toplantı Notları modülleri.
+// calendar.js'ten SONRA, firebase.js'ten ÖNCE yüklenir.
+// Firebase işlemleri window.FB üzerinden çağrılır (firebase.js tanımlar).
+// =====================================================================
 
+// ---------------------------------------------------------------------
+// 1) EK ÇEVİRİLER
+// ---------------------------------------------------------------------
+Object.assign(I18N.en, {
+    loginTagline: "A workshop for post-production",
+    featCalendar: "Post-production calendar",
+    featNotes: "Episode notes by department",
+    featScript: "Technical script notes",
+    featMeetings: "Meeting notes and action items",
+    tryOffline: "Try without signing in",
+    newProject: "New project", backToProjects: "Projects", projectLabel: "PROJECT",
+    projectNameLabel: "Project name", episodeCount: "Episodes", startDateLabel: "Start date", create: "CREATE",
+    modCalendar: "Calendar", modNotes: "Episode Notes", modScript: "Script", modMeetings: "Meeting Notes",
+    open: "Open", renameProject: "Rename", duplicate: "Duplicate", deleteProjectShort: "Delete",
+    copySuffix: "(copy)", episodesShort: "episodes", updated: "Updated",
+    projectsCount: "{n} projects", noProjectsYet: "No projects yet",
+    noProjectsHint: "Create your first project to start planning.",
+    loadError: "Projects could not be loaded",
+    saving: "Saving…", saved: "Saved", saveError: "Could not save — check your connection",
+    pendingSave: "Unsaved changes", offlineStatus: "Offline — not saved", readOnlyStatus: "Read-only",
+    offlineProjectName: "Trial project", keepOfflineWork: "Save the work you did offline as a new project?",
+    general: "General", episodesTitle: "EPISODES",
+    category: "Category", filterAll: "All", filterOpen: "Open",
+    cat_vfx: "VFX", cat_sfx: "Special FX", cat_music: "Music", cat_location: "Location",
+    cat_stunt: "Stunt", cat_props: "Props / Vehicle", cat_other: "Other",
+    scriptNoteHint: "Enter adds the note, Shift+Enter starts a new line. Category and scene stay filled for the next note.",
+    editNote: "Edit note:", noNotesInFilter: "No notes in this filter.",
+    scriptNotes: "Script notes", sceneRef: "Scene / page", notePlaceholder: "Write a note…", add: "Add",
+    noNotesYet: "No notes yet.", openNotes: "open", resolved: "resolved",
+    newMeeting: "New meeting", noMeetingsYet: "No meetings yet", noMeetingsHint: "Click “New meeting” to add the first one.",
+    meetingTitle: "Title", meetingDate: "Date", attendees: "Attendees", attendeesPlaceholder: "Who attended?",
+    meetingNotes: "Notes", meetingNotesPlaceholder: "What was discussed…",
+    actionItems: "Decisions & action items", actionPlaceholder: "Action / decision…", owner: "Owner",
+    addAction: "+ Add item", deleteMeeting: "Delete meeting", untitledMeeting: "Untitled meeting",
+    confirmDeleteMeeting: "Delete this meeting?", confirmDeleteNote: "Delete this note?",
+    switchAccount: "Switch Account", logOut: "Log Out",
+    shareNoData: "Fill a few calendar cells before sharing.",
+    shareInfo: "The link shows only the calendar and episode notes (read-only). Script and meeting notes stay private."
+});
+Object.assign(I18N.tr, {
+    loginTagline: "Post prodüksiyon için çalışma atölyesi",
+    featCalendar: "Post prodüksiyon takvimi",
+    featNotes: "Departman bazlı bölüm notları",
+    featScript: "Teknik senaryo notları",
+    featMeetings: "Toplantı notları ve aksiyon listesi",
+    tryOffline: "Giriş yapmadan dene",
+    newProject: "Yeni proje", backToProjects: "Projeler", projectLabel: "PROJE",
+    projectNameLabel: "Proje adı", episodeCount: "Bölüm sayısı", startDateLabel: "Başlangıç tarihi", create: "OLUŞTUR",
+    modCalendar: "Takvim", modNotes: "Bölüm Notları", modScript: "Senaryo", modMeetings: "Toplantı Notları",
+    open: "Aç", renameProject: "Yeniden adlandır", duplicate: "Çoğalt", deleteProjectShort: "Sil",
+    copySuffix: "(kopya)", episodesShort: "bölüm", updated: "Güncellendi",
+    projectsCount: "{n} proje", noProjectsYet: "Henüz proje yok",
+    noProjectsHint: "Planlamaya başlamak için ilk projeni oluştur.",
+    loadError: "Projeler yüklenemedi",
+    saving: "Kaydediliyor…", saved: "Kaydedildi", saveError: "Kaydedilemedi — bağlantını kontrol et",
+    pendingSave: "Kaydedilmemiş değişiklik", offlineStatus: "Offline — kaydedilmiyor", readOnlyStatus: "Salt-okunur",
+    offlineProjectName: "Deneme projesi", keepOfflineWork: "Offline yaptığın çalışma yeni bir proje olarak kaydedilsin mi?",
+    general: "Genel", episodesTitle: "BÖLÜMLER",
+    category: "Kategori", filterAll: "Tümü", filterOpen: "Açık",
+    cat_vfx: "VFX", cat_sfx: "Özel Efekt", cat_music: "Müzik", cat_location: "Lokasyon",
+    cat_stunt: "Stunt", cat_props: "Aksesuar / Araç", cat_other: "Diğer",
+    scriptNoteHint: "Enter notu ekler, Shift+Enter yeni satır açar. Kategori ve sahne bir sonraki not için dolu kalır.",
+    editNote: "Notu düzenle:", noNotesInFilter: "Bu filtrede not yok.",
+    scriptNotes: "Senaryo notları", sceneRef: "Sahne / sayfa", notePlaceholder: "Not yaz…", add: "Ekle",
+    noNotesYet: "Henüz not yok.", openNotes: "açık", resolved: "çözüldü",
+    newMeeting: "Yeni toplantı", noMeetingsYet: "Henüz toplantı yok", noMeetingsHint: "İlkini eklemek için “Yeni toplantı”ya tıkla.",
+    meetingTitle: "Başlık", meetingDate: "Tarih", attendees: "Katılımcılar", attendeesPlaceholder: "Kimler katıldı?",
+    meetingNotes: "Notlar", meetingNotesPlaceholder: "Neler konuşuldu…",
+    actionItems: "Kararlar & aksiyonlar", actionPlaceholder: "Aksiyon / karar…", owner: "Sorumlu",
+    addAction: "+ Madde ekle", deleteMeeting: "Toplantıyı sil", untitledMeeting: "Başlıksız toplantı",
+    confirmDeleteMeeting: "Bu toplantı silinsin mi?", confirmDeleteNote: "Bu not silinsin mi?",
+    switchAccount: "Hesap Değiştir", logOut: "Çıkış Yap",
+    shareNoData: "Paylaşmadan önce takvimde birkaç hücre doldur.",
+    shareInfo: "Link sadece takvimi ve bölüm notlarını gösterir (salt-okunur). Senaryo ve toplantı notları gizli kalır."
+});
 
-<!-- =====================================================================
-     FIREBASE (giriş, bulut kaydı, paylaşım)
-     ===================================================================== -->
+// ---------------------------------------------------------------------
+// 2) UYGULAMA DURUMU & YARDIMCILAR
+// ---------------------------------------------------------------------
+const App = window.App = {
+    view: 'boot',            // boot | login | dashboard | workspace
+    module: 'calendar',      // calendar | notes | script | meetings
+    user: null,
+    project: null,           // { id, projectName, scripts, meetings, createdAt }
+    projects: [],            // proje paneli için liste [{id, data}]
+    readOnly: false,
+    scriptKey: 'GENEL',
+    meetingId: null,
+    lastSavedAt: null
+};
+
+const $ = (id) => document.getElementById(id);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const tf = (key, vars) => t(key).replace(/\{(\w+)\}/g, (_, k) => (vars && vars[k] !== undefined ? vars[k] : ''));
+
+function formatDate(iso, opts = { day: 'numeric', month: 'short', year: 'numeric' }) {
+    if (!iso) return '';
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? parseLocalDate(iso) : new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleDateString(localeStr(), opts);
+}
+function formatTime(d) {
+    return d.toLocaleTimeString(localeStr(), { hour: '2-digit', minute: '2-digit' });
+}
+
+// ---------------------------------------------------------------------
+// 3) EKRANLAR
+// ---------------------------------------------------------------------
+function showView(view) {
+    App.view = view;
+    $('bootSplash').hidden = view !== 'boot';
+    $('loginView').hidden = view !== 'login';
+    $('dashboardView').hidden = view !== 'dashboard';
+    $('workspaceView').hidden = view !== 'workspace';
+    closeMenu();
+}
+window.showView = showView;
+
+function showLogin(errorText) {
+    showView('login');
+    const err = $('loginError');
+    err.hidden = !errorText;
+    err.textContent = errorText || '';
+}
+window.showLogin = showLogin;
+
+// Firebase yüklenemezse (ör. dosya çift tıkla açıldıysa) açılışta takılı kalma
+setTimeout(() => {
+    if (App.view === 'boot' && !window.FB) {
+        const e = $('bootError');
+        e.hidden = false;
+        e.textContent = location.protocol === 'file:'
+            ? "Site dosyadan açılmış. Lütfen bir sunucu/hosting üzerinden açın (ör. GitHub Pages)."
+            : "Bağlantı kurulamadı. Sayfayı yenileyin.";
+    }
+}, 8000);
+
+// ---------------------------------------------------------------------
+// 4) GİRİŞ / OFFLINE
+// ---------------------------------------------------------------------
+$('loginBtn').onclick = () => window.FB && FB.login();
+$('offlineLoginLink').onclick = (e) => { e.preventDefault(); window.FB && FB.login(); };
+$('offlineBannerClose').onclick = () => { $('offlineBanner').hidden = true; };
+
+$('offlineBtn').onclick = (e) => {
+    e.preventDefault();
+    window.isOfflineMode = true;
+    $('offlineBanner').hidden = false;
+    openProject('offline', {
+        projectName: t('offlineProjectName'),
+        startDate: toLocalISO(new Date()),
+        totalEpisodes: DEFAULT_EPISODES
+    });
+};
+
+// Offline çalışıp sonra giriş yapan kullanıcının işi kaybolmasın
+async function adoptOfflineWork() {
+    if (!App.project || App.project.id !== 'offline') return false;
+    const data = collectFullProject();
+    const hasWork = data.cells.length || data.meetings.length || Object.keys(data.scripts).length ||
+        Object.values(data.notes || {}).some(ep => Object.values(ep || {}).some(v => String(v).trim()));
+    window.isOfflineMode = false;
+    $('offlineBanner').hidden = true;
+    if (!hasWork || !confirm(t('keepOfflineWork'))) return false;
+    const created = await FB.createProject(data);
+    openProject(created.id, created.data);
+    return true;
+}
+
+// Firebase giriş durumu değişince çağrılır
+window.onAuthUser = async function (user) {
+    App.user = user;
+    if (App.readOnly) return;
+
+    if (user) {
+        renderProfile();
+        if (App.project && App.project.id === 'offline') {
+            if (await adoptOfflineWork()) return;
+            App.project = null;
+        }
+        if (App.view !== 'workspace') { showView('dashboard'); refreshDashboard(); }
+    } else {
+        if (window.isOfflineMode) return;
+        App.project = null;
+        showLogin();
+    }
+};
+
+function renderProfile() {
+    const u = App.user;
+    if (!u) return;
+    $('profileName').textContent = u.displayName || u.email || '';
+    $('profilePhoto').src = u.photoURL || "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#333"/><circle cx="12" cy="9" r="4" fill="#aaa"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="#aaa"/></svg>');
+}
+
+$('profileBtn').onclick = (e) => {
+    e.stopPropagation();
+    const r = e.currentTarget.getBoundingClientRect();
+    menu.innerHTML = `
+        <div class="item" data-act="switch">🔄&nbsp; ${escapeHtml(t('switchAccount'))}</div>
+        <div class="item" data-act="logout" style="color:#ff6b6b;">🚪&nbsp; ${escapeHtml(t('logOut'))}</div>`;
+    positionMenu(r.right - 180, r.bottom + 6);
+    menu.querySelector('[data-act="switch"]').onclick = () => { closeMenu(); FB.switchAccount(); };
+    menu.querySelector('[data-act="logout"]').onclick = () => { closeMenu(); FB.logout(); };
+};
+
+// ---------------------------------------------------------------------
+// 5) PROJELERİM PANELİ
+// ---------------------------------------------------------------------
+async function refreshDashboard() {
+    const grid = $('projectGrid');
+    grid.innerHTML = `<div class="dash-loading">${escapeHtml(t('loading'))}</div>`;
+    try {
+        App.projects = await FB.listProjects();
+        renderDashboard();
+    } catch (e) {
+        console.error(e);
+        grid.innerHTML = `<div class="dash-empty"><b>${escapeHtml(t('loadError'))}</b><p>${escapeHtml(e.message || '')}</p></div>`;
+    }
+}
+window.refreshDashboard = refreshDashboard;
+
+function projectStats(d) {
+    const cells = Array.isArray(d.cells) ? d.cells : [];
+    const eps = Math.max(parseInt(d.totalEpisodes) || DEFAULT_EPISODES, ...cells.map(c => parseInt(c.ep) || 0));
+    const scripts = d.scripts && typeof d.scripts === 'object' ? Object.values(d.scripts) : [];
+    return {
+        eps,
+        cells: cells.length,
+        masterLocks: cells.filter(c => c.cutType === 'master').length,
+        scriptNotes: scripts.reduce((n, s) => n + ((s && Array.isArray(s.notes)) ? s.notes.length : 0), 0),
+        meetings: Array.isArray(d.meetings) ? d.meetings.length : 0
+    };
+}
+
+function renderDashboard() {
+    if (App.view !== 'dashboard') return;
+    const grid = $('projectGrid');
+    $('dashSub').textContent = App.projects.length ? tf('projectsCount', { n: App.projects.length }) : '';
+
+    if (!App.projects.length) {
+        grid.innerHTML = `<div class="dash-empty">
+            <div class="dash-empty-icon">🎬</div>
+            <b>${escapeHtml(t('noProjectsYet'))}</b>
+            <p>${escapeHtml(t('noProjectsHint'))}</p>
+            <button class="primary-btn" onclick="openNewProjectModal()">+ ${escapeHtml(t('newProject'))}</button>
+        </div>`;
+        return;
+    }
+
+    grid.innerHTML = App.projects.map(({ id, data: d }) => {
+        const s = projectStats(d);
+        const chips = [
+            `📅 ${s.cells}`,
+            s.masterLocks ? `🔒 ${s.masterLocks} master lock` : '',
+            s.scriptNotes ? `🎬 ${s.scriptNotes}` : '',
+            s.meetings ? `🤝 ${s.meetings}` : ''
+        ].filter(Boolean).map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('');
+        return `<div class="project-card" data-id="${escapeHtml(id)}" tabindex="0">
+            <div class="pc-top">
+                <div class="pc-title">${escapeHtml(d.projectName || 'Untitled Project')}</div>
+                <button class="pc-menu" data-menu="${escapeHtml(id)}" title="…">⋯</button>
+            </div>
+            <div class="pc-meta">${s.eps} ${escapeHtml(t('episodesShort'))}${d.startDate ? ' · ' + escapeHtml(formatDate(d.startDate)) : ''}</div>
+            <div class="pc-chips">${chips}</div>
+            <div class="pc-foot">${escapeHtml(t('updated'))}: ${escapeHtml(formatDate(d.lastUpdated, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) || '—')}</div>
+        </div>`;
+    }).join('');
+}
+
+$('projectGrid').addEventListener('click', (e) => {
+    const menuBtn = e.target.closest('.pc-menu');
+    if (menuBtn) { e.stopPropagation(); showProjectMenu(menuBtn.dataset.menu, menuBtn); return; }
+    const card = e.target.closest('.project-card');
+    if (card) openProjectById(card.dataset.id);
+});
+$('projectGrid').addEventListener('keydown', (e) => {
+    const card = e.target.closest('.project-card');
+    if (card && e.key === 'Enter') openProjectById(card.dataset.id);
+});
+$('projectGrid').addEventListener('contextmenu', (e) => {
+    const card = e.target.closest('.project-card');
+    if (!card) return;
+    e.preventDefault();
+    showProjectMenu(card.dataset.id, null, e.clientX, e.clientY);
+});
+
+function showProjectMenu(id, anchor, x, y) {
+    const entry = App.projects.find(p => p.id === id);
+    if (!entry) return;
+    menu.innerHTML = `
+        <div class="item" data-act="open">📂&nbsp; ${escapeHtml(t('open'))}</div>
+        <div class="item" data-act="rename">✏️&nbsp; ${escapeHtml(t('renameProject'))}</div>
+        <div class="item" data-act="dup">📑&nbsp; ${escapeHtml(t('duplicate'))}</div>
+        <div class="menu-sep"></div>
+        <div class="item" data-act="del" style="color:#ff6b6b;">🗑&nbsp; ${escapeHtml(t('deleteProjectShort'))}</div>`;
+    if (anchor) { const r = anchor.getBoundingClientRect(); positionMenu(r.right - 170, r.bottom + 4); }
+    else positionMenu(x, y);
+
+    menu.querySelectorAll('.item').forEach(item => item.onclick = async () => {
+        closeMenu();
+        const act = item.dataset.act;
+        try {
+            if (act === 'open') openProjectById(id);
+            else if (act === 'rename') {
+                const name = prompt(t('askProjectName'), entry.data.projectName || '');
+                if (!name || !name.trim()) return;
+                await FB.renameProject(id, name.trim());
+                refreshDashboard();
+            } else if (act === 'dup') {
+                const copy = Object.assign({}, entry.data, { projectName: `${entry.data.projectName || 'Project'} ${t('copySuffix')}` });
+                await FB.createProject(copy);
+                refreshDashboard();
+            } else if (act === 'del') {
+                if (!confirm(`"${entry.data.projectName}" — ${t('confirmDeleteProject')}`)) return;
+                await FB.deleteProject(id);
+                refreshDashboard();
+            }
+        } catch (err) {
+            alert(err.message);
+        }
+    });
+}
+
+// Yeni proje penceresi
+function openNewProjectModal() {
+    $('npName').value = '';
+    $('npEpisodes').value = DEFAULT_EPISODES;
+    $('npStart').value = toLocalISO(new Date());
+    $('newProjectModal').style.display = 'flex';
+    setTimeout(() => $('npName').focus(), 50);
+}
+window.openNewProjectModal = openNewProjectModal;
+$('newProjectBtn').onclick = openNewProjectModal;
+$('npCancel').onclick = () => { $('newProjectModal').style.display = 'none'; };
+
+$('newProjectForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const name = $('npName').value.trim();
+    const eps = Math.min(200, Math.max(1, parseInt($('npEpisodes').value) || DEFAULT_EPISODES));
+    if (!name) return;
+    const btn = e.submitter || $('newProjectForm').querySelector('[type="submit"]');
+    btn.disabled = true;
+    try {
+        const created = await FB.createProject({ projectName: name, totalEpisodes: eps, startDate: $('npStart').value || toLocalISO(new Date()) });
+        $('newProjectModal').style.display = 'none';
+        openProject(created.id, created.data);
+    } catch (err) {
+        alert(err.message);
+    } finally {
+        btn.disabled = false;
+    }
+};
+
+// ---------------------------------------------------------------------
+// 6) PROJE AÇ / KAPAT / KAYDET
+// ---------------------------------------------------------------------
+function openProjectById(id) {
+    const entry = App.projects.find(p => p.id === id);
+    if (entry) openProject(entry.id, entry.data);
+}
+
+function openProject(id, data, { readOnly = false } = {}) {
+    App.readOnly = readOnly;
+    App.project = {
+        id,
+        projectName: data.projectName || 'Untitled Project',
+        scripts: (data.scripts && typeof data.scripts === 'object' && !Array.isArray(data.scripts)) ? data.scripts : {},
+        meetings: Array.isArray(data.meetings) ? data.meetings : [],
+        createdAt: data.createdAt || new Date().toISOString()
+    };
+    currentProjectId = id;
+    App.scriptKey = 'GENEL';
+    App.meetingId = App.project.meetings.length ? sortedMeetings()[0].id : null;
+    // Önceki projeden kalan modül içeriğini temizle
+    $('scriptModule').innerHTML = '';
+    $('meetingsModule').innerHTML = '';
+
+    document.body.classList.toggle('read-only-mode', readOnly);
+    $('readOnlyBanner').hidden = !readOnly;
+    $('backToProjects').hidden = readOnly;
+    $('shareBtn').hidden = readOnly || id === 'offline';
+    $('projectName').readOnly = readOnly;
+
+    showView('workspace');         // takvim ölçüm yaptığı için önce görünür olmalı
+    showModule('calendar');
+    loadProjectToUI(data);
+    setSaveStatus(readOnly ? 'readonly' : id === 'offline' ? 'offline' : 'saved');
+}
+window.openProject = openProject;
+
+async function backToProjects() {
+    await flushSave();
+    if (window.isOfflineMode) {
+        App.project = null;
+        window.isOfflineMode = false;
+        $('offlineBanner').hidden = true;
+        showLogin();
+        return;
+    }
+    App.project = null;
+    currentProjectId = null;
+    showView('dashboard');
+    refreshDashboard();
+}
+$('backToProjects').onclick = backToProjects;
+
+// Takvim + notlar (calendar.js) ile senaryo + toplantılar birleşik proje verisi
+function collectFullProject() {
+    const name = $('projectName').value.trim() || 'Untitled Project';
+    const data = collectProjectData(name);
+    data.scripts = App.project ? App.project.scripts : {};
+    data.meetings = App.project ? App.project.meetings : [];
+    data.createdAt = App.project ? App.project.createdAt : new Date().toISOString();
+    return data;
+}
+window.collectFullProject = collectFullProject;
+
+// calendar.js'teki otomatik kayıt bunu çağırır
+window.handleSaveAction = async function () {
+    if (App.readOnly || !App.project) return;
+    if (window.isOfflineMode || !App.user || App.project.id === 'offline') { setSaveStatus('offline'); return; }
+    setSaveStatus('saving');
+    try {
+        const data = collectFullProject();
+        await FB.saveProject(App.project.id, data);
+        App.project.projectName = data.projectName;
+        App.lastSavedAt = new Date();
+        setSaveStatus('saved');
+    } catch (e) {
+        console.error('Save error:', e);
+        setSaveStatus('error');
+    }
+};
+
+function setSaveStatus(state) {
+    const el = $('saveStatus');
+    if (!el) return;
+    if (state === 'pending' && (App.readOnly || !App.project || App.project.id === 'offline' || window.isOfflineMode)) {
+        state = App.readOnly ? 'readonly' : 'offline';
+    }
+    const map = {
+        pending: ['● ' + t('pendingSave'), 'pending'],
+        saving: ['⟳ ' + t('saving'), 'saving'],
+        saved: ['✓ ' + t('saved') + (App.lastSavedAt ? ' · ' + formatTime(App.lastSavedAt) : ''), 'saved'],
+        error: ['⚠ ' + t('saveError'), 'error'],
+        offline: ['⚠ ' + t('offlineStatus'), 'error'],
+        readonly: ['👁 ' + t('readOnlyStatus'), 'saved']
+    };
+    const [text, cls] = map[state] || map.saved;
+    el.textContent = text;
+    el.className = 'save-status ' + cls;
+    el.dataset.state = state;
+}
+window.setSaveStatus = setSaveStatus;
+
+$('projectName').addEventListener('input', () => { if (!App.readOnly) triggerAutoSave(); });
+
+// Ctrl+S: hemen kaydet
+window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && App.view === 'workspace') {
+        e.preventDefault();
+        flushSave().then(() => { if ($('saveStatus').dataset.state === 'pending') window.handleSaveAction(); });
+    }
+});
+
+// Kaydedilmemiş değişiklik varken sekme kapanırsa uyar
+window.addEventListener('beforeunload', (e) => {
+    if (hasPendingSave() && App.user && !window.isOfflineMode) {
+        flushSave();
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// Paylaşım (sadece takvim + bölüm notları)
+$('shareBtn').onclick = async () => {
+    if (!App.user || !App.project) { alert(t('signInFirst')); return; }
+    const data = collectProjectData($('projectName').value.trim() || 'Untitled Project');
+    if (!data.cells.length) { alert(t('shareNoData')); return; }
+    if (!confirm(t('shareInfo'))) return;
+    try {
+        const url = await FB.shareProject(data);
+        try { await navigator.clipboard.writeText(url); } catch (e) {}
+        prompt(t('shareLinkPrompt'), url);
+    } catch (e) {
+        alert("Paylaşım linki oluşturulamadı: " + e.message);
+    }
+};
+
+// ---------------------------------------------------------------------
+// 7) SOL MENÜ & MODÜL GEÇİŞİ
+// ---------------------------------------------------------------------
+const MODULES = [
+    { key: 'calendar', icon: '📅', label: 'modCalendar' },
+    { key: 'notes', icon: '📝', label: 'modNotes' },
+    { key: 'script', icon: '🎬', label: 'modScript', private: true },
+    { key: 'meetings', icon: '🤝', label: 'modMeetings', private: true }
+];
+
+function renderModuleNav() {
+    $('moduleNav').innerHTML = MODULES
+        .filter(m => !(App.readOnly && m.private))
+        .map(m => `<button class="sb-nav-item ${App.module === m.key ? 'active' : ''}" data-module="${m.key}">
+            <span class="sb-icon">${m.icon}</span><span>${escapeHtml(t(m.label))}</span></button>`)
+        .join('');
+}
+
+$('moduleNav').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-module]');
+    if (b) showModule(b.dataset.module);
+});
+
+function showModule(key) {
+    if (App.readOnly && MODULES.find(m => m.key === key && m.private)) key = 'calendar';
+    App.module = key;
+    $('calendarModule').style.display = key === 'calendar' ? 'flex' : 'none';
+    $('notesModule').style.display = key === 'notes' ? 'flex' : 'none';
+    $('scriptModule').style.display = key === 'script' ? 'flex' : 'none';
+    $('meetingsModule').style.display = key === 'meetings' ? 'flex' : 'none';
+    closeMenu();
+    if (key === 'notes') renderNotesBoard();
+    if (key === 'script') renderScriptModule();
+    if (key === 'meetings') renderMeetingsModule();
+    renderModuleNav();
+}
+window.showModule = showModule;
+
+// Dil değişince dinamik ekranları yeniden çiz
+window.onLanguageChange = function () {
+    if (App.view === 'dashboard') renderDashboard();
+    if (App.view === 'workspace') {
+        renderModuleNav();
+        if (App.module === 'script') renderScriptModule();
+        if (App.module === 'meetings') renderMeetingsModule();
+        setSaveStatus($('saveStatus').dataset.state || 'saved');
+    }
+};
+
+// ---------------------------------------------------------------------
+// 8) SENARYO NOTLARI MODÜLÜ
+// Senaryoyu okurken alınan teknik notlar: bölüm bazında (ve "Genel"),
+// kategori + sahne/sayfa referansı + not + çözüldü durumu.
+// Veri: project.scripts = { "GENEL": {notes:[...]}, "EP01": {notes:[...]} }
+//       not = { id, cat, ref, text, done, createdAt }
+// ---------------------------------------------------------------------
+const NOTE_CATS = [
+    { key: 'vfx',      color: '#8c7ae6' },
+    { key: 'sfx',      color: '#ff9f43' },
+    { key: 'music',    color: '#54a0ff' },
+    { key: 'location', color: '#10ac84' },
+    { key: 'stunt',    color: '#ff5c5c' },
+    { key: 'props',    color: '#c8a165' },
+    { key: 'other',    color: '#8a8f99' }
+];
+const catInfo = (key) => NOTE_CATS.find(c => c.key === key) || NOTE_CATS[NOTE_CATS.length - 1];
+const catLabel = (key) => t('cat_' + catInfo(key).key);
+
+App.scriptFilter = 'all';      // all | open | <kategori>
+App.scriptLastCat = 'vfx';     // form son seçilen kategoriyi hatırlar
+
+function scriptKeys() {
+    return ['GENEL', ...Array.from({ length: TOTAL_EPISODES }, (_, i) => 'EP' + String(i + 1).padStart(2, '0'))];
+}
+function scriptLabel(key) { return key === 'GENEL' ? t('general') : key; }
+function readScriptNotes(key) {
+    const s = App.project.scripts[key];
+    return (s && Array.isArray(s.notes)) ? s.notes : [];
+}
+function writeScript(key) {
+    const s = App.project.scripts;
+    if (!s[key] || typeof s[key] !== 'object') s[key] = { notes: [] };
+    if (!Array.isArray(s[key].notes)) s[key].notes = [];
+    return s[key];
+}
+
+function renderScriptModule() {
+    if (!App.project) return;
+    const keys = scriptKeys();
+    if (!keys.includes(App.scriptKey)) App.scriptKey = 'GENEL';
+
+    const listHtml = keys.map(k => {
+        const notes = readScriptNotes(k);
+        const open = notes.filter(n => !n.done).length;
+        return `<button class="mod-list-item ${k === App.scriptKey ? 'active' : ''}" data-key="${k}">
+            <span>${escapeHtml(scriptLabel(k))}</span>
+            <span class="mli-badges">${open ? `<span class="count">${open}</span>` : notes.length ? '<span class="all-done">✓</span>' : ''}</span>
+        </button>`;
+    }).join('');
+
+    const scroll = $('scriptList') ? $('scriptList').parentElement.scrollTop : 0;
+    $('scriptModule').innerHTML = `
+        <div class="mod-layout">
+            <div class="mod-list">
+                <div class="mod-list-title">${escapeHtml(t('episodesTitle'))}</div>
+                <div id="scriptList">${listHtml}</div>
+            </div>
+            <div class="mod-detail" id="scriptDetail"></div>
+        </div>`;
+    $('scriptList').parentElement.scrollTop = scroll;
+    renderScriptDetail();
+}
+
+function renderScriptDetail() {
+    const key = App.scriptKey;
+    const all = readScriptNotes(key);
+    const openCount = all.filter(n => !n.done).length;
+
+    // Filtre: sadece kullanılan kategoriler gösterilir
+    const usedCats = NOTE_CATS.filter(c => all.some(n => (n.cat || 'other') === c.key));
+    if (App.scriptFilter !== 'all' && App.scriptFilter !== 'open' && !usedCats.some(c => c.key === App.scriptFilter)) App.scriptFilter = 'all';
+
+    const visible = all
+        .filter(n => App.scriptFilter === 'all' ? true : App.scriptFilter === 'open' ? !n.done : (n.cat || 'other') === App.scriptFilter)
+        .sort((a, b) => (a.done - b.done) || String(b.createdAt).localeCompare(String(a.createdAt)));
+
+    const chip = (val, label, count, color) =>
+        `<button class="filter-chip ${App.scriptFilter === val ? 'active' : ''}" data-filter="${val}">
+            ${color ? `<span class="swatch" style="background:${color}"></span>` : ''}${escapeHtml(label)} <b>${count}</b></button>`;
+
+    $('scriptDetail').innerHTML = `
+        <div class="detail-head">
+            <h2>🎬 ${escapeHtml(scriptLabel(key))} — ${escapeHtml(t('scriptNotes'))}</h2>
+            <span class="muted">${openCount} ${escapeHtml(t('openNotes'))} · ${all.length - openCount} ${escapeHtml(t('resolved'))}</span>
+        </div>
+
+        <form class="note-add" id="scriptNoteForm">
+            <select id="snCat" title="${escapeHtml(t('category'))}">
+                ${NOTE_CATS.map(c => `<option value="${c.key}" ${c.key === App.scriptLastCat ? 'selected' : ''}>${escapeHtml(catLabel(c.key))}</option>`).join('')}
+            </select>
+            <input id="snRef" type="text" maxlength="40" placeholder="${escapeHtml(t('sceneRef'))}">
+            <textarea id="snText" rows="2" placeholder="${escapeHtml(t('notePlaceholder'))}"></textarea>
+            <button class="primary-btn small" type="submit">${escapeHtml(t('add'))}</button>
+        </form>
+        <p class="hint">${escapeHtml(t('scriptNoteHint'))}</p>
+
+        ${all.length ? `<div class="filter-chips">
+            ${chip('all', t('filterAll'), all.length)}
+            ${chip('open', t('filterOpen'), openCount)}
+            ${usedCats.map(c => chip(c.key, catLabel(c.key), all.filter(n => (n.cat || 'other') === c.key).length, c.color)).join('')}
+        </div>` : ''}
+
+        <div class="sn-list">
+            ${visible.length ? visible.map(n => {
+                const c = catInfo(n.cat || 'other');
+                return `<div class="sn-item ${n.done ? 'done' : ''}" data-id="${escapeHtml(n.id)}" style="border-left-color:${c.color}">
+                    <input type="checkbox" data-act="toggle" ${n.done ? 'checked' : ''} title="${escapeHtml(t('resolved'))}">
+                    <div class="sn-body">
+                        <div class="sn-tags">
+                            <span class="sn-cat" style="background:${c.color}">${escapeHtml(catLabel(c.key))}</span>
+                            ${n.ref ? `<span class="sn-ref">${escapeHtml(n.ref)}</span>` : ''}
+                        </div>
+                        <span class="sn-text">${escapeHtml(n.text)}</span>
+                        <small>${escapeHtml(formatDate(n.createdAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</small>
+                    </div>
+                    <button class="icon-btn" data-act="edit" title="${escapeHtml(t('rename'))}">✏️</button>
+                    <button class="icon-btn" data-act="del" title="${escapeHtml(t('delete'))}">🗑</button>
+                </div>`;
+            }).join('') : `<div class="viewer-empty">📝<br>${escapeHtml(all.length ? t('noNotesInFilter') : t('noNotesYet'))}</div>`}
+        </div>`;
+}
+
+$('scriptModule').addEventListener('click', (e) => {
+    const item = e.target.closest('.mod-list-item');
+    if (item) { App.scriptKey = item.dataset.key; App.scriptFilter = 'all'; renderScriptModule(); return; }
+
+    const f = e.target.closest('[data-filter]');
+    if (f) { App.scriptFilter = f.dataset.filter; renderScriptDetail(); return; }
+
+    const act = e.target.closest('[data-act]');
+    if (!act || act.dataset.act === 'toggle') return;
+    const id = act.closest('.sn-item') && act.closest('.sn-item').dataset.id;
+    const s = writeScript(App.scriptKey);
+    const note = s.notes.find(n => n.id === id);
+    if (!note) return;
+
+    if (act.dataset.act === 'edit') {
+        const text = prompt(t('editNote'), note.text);
+        if (text === null || !text.trim()) return;
+        note.text = text.trim();
+    } else if (act.dataset.act === 'del') {
+        if (!confirm(t('confirmDeleteNote'))) return;
+        s.notes = s.notes.filter(n => n.id !== id);
+    }
+    triggerAutoSave();
+    renderScriptModule();
+});
+
+$('scriptModule').addEventListener('change', (e) => {
+    if (e.target.id === 'snCat') { App.scriptLastCat = e.target.value; return; }
+    if (e.target.dataset.act !== 'toggle') return;
+    const id = e.target.closest('.sn-item').dataset.id;
+    const note = writeScript(App.scriptKey).notes.find(n => n.id === id);
+    if (note) { note.done = e.target.checked; triggerAutoSave(); renderScriptModule(); }
+});
+
+// Not alanında Enter = ekle, Shift+Enter = yeni satır
+$('scriptModule').addEventListener('keydown', (e) => {
+    if (e.target.id === 'snText' && e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        $('scriptNoteForm').requestSubmit();
+    }
+});
+
+$('scriptModule').addEventListener('submit', (e) => {
+    if (e.target.id !== 'scriptNoteForm') return;
+    e.preventDefault();
+    const text = $('snText').value.trim();
+    if (!text) return;
+    const ref = $('snRef').value.trim();
+    App.scriptLastCat = $('snCat').value;
+    writeScript(App.scriptKey).notes.push({
+        id: uid(), cat: App.scriptLastCat, ref, text, done: false, createdAt: new Date().toISOString()
+    });
+    triggerAutoSave();
+    renderScriptModule();
+    // Aynı sahneye art arda not girilebilsin diye kategori ve sahne alanı korunur
+    $('snRef').value = ref;
+    $('snText').focus();
+});
+
+// ---------------------------------------------------------------------
+// 9) TOPLANTI NOTLARI MODÜLÜ
+// Veri: project.meetings = [{id, title, date, attendees, notes, actions:[{id,text,owner,done}]}]
+// ---------------------------------------------------------------------
+function sortedMeetings() {
+    return App.project.meetings.slice().sort((a, b) =>
+        String(b.date || '').localeCompare(String(a.date || '')) || String(b.createdAt).localeCompare(String(a.createdAt)));
+}
+function currentMeeting() { return App.project.meetings.find(m => m.id === App.meetingId) || null; }
+
+function renderMeetingsModule() {
+    if (!App.project) return;
+    if (!currentMeeting()) App.meetingId = App.project.meetings.length ? sortedMeetings()[0].id : null;
+
+    $('meetingsModule').innerHTML = `
+        <div class="mod-layout">
+            <div class="mod-list">
+                <button class="primary-btn small wide" data-act="new">+ ${escapeHtml(t('newMeeting'))}</button>
+                <div id="meetingList"></div>
+            </div>
+            <div class="mod-detail" id="meetingDetail"></div>
+        </div>`;
+    renderMeetingList();
+    renderMeetingDetail();
+}
+
+function renderMeetingList() {
+    const el = $('meetingList');
+    if (!el) return;
+    el.innerHTML = sortedMeetings().map(m => {
+        const open = (m.actions || []).filter(a => !a.done && a.text).length;
+        return `<button class="mod-list-item meeting ${m.id === App.meetingId ? 'active' : ''}" data-id="${escapeHtml(m.id)}">
+            <span class="mli-main">
+                <span class="mli-title">${escapeHtml(m.title || t('untitledMeeting'))}</span>
+                <small>${escapeHtml(formatDate(m.date))}</small>
+            </span>
+            ${open ? `<span class="count">${open}</span>` : ''}
+        </button>`;
+    }).join('');
+}
+
+function renderMeetingDetail() {
+    const m = currentMeeting();
+    const el = $('meetingDetail');
+    if (!m) {
+        el.innerHTML = `<div class="dash-empty"><div class="dash-empty-icon">🤝</div>
+            <b>${escapeHtml(t('noMeetingsYet'))}</b><p>${escapeHtml(t('noMeetingsHint'))}</p></div>`;
+        return;
+    }
+    const actions = m.actions || [];
+    el.innerHTML = `
+        <div class="meeting-form">
+            <input class="meeting-title" data-field="title" maxlength="120" placeholder="${escapeHtml(t('meetingTitle'))}" value="${escapeHtml(m.title || '')}">
+            <div class="np-row">
+                <label class="np-field"><span>${escapeHtml(t('meetingDate'))}</span>
+                    <input type="date" data-field="date" value="${escapeHtml(m.date || '')}"></label>
+                <label class="np-field grow"><span>${escapeHtml(t('attendees'))}</span>
+                    <input type="text" data-field="attendees" placeholder="${escapeHtml(t('attendeesPlaceholder'))}" value="${escapeHtml(m.attendees || '')}"></label>
+            </div>
+            <label class="np-field"><span>${escapeHtml(t('meetingNotes'))}</span>
+                <textarea data-field="notes" class="autogrow" rows="6" placeholder="${escapeHtml(t('meetingNotesPlaceholder'))}">${escapeHtml(m.notes || '')}</textarea></label>
+
+            <div class="section-head"><h3>${escapeHtml(t('actionItems'))}</h3></div>
+            <div class="action-list">
+                ${actions.map(a => `
+                    <div class="action-item ${a.done ? 'done' : ''}" data-aid="${escapeHtml(a.id)}">
+                        <input type="checkbox" data-afield="done" ${a.done ? 'checked' : ''}>
+                        <input type="text" data-afield="text" placeholder="${escapeHtml(t('actionPlaceholder'))}" value="${escapeHtml(a.text || '')}">
+                        <input type="text" data-afield="owner" class="owner" placeholder="${escapeHtml(t('owner'))}" value="${escapeHtml(a.owner || '')}">
+                        <button class="icon-btn" data-act="delAction" title="${escapeHtml(t('delete'))}">✕</button>
+                    </div>`).join('')}
+            </div>
+            <button class="ghost-btn" data-act="addAction">${escapeHtml(t('addAction'))}</button>
+
+            <div class="meeting-foot">
+                <button class="ghost-btn danger" data-act="delMeeting">🗑 ${escapeHtml(t('deleteMeeting'))}</button>
+            </div>
+        </div>`;
+    el.querySelectorAll('textarea.autogrow').forEach(autoGrow);
+}
+
+$('meetingsModule').addEventListener('click', (e) => {
+    const item = e.target.closest('.mod-list-item');
+    if (item) { App.meetingId = item.dataset.id; renderMeetingList(); renderMeetingDetail(); return; }
+
+    const act = e.target.closest('[data-act]');
+    if (!act) return;
+    const m = currentMeeting();
+
+    if (act.dataset.act === 'new') {
+        const nm = { id: uid(), title: '', date: toLocalISO(new Date()), attendees: '', notes: '', actions: [], createdAt: new Date().toISOString() };
+        App.project.meetings.push(nm);
+        App.meetingId = nm.id;
+        triggerAutoSave();
+        renderMeetingList();
+        renderMeetingDetail();
+        $('meetingDetail').querySelector('.meeting-title').focus();
+    } else if (act.dataset.act === 'addAction' && m) {
+        (m.actions = m.actions || []).push({ id: uid(), text: '', owner: '', done: false });
+        triggerAutoSave();
+        renderMeetingDetail();
+        const inputs = $('meetingDetail').querySelectorAll('[data-afield="text"]');
+        if (inputs.length) inputs[inputs.length - 1].focus();
+    } else if (act.dataset.act === 'delAction' && m) {
+        const aid = act.closest('.action-item').dataset.aid;
+        m.actions = (m.actions || []).filter(a => a.id !== aid);
+        triggerAutoSave();
+        renderMeetingDetail();
+        renderMeetingList();
+    } else if (act.dataset.act === 'delMeeting' && m) {
+        if (!confirm(t('confirmDeleteMeeting'))) return;
+        App.project.meetings = App.project.meetings.filter(x => x.id !== m.id);
+        App.meetingId = null;
+        triggerAutoSave();
+        renderMeetingsModule();
+    }
+});
+
+// Yazarken detayı yeniden çizmiyoruz (odak kaybolmasın); sadece veriyi ve listeyi güncelliyoruz
+function onMeetingEdit(e) {
+    const m = currentMeeting();
+    if (!m) return;
+    const f = e.target.dataset.field;
+    const af = e.target.dataset.afield;
+    if (f) {
+        m[f] = e.target.value;
+        if (e.target.tagName === 'TEXTAREA') autoGrow(e.target);
+        if (f === 'title' || f === 'date') renderMeetingList();
+    } else if (af) {
+        const a = (m.actions || []).find(x => x.id === e.target.closest('.action-item').dataset.aid);
+        if (!a) return;
+        if (af === 'done') {
+            a.done = e.target.checked;
+            e.target.closest('.action-item').classList.toggle('done', a.done);
+        } else a[af] = e.target.value;
+        renderMeetingList();
+    } else return;
+    triggerAutoSave();
+}
+$('meetingsModule').addEventListener('input', onMeetingEdit);
+$('meetingsModule').addEventListener('change', (e) => { if (e.target.type === 'checkbox' || e.target.type === 'date') onMeetingEdit(e); });
+
+// Aksiyon satırında Enter → yeni madde
+$('meetingsModule').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.dataset.afield === 'text') {
+        e.preventDefault();
+        $('meetingsModule').querySelector('[data-act="addAction"]').click();
+    }
+});
+
+// ---------------------------------------------------------------------
+// 10) BAŞLANGIÇ — bu dosyadaki çeviriler eklendikten sonra dili yeniden uygula
+// ---------------------------------------------------------------------
+applyLanguage();
+</script>
 <script type="module">
+// =====================================================================
+// firebase.js — Giriş (Google), proje kaydet/yükle/sil, paylaşım linki.
+// workspace.js'teki ekranlar bu dosyanın window.FB fonksiyonlarını kullanır.
+// =====================================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, setDoc, doc, getDoc, getDocs, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -2068,272 +3329,114 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ---------------- SALT-OKUNUR PAYLAŞIM (?share=ID) ----------------
+function requireUser() {
+    if (!auth.currentUser) throw new Error(t('signInFirst'));
+    return auth.currentUser.uid;
+}
+const projectsCol = (uid) => collection(db, "users", uid, "projects");
+const projectDoc = (uid, id) => doc(db, "users", uid, "projects", id);
+
+function newProjectId(name) {
+    const slug = String(name || 'project').toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'project';
+    return `${slug.slice(0, 40)}-${Date.now()}`;
+}
+
+const FB = {
+    async login() {
+        try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+        catch (e) { if (e.code !== 'auth/popup-closed-by-user') showLogin("Giriş hatası: " + e.message); }
+    },
+    async switchAccount() {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        try { await flushSave(); await signInWithPopup(auth, provider); location.reload(); }
+        catch (e) { if (e.code !== 'auth/popup-closed-by-user') alert("Hata: " + e.message); }
+    },
+    async logout() {
+        await flushSave();
+        await signOut(auth);
+        location.reload();
+    },
+
+    async listProjects() {
+        const uid = requireUser();
+        const snap = await getDocs(projectsCol(uid));
+        return snap.docs
+            .map(d => ({ id: d.id, data: d.data() }))
+            .sort((a, b) => new Date(b.data.lastUpdated || 0) - new Date(a.data.lastUpdated || 0));
+    },
+
+    // Yeni proje (veya çoğaltma): verilen veriyi temel alır, eksik alanları doldurur
+    async createProject(base) {
+        const uid = requireUser();
+        const now = new Date().toISOString();
+        const data = {
+            projectName: base.projectName || 'Untitled Project',
+            startDate: base.startDate || "",
+            totalEpisodes: parseInt(base.totalEpisodes) || 16,
+            totalDays: base.totalDays || null,
+            milestones: base.milestones || [],
+            cells: base.cells || [],
+            notes: base.notes || {},
+            scripts: base.scripts || {},
+            meetings: base.meetings || [],
+            createdAt: now,
+            lastUpdated: now
+        };
+        const id = newProjectId(data.projectName);
+        await setDoc(projectDoc(uid, id), data);
+        return { id, data };
+    },
+
+    async saveProject(id, data) {
+        const uid = requireUser();
+        await setDoc(projectDoc(uid, id), data);
+    },
+
+    async renameProject(id, name) {
+        const uid = requireUser();
+        await setDoc(projectDoc(uid, id), { projectName: name, lastUpdated: new Date().toISOString() }, { merge: true });
+    },
+
+    async deleteProject(id) {
+        const uid = requireUser();
+        await deleteDoc(projectDoc(uid, id));
+    },
+
+    // Salt-okunur paylaşım: sadece takvim + bölüm notları kopyalanır
+    async shareProject(data) {
+        const uid = requireUser();
+        const shareId = Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+        await setDoc(doc(db, "sharedProjects", shareId), Object.assign({}, data, {
+            lang: window.currentLang || 'en',
+            ownerUid: uid,
+            createdAt: new Date().toISOString()
+        }));
+        return `${location.origin}${location.pathname}?share=${shareId}`;
+    }
+};
+window.FB = FB;
+
+// ---------------- PAYLAŞIM LİNKİ (?share=ID) ----------------
 const shareParam = new URLSearchParams(location.search).get('share');
+
 if (shareParam) {
-    document.body.classList.add('read-only-mode');
-    document.getElementById('readOnlyBanner').style.display = 'block';
-    enterSharedReadOnlyView(shareParam);
-}
-
-async function enterSharedReadOnlyView(shareId) {
-    try {
-        const snap = await getDoc(doc(db, "sharedProjects", shareId));
-        if (!snap.exists()) { alert("Bu paylaşım linki geçersiz veya artık mevcut değil."); return; }
-        const data = snap.data();
-        setLanguageSilent(data.lang || 'en');
-        loadProjectToUI(data);
-        switchToCalendarView(); // yapımcılar için takvim görünümüyle açılır
-    } catch (e) {
-        alert("Paylaşım verisi yüklenemedi: " + e.message);
-    }
-}
-
-function generateShareId() {
-    return Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
-}
-
-window.handleShareAction = async () => {
-    if (window.isOfflineMode) { showOfflineBanner(); return; }
-    if (!auth.currentUser) { alert(t('signInFirst')); return; }
-
-    const projectName = document.getElementById("projectName").value.trim() || "Untitled Project";
-    const data = collectProjectData(projectName);
-    if (data.cells.length === 0) { alert("Paylaşılacak bir takvim bulunamadı — önce birkaç hücre doldurun."); return; }
-
-    data.lang = window.currentLang || 'en';
-    data.ownerUid = auth.currentUser.uid;
-    data.createdAt = new Date().toISOString();
-
-    const shareId = generateShareId();
-    try {
-        await setDoc(doc(db, "sharedProjects", shareId), data);
-        const url = `${location.origin}${location.pathname}?share=${shareId}`;
-        try { await navigator.clipboard.writeText(url); } catch (e) {}
-        prompt(t('shareLinkPrompt'), url);
-    } catch (e) {
-        alert("Paylaşım linki oluşturulamadı: " + e.message);
-    }
-};
-document.getElementById('shareBtn').onclick = () => window.handleShareAction();
-
-// ---------------- GİRİŞ / ÇIKIŞ ----------------
-window.toggleUserDropdown = () => {
-    const dd = document.getElementById("userDropdown");
-    dd.style.display = (dd.style.display === "block") ? "none" : "block";
-};
-
-window.loginWithGoogle = async () => {
-    try { await signInWithPopup(auth, new GoogleAuthProvider()); }
-    catch (e) { alert("Giriş hatası: " + e.message); }
-};
-
-window.logout = async () => {
-    try { await signOut(auth); window.location.reload(); }
-    catch (e) { alert("Çıkış yapılamadı."); }
-};
-
-window.switchAccount = async () => {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    try { await signInWithPopup(auth, provider); }
-    catch (e) { alert("Hata: " + e.message); }
-};
-
-// ---------------- KAYDETME ----------------
-// mode: 'auto'   → sessiz otomatik kayıt (mevcut projenin üzerine)
-//       'manual' → KAYDET: mevcut projeyi günceller; proje yoksa isim sorar
-//       'saveAs' → FARKLI KAYDET: yeni isim/sürüm ile yeni proje oluşturur
-window.handleSaveAction = async (mode = 'auto') => {
-    if (window.isReadOnlyShare) return;
-    const isManual = mode !== 'auto';
-
-    if (window.isOfflineMode) { if (isManual) showOfflineBanner(); return; }
-    if (!auth.currentUser) { if (isManual) alert(t('signInFirst')); return; }
-
-    const nameInput = document.getElementById("projectName");
-    let projectName = nameInput.value.trim();
-    const userId = auth.currentUser.uid;
-
-    try {
-        if (mode === 'saveAs' || (mode === 'manual' && !currentProjectId)) {
-            const entered = prompt(t('askProjectName'), projectName);
-            if (entered === null) return;
-            if (!entered.trim()) { alert(t('nameRequired')); return; }
-            projectName = entered.trim();
-
-            if (mode === 'saveAs') {
-                // Aynı isim varsa _V2, _V3 ... şeklinde sürüm numarası ver
-                const snap = await getDocs(collection(db, "users", userId, "projects"));
-                const safeName = projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regex = new RegExp(`^${safeName}_V(\\d+)$`);
-                let version = 1;
-                snap.forEach(ds => {
-                    const n = ds.data().projectName;
-                    if (!n) return;
-                    if (n === projectName) version = Math.max(version, 2);
-                    const m = n.match(regex);
-                    if (m) version = Math.max(version, parseInt(m[1]) + 1);
-                });
-                if (version > 1) projectName = `${projectName}_V${version}`;
-            }
-
-            const slug = projectName.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'project';
-            currentProjectId = `${slug}-${Date.now()}`;
-        } else if (!currentProjectId) {
-            currentProjectId = "project-" + Date.now();
+    window.isReadOnlyShare = true;
+    (async () => {
+        try {
+            const snap = await getDoc(doc(db, "sharedProjects", shareParam));
+            if (!snap.exists()) { showLogin("Bu paylaşım linki geçersiz veya artık mevcut değil."); return; }
+            const data = snap.data();
+            setLanguageSilent(data.lang || 'en');
+            openProject(null, data, { readOnly: true });
+            switchToCalendarView(); // yapımcılar için takvim görünümüyle açılır
+        } catch (e) {
+            showLogin("Paylaşım verisi yüklenemedi: " + e.message);
         }
-
-        if (!projectName) projectName = "Untitled Project";
-        nameInput.value = projectName;
-
-        await setDoc(doc(db, "users", userId, "projects", currentProjectId), collectProjectData(projectName));
-
-        if (isManual) alert(`✅ ${t('savedAs')} '${projectName}'`);
-        else console.log("Auto saved:", currentProjectId);
-    } catch (e) {
-        if (isManual) alert("Save error: " + e.message);
-        else console.error("Auto save error:", e);
-    }
-};
-
-document.getElementById('saveBtn').addEventListener('click', () => window.handleSaveAction('manual'));
-document.getElementById('saveAsBtn').addEventListener('click', () => window.handleSaveAction('saveAs'));
-
-// ---------------- YÜKLEME / LİSTELEME ----------------
-const projectsPanel = document.getElementById("projectsPanel");
-const projectCtxMenu = document.getElementById('projectContextMenu');
-let projectToDelete = null;
-
-window.handleLoadAction = async () => {
-    if (!auth.currentUser) { alert(t('signInFirst')); return; }
-
-    const list = document.getElementById("projectsList");
-    projectsPanel.style.display = "flex";
-    list.textContent = t('loading');
-
-    let snap;
-    try {
-        snap = await getDocs(collection(db, "users", auth.currentUser.uid, "projects"));
-    } catch (e) {
-        list.textContent = "Hata: " + e.message;
-        return;
-    }
-
-    document.getElementById('deleteAllProjectsBtn').style.display = snap.size >= 2 ? "inline-block" : "none";
-    list.innerHTML = "";
-
-    if (snap.empty) { list.innerHTML = `<p>${escapeHtml(t('noProjects'))}</p>`; return; }
-
-    snap.docs
-        .sort((a, b) => new Date(b.data().lastUpdated || 0) - new Date(a.data().lastUpdated || 0))
-        .forEach(docSnap => {
-            const d = docSnap.data();
-            const projectId = docSnap.id;
-
-            const div = document.createElement("div");
-            div.className = "nav-btn project-item";
-            div.style.cssText = "margin-bottom:10px; width:100%; box-sizing:border-box; display:flex; justify-content:space-between; padding:15px; font-size:14px; cursor:pointer; background:#1c1f26; border:1px solid #333; border-radius:6px; text-transform:none;";
-            const dateDisplay = d.lastUpdated ? new Date(d.lastUpdated).toLocaleDateString(localeStr()) : '—';
-            div.innerHTML = `<span>📂 ${escapeHtml(d.projectName)}</span> <small>${escapeHtml(dateDisplay)}</small>`;
-
-            div.onclick = () => {
-                currentProjectId = projectId;
-                loadProjectToUI(d);
-                projectsPanel.style.display = "none";
-            };
-            div.oncontextmenu = (e) => {
-                e.preventDefault();
-                projectToDelete = { id: projectId, name: d.projectName || projectId };
-                projectCtxMenu.style.display = 'block';
-                projectCtxMenu.style.left = e.clientX + 'px';
-                projectCtxMenu.style.top = e.clientY + 'px';
-            };
-            list.appendChild(div);
-        });
-};
-document.getElementById('loadBtn').addEventListener('click', () => window.handleLoadAction());
-document.getElementById('closeProjectsBtn').onclick = () => { projectsPanel.style.display = 'none'; };
-
-document.addEventListener('mousedown', (e) => {
-    if (projectCtxMenu.style.display === 'block' && !projectCtxMenu.contains(e.target)) projectCtxMenu.style.display = 'none';
-});
-
-document.getElementById('deleteProjectBtn').onclick = async () => {
-    if (!projectToDelete || !auth.currentUser) return;
-    projectCtxMenu.style.display = 'none';
-    if (!confirm(`"${projectToDelete.name}" — ${t('confirmDeleteProject')}`)) return;
-    try {
-        await deleteDoc(doc(db, "users", auth.currentUser.uid, "projects", projectToDelete.id));
-        if (currentProjectId === projectToDelete.id) currentProjectId = null;
-        projectToDelete = null;
-        window.handleLoadAction();
-    } catch (error) {
-        console.error("Silme hatası:", error);
-        alert("Silme işlemi başarısız oldu.");
-    }
-};
-
-document.getElementById('deleteAllProjectsBtn').onclick = async () => {
-    if (!auth.currentUser) return;
-    if (!confirm("TÜM PROJELERİ SİLMEK ÜZERESİN! Emin misin?")) return;
-    if (!confirm("Bu işlem GERİ ALINAMAZ. SON KEZ EMİN MİSİN?")) return;
-    try {
-        const userId = auth.currentUser.uid;
-        const snap = await getDocs(collection(db, "users", userId, "projects"));
-        await Promise.all(snap.docs.map(ds => deleteDoc(doc(db, "users", userId, "projects", ds.id))));
-        currentProjectId = null;
-        alert("🗑 Tüm projeler silindi.");
-        window.handleLoadAction();
-    } catch (e) {
-        alert("Silme hatası: " + e.message);
-    }
-};
-
-// ---------------- OFFLINE MOD ----------------
-window.isOfflineMode = false;
-const showWelcomeModal = () => { document.getElementById('welcomeModal').style.display = 'flex'; };
-const hideWelcomeModal = () => { document.getElementById('welcomeModal').style.display = 'none'; };
-function showOfflineBanner() { document.getElementById('offlineBanner').style.display = 'block'; }
-const hideOfflineBanner = () => { document.getElementById('offlineBanner').style.display = 'none'; };
-
-window.enterOfflineMode = function () {
-    window.isOfflineMode = true;
-    hideWelcomeModal();
-    showOfflineBanner();
-};
-
-document.getElementById('welcomeLoginBtn').onclick = () => window.loginWithGoogle();
-document.getElementById('welcomeOfflineBtn').onclick = (e) => { e.preventDefault(); window.enterOfflineMode(); };
-document.getElementById('offlineLoginLink').onclick = (e) => { e.preventDefault(); window.loginWithGoogle(); };
-document.getElementById('offlineBannerClose').onclick = () => hideOfflineBanner();
-
-// ---------------- GİRİŞ DURUMU ----------------
-onAuthStateChanged(auth, (user) => {
-    if (window.isReadOnlyShare) return;
-
-    const loginBtn = document.getElementById("googleLoginBtn");
-    const userWrapper = document.getElementById("userMenuWrapper");
-
-    if (user) {
-        loginBtn.style.display = "none";
-        userWrapper.style.display = "flex";
-        document.getElementById("userName").textContent = user.displayName || user.email || "";
-        document.getElementById("userPhoto").src = user.photoURL || "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32"><circle cx="12" cy="12" r="12" fill="#333"/><circle cx="12" cy="9" r="4" fill="#aaa"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="#aaa"/></svg>');
-        window.isOfflineMode = false;
-        hideWelcomeModal();
-        hideOfflineBanner();
-    } else {
-        loginBtn.style.display = "flex";
-        userWrapper.style.display = "none";
-        if (!window.isOfflineMode) showWelcomeModal();
-    }
-});
-
-document.addEventListener('click', (event) => {
-    const wrapper = document.getElementById('userMenuWrapper');
-    if (!wrapper.contains(event.target)) document.getElementById('userDropdown').style.display = 'none';
-});
+    })();
+} else {
+    onAuthStateChanged(auth, (user) => { window.onAuthUser(user); });
+}
 </script>
 </body>
 </html>
