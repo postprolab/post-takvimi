@@ -152,7 +152,7 @@ body {
 
 .timeline { background: white; color: black; z-index: 1; }
 .weekend.timeline { background: #d1d1d1; }
-.filled { z-index: 5 !important; color: #000000 !important; font-weight: bold; cursor: grab; }
+.filled { z-index: 5 !important; color: var(--fg, #000000) !important; font-weight: bold; cursor: grab; }
 .filled:active { cursor: grabbing; }
 .selected { outline: 2px solid #0078d7 !important; z-index: 10 !important; box-shadow: 0 0 8px rgba(0, 120, 215, 0.5); }
 
@@ -171,8 +171,6 @@ body {
 body.read-only-mode .extend-cell, body.read-only-mode .extend-btn { display: none !important; }
 
 /* CUT TÜRLERİ (Director / Producer / Master Lock) */
-.cell.timeline.filled[data-cut_type="producer"],
-.cell.timeline.filled[data-cut_type="master"] { color: #FFFFFF !important; }
 .cell.timeline.filled[data-cut_type="master"] { box-shadow: inset 0 0 0 1px #ff5252; }
 
 .episode-v { background: #6FBF73 !important; color: #000 !important; display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; transform: rotate(180deg); font-size: 12px; height: 100% !important; border-right: 1px solid var(--border-color); }
@@ -188,6 +186,18 @@ body.read-only-mode .extend-cell, body.read-only-mode .extend-btn { display: non
 .context-menu .menu-label { padding: 4px 15px 2px; font-size: 10px; color: #777; letter-spacing: 1px; font-weight: bold; }
 .context-menu .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 8px; border: 1px solid rgba(255,255,255,0.25); flex-shrink: 0; }
 .context-menu .check { margin-left: auto; padding-left: 10px; color: var(--neon-green); }
+/* Platform cut alt menüleri (Netflix / Amazon / HBO / Disney) */
+.context-menu .item.has-sub { position: relative; }
+.context-menu .item.has-sub .check { margin-left: 8px; padding-left: 0; }
+.context-menu .sub-arrow { margin-left: auto; padding-left: 14px; color: #888; font-size: 11px; }
+.context-menu .submenu {
+    display: none; position: absolute; left: 100%; top: -6px; min-width: 150px; padding: 5px 0;
+    background: #1c1f26; border: 1px solid #444; border-radius: 4px; box-shadow: 0 6px 18px rgba(0,0,0,0.5); z-index: 1;
+}
+.context-menu .item.has-sub:hover > .submenu,
+.context-menu .item.has-sub.open > .submenu { display: block; }
+.context-menu .item.has-sub.flip > .submenu { left: auto; right: 100%; }
+.context-menu .item.has-sub:hover > .sub-arrow { color: #fff; }
 
 .date-summary-pop { position: fixed; background: #222; border: 1px solid #444; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.8); z-index: 11000; display: none; min-width: 200px; max-width: 300px; padding: 10px; color: #eee; font-size: 12px; }
 .pop-title { font-weight: bold; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 8px; color: var(--accent); }
@@ -987,6 +997,22 @@ const CUT_TYPES = {
     producer: { label: "PRODUCER CUT", bg: "#C62828", fg: "#FFFFFF" },
     master:   { label: "MASTER LOCK",  bg: "#7F0000", fg: "#FFFFFF" }
 };
+const BASE_CUT_KEYS = Object.keys(CUT_TYPES);
+
+// 📺 Platform cut'ları — her platformun kendi renk paleti (cut numarasından bağımsız).
+// Yeni platform ya da daha fazla cut numarası eklemek için sadece burayı düzenle.
+const PLATFORM_CUT_COUNT = 3;
+const PLATFORM_CUTS = [
+    { key: 'nf',  name: 'Netflix Cut', prefix: 'NCUT', bg: '#141414', fg: '#E50914' },
+    { key: 'am',  name: 'Amazon Cut',  prefix: 'AC',   bg: '#00A8E1', fg: '#00131A' },
+    { key: 'hbo', name: 'HBO Cut',     prefix: 'HC',   bg: '#5B2BC4', fg: '#FFFFFF' },
+    { key: 'dis', name: 'Disney Cut',  prefix: 'DC',   bg: '#1B3FBF', fg: '#FFFFFF' }
+];
+PLATFORM_CUTS.forEach(p => {
+    for (let n = 1; n <= PLATFORM_CUT_COUNT; n++) {
+        CUT_TYPES[p.key + n] = { label: p.prefix + String(n).padStart(2, '0'), bg: p.bg, fg: p.fg, platform: p.key };
+    }
+});
 
 let columnWidths = { episode: 120, edit: 260, cuts: 260, vfx: 260, color: 260, sound: 260, music: 260, send: 260 };
 
@@ -1030,7 +1056,7 @@ const I18N = {
         readOnlyBannerText: "This is a read-only shared view — editing is disabled.",
         myProjects: "MY PROJECTS", deleteAll: "DELETE ALL", close: "CLOSE", deleteProject: "Delete Project",
         selectStartDate: "SELECT START DATE", apply: "APPLY", cancel: "CANCEL",
-        rename: "Rename", color: "Color", delete: "Delete", cutType: "CUT TYPE", normalCut: "Back to normal CUT",
+        rename: "Rename", color: "Color", delete: "Delete", cutType: "CUT TYPE", normalCut: "Back to normal CUT", platformCuts: "PLATFORM CUTS",
         askProjectName: "Enter project name:", nameRequired: "Project name is required.", savedAs: "Saved as",
         signInFirst: "⚠️ Please sign in first.", shareLinkPrompt: "Share this link (read-only, nobody can edit):",
         newName: "New name:", noSchedule: "No schedule.", loading: "Loading...", noProjects: "No saved projects.",
@@ -1051,7 +1077,7 @@ const I18N = {
         readOnlyBannerText: "Bu bir salt-okunur paylaşım görünümüdür — düzenleme yapılamaz.",
         myProjects: "PROJELERİM", deleteAll: "TÜMÜNÜ SİL", close: "KAPAT", deleteProject: "Projeyi Sil",
         selectStartDate: "BAŞLANGIÇ TARİHİ SEÇ", apply: "UYGULA", cancel: "VAZGEÇ",
-        rename: "Yeniden Adlandır", color: "Renk", delete: "Sil", cutType: "CUT TÜRÜ", normalCut: "Normal CUT'a döndür",
+        rename: "Yeniden Adlandır", color: "Renk", delete: "Sil", cutType: "CUT TÜRÜ", normalCut: "Normal CUT'a döndür", platformCuts: "PLATFORM CUT'LARI",
         askProjectName: "Proje adını girin:", nameRequired: "Proje adı gerekli.", savedAs: "Kaydedildi:",
         signInFirst: "⚠️ Önce giriş yapmalısınız.", shareLinkPrompt: "Bu linki paylaşabilirsiniz (salt-okunur, kimse düzenleyemez):",
         newName: "Yeni isim:", noSchedule: "Plan yok.", loading: "Yükleniyor...", noProjects: "Kayıt bulunamadı.",
@@ -1133,7 +1159,7 @@ function fitText(cell) {
     const text = cell.textContent || "";
     const longestWord = text.split(/\s+/).reduce((m, w) => Math.max(m, w.length), 0);
     const len = text.length;
-    let size = len > 12 ? 6.5 : len > 9 ? 7.5 : len > 6 ? 9 : 10;
+    let size = len > 12 ? 6.5 : len > 9 ? 7.5 : len > 5 ? 9 : 10;
     if (longestWord >= 8) size = Math.min(size, 6.5);
     else if (longestWord >= 7) size = Math.min(size, 7.5);
     cell.style.fontSize = size === 10 ? "" : size + "px";
@@ -1143,8 +1169,13 @@ function fillCell(cell, { text, bg, cutType }) {
     cell.dataset.proc = cell.dataset.proc_type;
     cell.textContent = text;
     cell.style.backgroundColor = safeColor(bg);
-    if (cutType && CUT_TYPES[cutType]) cell.dataset.cut_type = cutType;
-    else delete cell.dataset.cut_type;
+    if (cutType && CUT_TYPES[cutType]) {
+        cell.dataset.cut_type = cutType;
+        cell.style.setProperty('--fg', CUT_TYPES[cutType].fg);   // yazı rengi (CSS .filled kullanır)
+    } else {
+        delete cell.dataset.cut_type;
+        cell.style.removeProperty('--fg');
+    }
     cell.classList.add('filled');
     fitText(cell);
 }
@@ -1154,6 +1185,7 @@ function clearCell(cell) {
     cell.textContent = "";
     cell.style.backgroundColor = "";
     cell.style.fontSize = "";
+    cell.style.removeProperty('--fg');
     delete cell.dataset.cut_type;
     cell.classList.remove('filled', 'selected');
 }
@@ -1707,12 +1739,34 @@ window.showGridMenu = function (x, y) {
 
     if (isCuts) {
         html += `<div class="menu-sep"></div><div class="menu-label">${escapeHtml(t('cutType'))}</div>`;
-        Object.entries(CUT_TYPES).forEach(([key, ct]) => {
+        BASE_CUT_KEYS.forEach(key => {
+            const ct = CUT_TYPES[key];
             html += `<div class="item" data-act="cut" data-cut="${key}">
                         <span class="swatch" style="background:${ct.bg}"></span>${escapeHtml(ct.label)}
                         ${currentType === key ? '<span class="check">✓</span>' : ''}
                      </div>`;
         });
+
+        // Platform cut'ları: üzerine gelince (veya tıklayınca) alt menü açılır
+        html += `<div class="menu-sep"></div><div class="menu-label">${escapeHtml(t('platformCuts'))}</div>`;
+        PLATFORM_CUTS.forEach(p => {
+            const isCurrent = CUT_TYPES[currentType] && CUT_TYPES[currentType].platform === p.key;
+            let sub = '';
+            for (let n = 1; n <= PLATFORM_CUT_COUNT; n++) {
+                const key = p.key + n;
+                sub += `<div class="item" data-act="cut" data-cut="${key}">
+                            <span class="swatch" style="background:${p.bg}; border-color:${p.fg}"></span>${escapeHtml(CUT_TYPES[key].label)}
+                            ${currentType === key ? '<span class="check">✓</span>' : ''}
+                        </div>`;
+            }
+            html += `<div class="item has-sub" data-plat="${p.key}">
+                        <span class="swatch" style="background:${p.bg}; border-color:${p.fg}"></span>${escapeHtml(p.name)}
+                        ${isCurrent ? '<span class="check">✓</span>' : ''}
+                        <span class="sub-arrow">▸</span>
+                        <div class="submenu">${sub}</div>
+                     </div>`;
+        });
+
         if (currentType) {
             html += `<div class="item" data-act="cut" data-cut="">
                         <span class="swatch" style="background:${deptColors.cuts}"></span>↩ ${escapeHtml(t('normalCut'))}
@@ -1725,8 +1779,28 @@ window.showGridMenu = function (x, y) {
     menu.innerHTML = html;
     positionMenu(x, y);
 
+    // Alt menüler: ekranın sağına sığmazsa sola açılsın; tıklayınca da açılıp kapansın
+    menu.querySelectorAll('.item.has-sub').forEach(item => {
+        const place = () => {
+            const r = item.getBoundingClientRect();
+            item.classList.toggle('flip', r.right + 170 > window.innerWidth);
+            const sub = item.querySelector('.submenu');
+            sub.style.top = '';
+            const sr = sub.getBoundingClientRect();
+            if (sr.bottom > window.innerHeight - 5) sub.style.top = (window.innerHeight - 5 - sr.bottom) + 'px';
+        };
+        item.addEventListener('mouseenter', place);
+        item.onclick = (e) => {
+            if (e.target.closest('.submenu')) return;
+            menu.querySelectorAll('.item.has-sub.open').forEach(o => { if (o !== item) o.classList.remove('open'); });
+            item.classList.toggle('open');
+            place();
+        };
+    });
+
     menu.querySelectorAll('.item[data-act]').forEach(item => {
-        item.onclick = () => {
+        item.onclick = (e) => {
+            e.stopPropagation();
             const act = item.dataset.act;
             if (act === 'rename') handleRename();
             else if (act === 'color') handleChangeColor();
