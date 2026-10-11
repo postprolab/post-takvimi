@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
-/* ===== TAKVİM STİLLERİ ===== */
 :root {
     --bg-dark: #0F1115;
     --bg-panel: #15171c;
@@ -353,7 +352,8 @@ body.read-only-mode .cell.timeline { cursor: default; }
 .resize-handle { position: absolute; top: 0; right: 0; width: 6px; height: 100%; cursor: col-resize; background: transparent; }
 .resize-handle:hover { background: #00ff99; }
 
-/* ===== ÇALIŞMA ALANI STİLLERİ ===== */
+</style>
+<style>
 /* =====================================================================
    workspace.css — Giriş ekranı, Projelerim paneli, çalışma alanı,
    Senaryo ve Toplantı Notları modülleri. (Takvim stilleri: style.css)
@@ -772,6 +772,25 @@ body.read-only-mode #newVersionBtn { display: none !important; }
     .ver-actions { opacity: 1; }
 }
 
+/* ---------- YARDIM BALONLARI ---------- */
+.help-tip {
+    position: fixed; z-index: 30000; max-width: 300px; pointer-events: none;
+    display: flex; gap: 8px; align-items: flex-start;
+    background: #1b1f27; border: 1px solid #3a4150; color: #e8e8e8; border-radius: 8px;
+    padding: 10px 12px; font-size: 12px; line-height: 1.55; font-weight: 500; text-align: left;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+    opacity: 0; transform: translateY(-4px); transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.help-tip.above { transform: translateY(4px); }
+.help-tip.show { opacity: 1; transform: translateY(0); }
+.help-tip .ht-icon { flex-shrink: 0; }
+.help-tip::before {
+    content: ""; position: absolute; left: var(--arrow-x, 50%); top: -6px; width: 10px; height: 10px;
+    background: #1b1f27; border-left: 1px solid #3a4150; border-top: 1px solid #3a4150;
+    transform: translateX(-50%) rotate(45deg);
+}
+.help-tip.above::before { top: auto; bottom: -6px; transform: translateX(-50%) rotate(225deg); }
+
 /* ---------- BANNER'LAR ---------- */
 .banner { position: fixed; left: 0; width: 100%; box-sizing: border-box; padding: 9px 16px; font-size: 12px; text-align: center; z-index: 19000; }
 .banner-readonly { top: 0; background: #1a2e1a; color: #a8e6a1; border-bottom: 1px solid #4CAF50; }
@@ -806,6 +825,7 @@ body.read-only-mode #newVersionBtn { display: none !important; }
     .app-header { padding: 10px 14px; }
     .profile-btn #profileName { display: none; }
 }
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
@@ -832,7 +852,7 @@ body.read-only-mode #newVersionBtn { display: none !important; }
         <button id="loginBtn" class="primary-btn wide">🔑 <span data-i18n="welcomeLoginBtn">Sign in with Google</span></button>
         <a href="#" id="offlineBtn" class="link-btn" data-i18n="tryOffline">Try without signing in</a>
         <p id="loginError" class="login-error" hidden></p>
-        <div class="lang-switch"><span data-lang="en">EN</span><span data-lang="tr">TR</span></div>
+        <div class="lang-switch" data-help="help_lang"><span data-lang="en">EN</span><span data-lang="tr">TR</span></div>
     </div>
 </section>
 
@@ -841,8 +861,8 @@ body.read-only-mode #newVersionBtn { display: none !important; }
     <header class="app-header">
         <div class="brand-mark">POSTPRO<span>LAB</span></div>
         <div class="nav-spacer"></div>
-        <div class="lang-switch"><span data-lang="en">EN</span><span data-lang="tr">TR</span></div>
-        <button id="profileBtn" class="profile-btn">
+        <div class="lang-switch" data-help="help_lang"><span data-lang="en">EN</span><span data-lang="tr">TR</span></div>
+        <button id="profileBtn" data-help="help_profile" class="profile-btn">
             <img id="profilePhoto" alt="">
             <span id="profileName"></span>
             <span class="caret">▾</span>
@@ -854,7 +874,7 @@ body.read-only-mode #newVersionBtn { display: none !important; }
                 <h1 data-i18n="myProjects">MY PROJECTS</h1>
                 <p id="dashSub" class="dash-sub"></p>
             </div>
-            <button id="newProjectBtn" class="primary-btn">+ <span data-i18n="newProject">New project</span></button>
+            <button id="newProjectBtn" data-help="help_newProject" class="primary-btn">+ <span data-i18n="newProject">New project</span></button>
         </div>
         <div id="legacyBanner" class="legacy-banner" hidden></div>
         <div id="projectGrid" class="project-grid"></div>
@@ -864,18 +884,18 @@ body.read-only-mode #newVersionBtn { display: none !important; }
 <!-- ============ ÇALIŞMA ALANI ============ -->
 <section id="workspaceView" class="view workspace-view" hidden>
     <aside class="app-sidebar">
-        <button id="backToProjects" class="sb-back">← <span data-i18n="backToProjects">Projects</span></button>
+        <button id="backToProjects" data-help="help_back" class="sb-back">← <span data-i18n="backToProjects">Projects</span></button>
         <div class="sb-project">
             <label for="projectName" class="sb-label" data-i18n="projectLabel">PROJECT</label>
-            <input type="text" id="projectName" class="sb-project-input" placeholder="PROJECT NAME..." data-i18n-placeholder="projectNamePlaceholder" autocomplete="off">
+            <input type="text" id="projectName" data-help="help_projectName" class="sb-project-input" placeholder="PROJECT NAME..." data-i18n-placeholder="projectNamePlaceholder" autocomplete="off">
         </div>
         <nav id="moduleNav" class="sb-nav"></nav>
         <div class="nav-spacer"></div>
         <div class="sb-footer">
-            <button id="peopleBtn" class="sb-btn sb-btn-people">👥 <span data-i18n="people">People</span></button>
-            <button id="shareBtn" class="sb-btn">🔗 <span data-i18n="linkShare">Read-only link</span></button>
-            <div id="saveStatus" class="save-status"></div>
-            <div class="lang-switch"><span data-lang="en">EN</span><span data-lang="tr">TR</span></div>
+            <button id="peopleBtn" data-help="help_people" class="sb-btn sb-btn-people">👥 <span data-i18n="people">People</span></button>
+            <button id="shareBtn" data-help="help_linkShare" class="sb-btn">🔗 <span data-i18n="linkShare">Read-only link</span></button>
+            <div id="saveStatus" data-help="help_saveStatus" class="save-status"></div>
+            <div class="lang-switch" data-help="help_lang"><span data-lang="en">EN</span><span data-lang="tr">TR</span></div>
         </div>
     </aside>
 
@@ -885,24 +905,24 @@ body.read-only-mode #newVersionBtn { display: none !important; }
         <div id="calendarModule" class="ws-module">
             <div class="top-bar">
                 <div id="versionGroup" class="version-group">
-                    <button id="versionBtn" class="nav-btn version-btn">
+                    <button id="versionBtn" data-help="help_version" class="nav-btn version-btn">
                         <span class="v-label" data-i18n="versionLabel">VERSION</span>
                         <span id="versionName">—</span>
                         <span class="caret">▾</span>
                     </button>
-                    <button id="newVersionBtn" class="nav-btn"><span>＋</span> <span data-i18n="newVersionBtn">NEW VERSION</span></button>
+                    <button id="newVersionBtn" data-help="help_newVersion" class="nav-btn"><span>＋</span> <span data-i18n="newVersionBtn">NEW VERSION</span></button>
                 </div>
                 <div class="tb-sep"></div>
-                <button id="openModalBtn" class="nav-btn nav-btn-primary"><span>📅</span> <span data-i18n="setStartDate">SET START DATE</span></button>
-                <button id="toggleTodayBtn" class="nav-btn"><span>📍</span> <span data-i18n="todayLine">TODAY LINE</span></button>
-                <button id="toggleViewBtn" class="nav-btn">🔄 CALENDAR VIEW</button>
-                <button id="openAutoModalBtn" class="nav-btn" style="background:#2a2d35 !important; border-color:var(--neon-green) !important;"><span>🤖</span> <span data-i18n="autoSchedule">AUTO SCHEDULE</span></button>
+                <button id="openModalBtn" data-help="help_setStart" class="nav-btn nav-btn-primary"><span>📅</span> <span data-i18n="setStartDate">SET START DATE</span></button>
+                <button id="toggleTodayBtn" data-help="help_today" class="nav-btn"><span>📍</span> <span data-i18n="todayLine">TODAY LINE</span></button>
+                <button id="toggleViewBtn" data-help="help_viewToggle" class="nav-btn">🔄 CALENDAR VIEW</button>
+                <button id="openAutoModalBtn" data-help="help_auto" class="nav-btn" style="background:#2a2d35 !important; border-color:var(--neon-green) !important;"><span>🤖</span> <span data-i18n="autoSchedule">AUTO SCHEDULE</span></button>
                 <div class="nav-spacer"></div>
-                <button id="exportVerticalBtn" class="nav-btn"><span>📄</span> <span data-i18n="verticalView">VERTICAL VIEW</span></button>
-                <button id="exportExcelBtn" class="nav-btn" style="border-color:#1D6F42;"><span>📊</span> <span data-i18n="exportExcel">EXPORT TO EXCEL</span></button>
+                <button id="exportVerticalBtn" data-help="help_exportVertical" class="nav-btn"><span>📄</span> <span data-i18n="verticalView">VERTICAL VIEW</span></button>
+                <button id="exportExcelBtn" data-help="help_excel" class="nav-btn" style="border-color:#1D6F42;"><span>📊</span> <span data-i18n="exportExcel">EXPORT TO EXCEL</span></button>
             </div>
 
-            <div class="filter-bar" id="deptFilters">
+            <div class="filter-bar" id="deptFilters" data-help="help_focus">
                 <div class="filter-label">FOCUS MODE:</div>
                 <button class="dept-filter-btn active" id="btn-all" onclick="filterDept('all', this)"><span>🌐</span> ALL</button>
                 <button class="dept-filter-btn" onclick="filterDept('set', this)"><span>🎬</span> SET</button>
@@ -1611,7 +1631,7 @@ function buildHeader() {
         <div class="header-days">
             ${months}${days}
             <div class="extend-cell" style="grid-column: ${TOTAL_DAYS + 1}; grid-row: 1 / span 2;">
-                <button class="extend-btn" onclick="extendDays()">+ ${EXTEND_STEP} ${escapeHtml(t('days'))}</button>
+                <button class="extend-btn" data-help="help_extend" onclick="extendDays()">+ ${EXTEND_STEP} ${escapeHtml(t('days'))}</button>
             </div>
         </div>`;
 }
@@ -2758,6 +2778,7 @@ document.getElementById('runAutoSetupBtn').onclick = function () {
 // Takvim artık bir proje açıldığında çiziliyor (workspace.js → openProject)
 // ---------------------------------------------------------------------
 applyLanguage();
+
 </script>
 <script>
 // =====================================================================
@@ -3227,7 +3248,7 @@ function renderDashboard() {
     banner.hidden = !App.legacy.length;
     if (App.legacy.length) {
         banner.innerHTML = `<span>📦 ${escapeHtml(tf('legacyBannerText', { n: App.legacy.length }))}</span>
-            <button class="primary-btn small" onclick="openMigration()">${escapeHtml(t('legacyBannerBtn'))} →</button>`;
+            <button class="primary-btn small" data-help="help_legacy" onclick="openMigration()">${escapeHtml(t('legacyBannerBtn'))} →</button>`;
     }
 
     if (!App.projects.length) {
@@ -3257,7 +3278,7 @@ function renderDashboard() {
         return `<div class="project-card ${role !== 'owner' ? 'shared' : ''}" data-id="${escapeHtml(id)}" tabindex="0">
             <div class="pc-top">
                 <div class="pc-title">${escapeHtml(d.projectName || 'Untitled Project')}</div>
-                <button class="pc-menu" data-menu="${escapeHtml(id)}" title="…">⋯</button>
+                <button class="pc-menu" data-menu="${escapeHtml(id)}" data-help="help_cardMenu">⋯</button>
             </div>
             <div class="pc-meta">${s.eps} ${escapeHtml(t('episodesShort'))}${s.activeVersion ? ' · ' + escapeHtml(t('activeVersion')) + ': <b>' + escapeHtml(s.activeVersion) + '</b>' : ''}</div>
             <div class="pc-chips">${roleChip}${chips}</div>
@@ -4274,7 +4295,7 @@ const MODULES = [
 function renderModuleNav() {
     $('moduleNav').innerHTML = MODULES
         .filter(m => !(App.publicShare && m.private))
-        .map(m => `<button class="sb-nav-item ${App.module === m.key ? 'active' : ''}" data-module="${m.key}">
+        .map(m => `<button class="sb-nav-item ${App.module === m.key ? 'active' : ''}" data-module="${m.key}" data-help="help_mod_${m.key}">
             <span class="sb-icon">${m.icon}</span><span>${escapeHtml(t(m.label))}</span></button>`)
         .join('');
 }
@@ -4486,7 +4507,7 @@ function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey 
         el.innerHTML = `
             <div class="mod-layout">
                 <div class="mod-list">
-                    <div class="mod-list-title">${escapeHtml(t('episodesTitle'))}</div>
+                    <div class="mod-list-title" data-help="help_episodeList">${escapeHtml(t('episodesTitle'))}</div>
                     <div class="mod-list-items">${listHtml}</div>
                 </div>
                 <div class="mod-detail"></div>
@@ -4522,16 +4543,16 @@ function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey 
                 <h2>${icon} ${escapeHtml(noteKeyLabel(st.sel))} — ${escapeHtml(t(titleKey))}</h2>
                 <div class="detail-tools">
                     <span class="muted">${openCount} ${escapeHtml(t('openNotes'))} · ${all.length - openCount} ${escapeHtml(t('resolved'))}</span>
-                    <button class="ghost-btn" data-act="pdf">📄 ${escapeHtml(t('exportPdf'))}</button>
+                    <button class="ghost-btn" data-act="pdf" data-help="help_pdf">📄 ${escapeHtml(t('exportPdf'))}</button>
                 </div>
             </div>
 
             ${ro ? '' : `
             <form class="note-add">
-                <select data-role="cat" title="${escapeHtml(t('category'))}">
+                <select data-role="cat" data-help="help_noteCat">
                     ${cats.map(c => `<option value="${c.key}" ${c.key === st.lastCat ? 'selected' : ''}>${escapeHtml(catLabel(c.key))}</option>`).join('')}
                 </select>
-                <input data-role="ref" type="text" maxlength="40" placeholder="${escapeHtml(t(refKey))}">
+                <input data-role="ref" data-help="help_noteRef" type="text" maxlength="40" placeholder="${escapeHtml(t(refKey))}">
                 <textarea data-role="text" rows="2" placeholder="${escapeHtml(t('notePlaceholder'))}"></textarea>
                 <button class="primary-btn small" type="submit">${escapeHtml(t('add'))}</button>
             </form>
@@ -4695,7 +4716,7 @@ function renderMeetingsModule() {
     $('meetingsModule').innerHTML = `
         <div class="mod-layout">
             <div class="mod-list">
-                ${App.readOnly ? '' : `<button class="primary-btn small wide" data-act="new">+ ${escapeHtml(t('newMeeting'))}</button>`}
+                ${App.readOnly ? '' : `<button class="primary-btn small wide" data-act="new" data-help="help_newMeeting">+ ${escapeHtml(t('newMeeting'))}</button>`}
                 <div id="meetingList"></div>
             </div>
             <div class="mod-detail" id="meetingDetail"></div>
@@ -4772,7 +4793,7 @@ function renderMeetingDetail() {
     el.innerHTML = `
         <div class="meeting-form">
             <div class="detail-tools meeting-tools">
-                <button class="ghost-btn" data-act="pdf">📄 ${escapeHtml(t('exportPdf'))}</button>
+                <button class="ghost-btn" data-act="pdf" data-help="help_meetingPdf">📄 ${escapeHtml(t('exportPdf'))}</button>
             </div>
             <input class="meeting-title" data-field="title" ${ro} maxlength="120" placeholder="${escapeHtml(t('meetingTitle'))}" value="${escapeHtml(m.title || '')}">
             <div class="np-row">
@@ -4794,7 +4815,7 @@ function renderMeetingDetail() {
                         ${App.readOnly ? '' : `<button class="icon-btn" data-act="delAction" title="${escapeHtml(t('delete'))}">✕</button>`}
                     </div>`).join('')}
             </div>
-            ${App.readOnly ? '' : `<button class="ghost-btn" data-act="addAction">${escapeHtml(t('addAction'))}</button>
+            ${App.readOnly ? '' : `<button class="ghost-btn" data-act="addAction" data-help="help_addAction">${escapeHtml(t('addAction'))}</button>
 
             <div class="meeting-foot">
                 <button class="ghost-btn danger" data-act="delMeeting">🗑 ${escapeHtml(t('deleteMeeting'))}</button>
@@ -4887,9 +4908,153 @@ $('meetingsModule').addEventListener('keydown', (e) => {
 });
 
 // ---------------------------------------------------------------------
-// 11) BAŞLANGIÇ — bu dosyadaki çeviriler eklendikten sonra dili yeniden uygula
+// 11) YARDIM BALONLARI — fare bir aracın üzerinde 3 sn durunca ne işe yaradığını anlatır.
+// Bir öğeye yardım eklemek için: data-help="help_anahtar" + aşağıya çeviri.
+// ---------------------------------------------------------------------
+Object.assign(I18N.en, {
+    helpTipsOn: "Help tips: On", helpTipsOff: "Help tips: Off",
+    help_setStart: "Sets the calendar's start date. Your plan is not deleted — it shifts to the new date.",
+    help_today: "Shows or hides a green line marking today on the calendar.",
+    help_viewToggle: "Switches between the timeline and the monthly calendar view. In calendar view, right-click a day to add an entry.",
+    help_auto: "Builds the whole post-production calendar automatically from the number of episodes and department durations.",
+    help_exportVertical: "Downloads a printable day-by-day list of the calendar. If days are selected in calendar view, only those are included.",
+    help_excel: "Downloads the current view as an Excel file, with colors.",
+    help_version: "Calendar versions of this project. Click to switch to another version, rename or delete one.",
+    help_newVersion: "Opens a copy of the current calendar as a new version. The old version stays as it is.",
+    help_focus: "Click a department to highlight only that department; the others fade. Click again to show all.",
+    help_extend: "Adds 110 more days to the end of the calendar.",
+    help_back: "Back to My Projects. Your changes are saved automatically.",
+    help_projectName: "The project's name. You can change it here; it saves automatically.",
+    help_mod_calendar: "Post-production calendar. Double-click: fill a cell · Right-click: rename, color, cut types · Drag: move · Shift+click: fill a range · Ctrl+Z: undo.",
+    help_mod_notes: "Department notes per episode (Edit, VFX, Color, Sound/Dubbing…). Mark them resolved and export to PDF.",
+    help_mod_script: "Technical notes taken while reading the script: VFX, special effects, music, locations… with scene/page references.",
+    help_mod_meetings: "Meeting records: attendees, notes and action items with owners.",
+    help_people: "Share the project with people by email: they can edit or only view. Changes update for everyone instantly.",
+    help_linkShare: "Creates a read-only link that opens without signing in (calendar + episode notes). Script and meeting notes stay private.",
+    help_saveStatus: "Save status. Changes are saved automatically within 2 seconds; press Ctrl+S to save right away.",
+    help_lang: "Changes the interface language (English / Turkish).",
+    help_newProject: "Creates a new project: name, number of episodes and start date.",
+    help_cardMenu: "Project options: open, share with people, rename, duplicate, delete.",
+    help_profile: "Switch account, log out and turn help tips on or off.",
+    help_noteCat: "The note's category. Notes are grouped by it in filters and in the PDF.",
+    help_noteRef: "Scene, page or timecode the note belongs to (e.g. Sc 14, p.32, 01:02:03:00).",
+    help_pdf: "Export notes as PDF: this episode only or all episodes. In the print window, choose “Save as PDF”.",
+    help_newMeeting: "Opens a new meeting record.",
+    help_meetingPdf: "Exports this meeting or all meetings as PDF.",
+    help_addAction: "Adds a decision or task from the meeting; write the owner and tick it when done.",
+    help_legacy: "Moves your saves from the old system into projects as calendar versions.",
+    help_episodeList: "Episodes. The red badge shows the number of open (unresolved) notes."
+});
+Object.assign(I18N.tr, {
+    helpTipsOn: "Yardım balonları: Açık", helpTipsOff: "Yardım balonları: Kapalı",
+    help_setStart: "Takvimin başlangıç tarihini seçer. Mevcut plan silinmez, yeni tarihe kaydırılır.",
+    help_today: "Bugünün tarihini takvimde yeşil bir çizgiyle gösterir veya gizler.",
+    help_viewToggle: "Zaman çizelgesi ile aylık takvim görünümü arasında geçiş yapar. Takvim görünümünde bir güne sağ tıklayarak kayıt ekleyebilirsin.",
+    help_auto: "Bölüm sayısı ve departman sürelerini girerek tüm post prodüksiyon takvimini otomatik oluşturur.",
+    help_exportVertical: "Takvimi gün gün listelenmiş, yazdırılabilir bir dosya olarak indirir. Takvim görünümünde seçili günler varsa sadece onları alır.",
+    help_excel: "Açık olan görünümü renkleriyle birlikte Excel dosyası olarak indirir.",
+    help_version: "Bu projenin takvim versiyonları. Tıklayıp başka bir versiyona geçebilir, yeniden adlandırabilir veya silebilirsin.",
+    help_newVersion: "Mevcut takvimin bir kopyasını yeni versiyon olarak açar; eski versiyon olduğu gibi kalır.",
+    help_focus: "Bir departmana tıkla: sadece o departman öne çıkar, diğerleri soluklaşır. Tekrar tıklayınca hepsi görünür.",
+    help_extend: "Takvimin sonuna 110 gün daha ekler.",
+    help_back: "Projelerim ekranına döner. Değişikliklerin otomatik kaydedilir.",
+    help_projectName: "Projenin adı. Buradan değiştirebilirsin; otomatik kaydedilir.",
+    help_mod_calendar: "Post prodüksiyon takvimi. Çift tıkla: hücre doldur · Sağ tıkla: yeniden adlandır, renk, cut türleri · Sürükle: taşı · Shift+tık: aralık doldur · Ctrl+Z: geri al.",
+    help_mod_notes: "Bölüm bazında departman notları (Edit, VFX, Renk, Ses/Dublaj…). Çözülenleri işaretleyip PDF alabilirsin.",
+    help_mod_script: "Senaryoyu okurken aldığın teknik notlar: VFX, özel efekt, müzik, lokasyon… sahne/sayfa bilgisiyle.",
+    help_mod_meetings: "Toplantı kayıtları: katılımcılar, notlar ve sorumlusu atanabilen aksiyon listesi.",
+    help_people: "Projeyi e-postayla başkalarıyla paylaş: düzenleyebilir ya da sadece görüntüleyebilir. Değişiklikler herkeste anında güncellenir.",
+    help_linkShare: "Giriş yapmadan açılabilen salt-okunur bir link oluşturur (takvim + bölüm notları). Senaryo ve toplantı notları gizli kalır.",
+    help_saveStatus: "Kayıt durumu. Değişiklikler 2 saniye içinde otomatik kaydedilir; Ctrl+S ile hemen kaydedebilirsin.",
+    help_lang: "Arayüz dilini değiştirir (İngilizce / Türkçe).",
+    help_newProject: "Yeni bir proje oluşturur: ad, bölüm sayısı ve başlangıç tarihi.",
+    help_cardMenu: "Proje seçenekleri: aç, kişilerle paylaş, yeniden adlandır, çoğalt, sil.",
+    help_profile: "Hesap değiştirme, çıkış ve yardım balonlarını açıp kapatma.",
+    help_noteCat: "Notun kategorisi. Filtrelerde ve PDF çıktısında notlar bu gruplara göre ayrılır.",
+    help_noteRef: "Notun ait olduğu sahne, sayfa ya da timecode (ör. Sc 14, s.32, 01:02:03:00).",
+    help_pdf: "Notları PDF olarak al: sadece bu bölüm ya da tüm bölümler. Açılan pencerede “PDF olarak kaydet”i seç.",
+    help_newMeeting: "Yeni bir toplantı kaydı açar.",
+    help_meetingPdf: "Bu toplantıyı ya da tüm toplantıları PDF olarak alır.",
+    help_addAction: "Toplantıda alınan bir kararı ya da yapılacak işi ekler; sorumlusunu yazıp bitince işaretleyebilirsin.",
+    help_legacy: "Eski sistemdeki kayıtlarını projelerin içine takvim versiyonu olarak taşır.",
+    help_episodeList: "Bölümler. Kırmızı rozet, o bölümdeki açık (çözülmemiş) not sayısını gösterir."
+});
+
+const HELP_DELAY = 3000;
+let helpOn = (() => { try { return localStorage.getItem('helpTips') !== 'off'; } catch (e) { return true; } })();
+const noHover = window.matchMedia && window.matchMedia('(hover: none)').matches;   // tablet/telefon
+
+const helpTip = document.createElement('div');
+helpTip.className = 'help-tip';
+helpTip.hidden = true;
+helpTip.setAttribute('role', 'tooltip');
+document.body.appendChild(helpTip);
+let helpTimer = null, helpEl = null;
+
+function hideHelp() {
+    clearTimeout(helpTimer);
+    helpTimer = null;
+    helpEl = null;
+    helpTip.classList.remove('show');
+    helpTip.hidden = true;
+}
+
+function showHelp(el) {
+    if (!helpOn || !document.body.contains(el)) return;
+    const key = el.dataset.help;
+    const text = t(key);
+    if (!text || text === key) return;
+    helpTip.innerHTML = `<span class="ht-icon">💡</span><span>${escapeHtml(text)}</span>`;
+    helpTip.hidden = false;
+    const r = el.getBoundingClientRect();
+    const tw = helpTip.offsetWidth, th = helpTip.offsetHeight;
+    const x = Math.max(8, Math.min(r.left + r.width / 2 - tw / 2, window.innerWidth - tw - 8));
+    let y = r.bottom + 10, below = true;
+    if (y + th > window.innerHeight - 8) { y = r.top - th - 10; below = false; }
+    helpTip.style.left = x + 'px';
+    helpTip.style.top = Math.max(8, y) + 'px';
+    helpTip.style.setProperty('--arrow-x', Math.max(12, Math.min(r.left + r.width / 2 - x, tw - 12)) + 'px');
+    helpTip.classList.toggle('above', !below);
+    requestAnimationFrame(() => helpTip.classList.add('show'));
+}
+
+document.addEventListener('mouseover', (e) => {
+    if (!helpOn || noHover) return;
+    const el = e.target.closest && e.target.closest('[data-help]');
+    if (el === helpEl) return;           // aynı aracın içinde dolaşıyor: sayaç devam
+    hideHelp();
+    if (!el) return;
+    helpEl = el;
+    helpTimer = setTimeout(() => showHelp(el), HELP_DELAY);
+});
+document.addEventListener('mousedown', hideHelp, true);
+document.addEventListener('keydown', hideHelp, true);
+document.addEventListener('wheel', hideHelp, { capture: true, passive: true });
+document.addEventListener('scroll', hideHelp, true);
+window.addEventListener('blur', hideHelp);
+
+function setHelpTips(on) {
+    helpOn = on;
+    try { localStorage.setItem('helpTips', on ? 'on' : 'off'); } catch (e) {}
+    if (!on) hideHelp();
+}
+window.setHelpTips = setHelpTips;
+
+// Profil menüsüne "Yardım balonları" ayarı
+const _profileClick = $('profileBtn').onclick;
+$('profileBtn').onclick = (e) => {
+    _profileClick(e);
+    menu.insertAdjacentHTML('afterbegin', `<div class="item" data-act="help">💡&nbsp; ${escapeHtml(t(helpOn ? 'helpTipsOn' : 'helpTipsOff'))}</div><div class="menu-sep"></div>`);
+    menu.querySelector('[data-act="help"]').onclick = () => { closeMenu(); setHelpTips(!helpOn); };
+    const r = e.currentTarget.getBoundingClientRect();
+    positionMenu(r.right - 220, r.bottom + 6);
+};
+
+// ---------------------------------------------------------------------
+// 12) BAŞLANGIÇ — bu dosyadaki çeviriler eklendikten sonra dili yeniden uygula
 // ---------------------------------------------------------------------
 applyLanguage();
+
 </script>
 <script type="module">
 // =====================================================================
@@ -5158,6 +5323,7 @@ if (shareParam) {
 } else {
     onAuthStateChanged(auth, (user) => { window.onAuthUser(user); });
 }
+
 </script>
 </body>
 </html>
