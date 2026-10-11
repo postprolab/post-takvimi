@@ -73,6 +73,27 @@ body {
 .main-layout { display: flex; flex: 1; overflow: hidden; width: 100%; }
 .container { flex: 1; overflow: auto; position: relative; box-sizing: border-box; scroll-behavior: smooth; }
 .header, .grid { display: grid; width: max-content; }
+/* ⚡ PERFORMANS: etiket sütunu ve başlık köşesi TEK yapışkan blok.
+   Tek tek hücreler artık sticky değil (eskiden ~300 yapışkan katman vardı). */
+.header { display: flex; }
+.header-corner {
+    position: sticky; left: 0; z-index: 10; flex-shrink: 0;
+    display: grid; grid-template-columns: var(--sticky-1) var(--sticky-2);
+}
+.header-days { display: grid; grid-template-columns: var(--day-cols); grid-template-rows: 30px 30px; }
+/* Bulanıklık her gün hücresinde ayrı ayrı değil, tüm başlık satırında TEK sefer */
+.header-days { backdrop-filter: blur(4px); }
+.header .date { backdrop-filter: none !important; }
+/* Ay adı sağa kaydırınca ekranda kalsın */
+.header .month .month-label { position: sticky; left: calc(var(--sticky-1) + var(--sticky-2) + 12px); white-space: nowrap; }
+.header .month, .header .date,
+.header .sticky-col-1, .header .sticky-col-2 { position: relative !important; top: auto !important; left: auto !important; }
+
+.grid { display: flex; align-items: flex-start; }
+.grid-labels { position: sticky; left: 0; z-index: 100; flex-shrink: 0; }
+.label-block { display: grid; grid-template-columns: var(--sticky-1) var(--sticky-2); }
+.days-block  { display: grid; grid-template-columns: var(--day-cols); }
+.grid .sticky-col-1, .grid .sticky-col-2 { position: relative; left: auto; }
 
 .cell {
     border: 1px solid var(--border-color);
@@ -137,7 +158,7 @@ body {
 
 /* "+ 110 GÜN" butonu (timeline'ın en sağında, başlık satırında) */
 .extend-cell {
-    position: sticky; top: 0; z-index: 1001; height: 60px;
+    position: relative; z-index: 1; height: 60px;
     display: flex; align-items: center; justify-content: center;
     background: #000; border-left: 1px solid var(--accent); box-sizing: border-box; padding: 0 8px;
 }
@@ -1433,54 +1454,70 @@ function closeMenu() {
 // ---------------------------------------------------------------------
 // 10) GRID OLUŞTURMA
 // ---------------------------------------------------------------------
+// ⚡ PERFORMANS NOTU
+// Eskiden her satır etiketi (EDIT, CUTS…) ve başlıktaki her gün hücresi ayrı ayrı
+// "position: sticky" idi (~300 yapışkan katman). Tarayıcı bunların hepsini her
+// kaydırma karesinde yeniden konumlandırdığı için takvim takılıyordu.
+// Artık: sol etiket sütunu TEK bir yapışkan blok, başlık TEK bir yapışkan blok.
+// Görünüm aynı; yapışkan katman sayısı ~300'den 2'ye indi.
+const ROW_H = 30, DIVIDER_H = 12;
+
 function buildHeader() {
     const header = document.getElementById("header");
-    header.innerHTML = "";
-    header.style.gridTemplateColumns = `var(--sticky-1) var(--sticky-2) repeat(${TOTAL_DAYS}, var(--cell-width)) 130px`;
+    header.style.setProperty('--day-cols', `repeat(${TOTAL_DAYS}, var(--cell-width)) 130px`);
 
-    let html = `<div class="cell sticky-col-1 month" style="height:60px; grid-row: span 2">EPISODE</div>
-                <div class="cell sticky-col-2 month" style="height:60px; grid-row: span 2">PIPELINE</div>
-                <div class="extend-cell" style="grid-column: ${TOTAL_DAYS + 3}; grid-row: 1 / span 2;">
-                    <button class="extend-btn" onclick="extendDays()">+ ${EXTEND_STEP} ${escapeHtml(t('days'))}</button>
-                </div>`;
-
+    let months = "";
     let dIdx = 0;
     while (dIdx < dates.length) {
         const m = dates[dIdx].getMonth();
         let span = 0;
         while (dIdx + span < dates.length && dates[dIdx + span].getMonth() === m) span++;
-        html += `<div class="cell month" style="grid-column: span ${span}">${escapeHtml(dates[dIdx].toLocaleDateString(localeStr(), { month: "long", year: "numeric" }).toUpperCase())}</div>`;
+        months += `<div class="cell month" style="grid-column: span ${span}"><span class="month-label">${escapeHtml(dates[dIdx].toLocaleDateString(localeStr(), { month: "long", year: "numeric" }).toUpperCase())}</span></div>`;
         dIdx += span;
     }
-    header.innerHTML = html;
+    const days = dates.map((d, i) => {
+        const dayName = escapeHtml(d.toLocaleDateString(localeStr(), { weekday: 'short' }).toUpperCase());
+        return `<div class="cell date${milestoneCols.has(i) ? ' milestone' : ''}" data-col="${i}" style="grid-row: 2; grid-column: ${i + 1}">` +
+               `<div style="line-height:1.2; padding-top:2px;">${d.getDate()}/${d.getMonth() + 1}<br><span style="font-size:8px; opacity:0.7;">${dayName}</span></div></div>`;
+    }).join("");
 
-    dates.forEach((d, i) => {
-        const dCell = document.createElement("div");
-        dCell.className = "cell date" + (milestoneCols.has(i) ? " milestone" : "");
-        const dayName = d.toLocaleDateString(localeStr(), { weekday: 'short' }).toUpperCase();
-        dCell.innerHTML = `<div style="line-height:1.2; padding-top:2px;">${d.getDate()}/${d.getMonth() + 1}<br><span style="font-size:8px; opacity:0.7;">${escapeHtml(dayName)}</span></div>`;
-        dCell.dataset.col = i;
-
-        dCell.onclick = (e) => {
-            e.stopPropagation();
-            if (!e.shiftKey) clearActiveSelection();
-            dCell.classList.add('active-date');
-            document.querySelectorAll(`.cell.timeline[data-col="${i}"]`).forEach(c => {
-                c.classList.add('highlight-column');
-                if (c.classList.contains('filled')) { c.classList.add('selected'); selectedCells.add(c); }
-            });
-            showDateSummary(i, e.clientX, e.clientY);
-        };
-        dCell.oncontextmenu = (e) => {
-            e.preventDefault();
-            if (window.isReadOnlyShare) return;
-            if (milestoneCols.has(i)) milestoneCols.delete(i); else milestoneCols.add(i);
-            dCell.classList.toggle('milestone', milestoneCols.has(i));
-            triggerAutoSave();
-        };
-        header.appendChild(dCell);
-    });
+    header.innerHTML = `
+        <div class="header-corner">
+            <div class="cell sticky-col-1 month" style="height:60px">EPISODE</div>
+            <div class="cell sticky-col-2 month" style="height:60px">PIPELINE</div>
+        </div>
+        <div class="header-days">
+            ${months}${days}
+            <div class="extend-cell" style="grid-column: ${TOTAL_DAYS + 1}; grid-row: 1 / span 2;">
+                <button class="extend-btn" onclick="extendDays()">+ ${EXTEND_STEP} ${escapeHtml(t('days'))}</button>
+            </div>
+        </div>`;
 }
+
+// Tarih başlığı tıklamaları (tek dinleyici)
+document.getElementById("header").addEventListener('click', (e) => {
+    const dCell = e.target.closest('.cell.date');
+    if (!dCell) return;
+    e.stopPropagation();
+    const i = parseInt(dCell.dataset.col);
+    if (!e.shiftKey) clearActiveSelection();
+    dCell.classList.add('active-date');
+    document.querySelectorAll(`.cell.timeline[data-col="${i}"]`).forEach(c => {
+        c.classList.add('highlight-column');
+        if (c.classList.contains('filled')) { c.classList.add('selected'); selectedCells.add(c); }
+    });
+    showDateSummary(i, e.clientX, e.clientY);
+});
+document.getElementById("header").addEventListener('contextmenu', (e) => {
+    const dCell = e.target.closest('.cell.date');
+    if (!dCell) return;
+    e.preventDefault();
+    if (window.isReadOnlyShare) return;
+    const i = parseInt(dCell.dataset.col);
+    if (milestoneCols.has(i)) milestoneCols.delete(i); else milestoneCols.add(i);
+    dCell.classList.toggle('milestone', milestoneCols.has(i));
+    triggerAutoSave();
+});
 
 // ⚡ Grid tek seferde HTML metni olarak üretilir. Hücrelere tek tek olay
 // dinleyicisi bağlanmaz; tüm tıklamaları grid'in kendisi yakalar (aşağıda).
@@ -1488,7 +1525,7 @@ function rebuildGrid(scrollToToday = true) {
     const grid = document.getElementById("grid");
     cellIndex.clear();
     selectedCells.clear();
-    grid.style.gridTemplateColumns = `var(--sticky-1) var(--sticky-2) repeat(${TOTAL_DAYS}, var(--cell-width))`;
+    grid.style.setProperty('--day-cols', `repeat(${TOTAL_DAYS}, var(--cell-width))`);
 
     const dayCls = dates.map(d => isWeekend(d) ? "cell timeline weekend" : "cell timeline");
     const rowCells = (proc, ep) => {
@@ -1499,19 +1536,22 @@ function rebuildGrid(scrollToToday = true) {
     const label = (cls, proc, text) =>
         `<div class="cell ${cls}" data-proc_type="${proc}" style="background-color:${deptColors[proc]};color:#000">${text}</div>`;
 
-    const parts = [label("sticky-col-1", "set", "SET"), label("sticky-col-2", "set", "SET DAYS"), rowCells("set", 0)];
+    // Sol: etiket sütunu (tek yapışkan blok) — Sağ: gün hücreleri
+    let labels = `<div class="label-block">${label("sticky-col-1", "set", "SET")}${label("sticky-col-2", "set", "SET DAYS")}</div>`;
+    let days = `<div class="days-block">${rowCells("set", 0)}</div>`;
 
     for (let i = 1; i <= TOTAL_EPISODES; i++) {
-        PROC_ORDER.forEach((p, idx) => {
-            if (idx === 0) {
-                parts.push(`<div class="cell sticky-col-1 episode-v" style="grid-row: span ${PROC_ORDER.length}">EPISODE ${String(i).padStart(2, "0")}</div>`);
-            }
-            parts.push(label("sticky-col-2", p, p.toUpperCase()), rowCells(p, i));
+        let l = `<div class="cell sticky-col-1 episode-v" style="grid-row: span ${PROC_ORDER.length}">EPISODE ${String(i).padStart(2, "0")}</div>`;
+        let d = "";
+        PROC_ORDER.forEach(p => {
+            l += label("sticky-col-2", p, p.toUpperCase());
+            d += rowCells(p, i);
         });
-        parts.push(`<div class="divider"></div>`);
+        labels += `<div class="label-block">${l}<div class="divider"></div></div>`;
+        days += `<div class="days-block">${d}<div class="divider"></div></div>`;
     }
 
-    grid.innerHTML = parts.join("");
+    grid.innerHTML = `<div class="grid-labels">${labels}</div><div class="grid-days">${days}</div>`;
 
     for (const el of grid.getElementsByClassName("timeline")) {
         cellIndex.set(cellKey(el.dataset.col, el.dataset.ep, el.dataset.proc_type), el);
