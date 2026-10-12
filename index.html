@@ -1090,6 +1090,43 @@ body.vim-open { overflow: hidden; }
     .vim-group { padding: 0 4px; }
 }
 
+/* ---------- VFX: sütun genişletme ---------- */
+.vfx-table th { position: sticky; }
+.col-rs { position: absolute; top: 0; right: -4px; width: 9px; height: 100%; cursor: col-resize; z-index: 4; touch-action: none; }
+.col-rs::after { content: ''; position: absolute; top: 20%; bottom: 20%; left: 4px; width: 2px; border-radius: 1px; background: rgba(255,255,255,.0); transition: background .15s; }
+.vfx-table th:hover .col-rs::after { background: rgba(255,255,255,.45); }
+.col-rs:hover::after, body.vfx-resizing .col-rs::after { background: var(--neon-green) !important; }
+body.vfx-resizing, body.vfx-resizing * { cursor: col-resize !important; user-select: none !important; }
+.vfx-thumb { width: var(--tbw, 96px) !important; height: var(--tbh, 54px) !important; }
+.vfx-table td.c-thumb { padding: 4px; }
+.vfx-table th.c-round { padding: 8px 26px 8px 10px; }
+.vfx-round-lbl { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vfx-table .vfx-round-h { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 18px; height: 20px; padding: 0; border-radius: 4px; font-size: 11px; background: rgba(0,0,0,.18); }
+
+/* ---------- VFX: hücre seçimi ---------- */
+.vfx-table th[data-key] { cursor: s-resize; }
+.vfx-table th.sel { background: #7f3f68; box-shadow: inset 0 -3px 0 #64b5f6; }
+.vfx-table td.sel { box-shadow: inset 0 0 0 2px #64b5f6; }
+.vfx-table td.sel input, .vfx-table td.sel textarea { background: rgba(100,181,246,.14); }
+body.vfx-selecting, body.vfx-selecting * { user-select: none !important; cursor: cell !important; }
+
+/* ---------- VFX: biçim çubuğu ---------- */
+.vfx-fmtbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex-shrink: 0; background: #121418; border: 1px solid #262931; border-radius: 8px; padding: 5px 8px; }
+.vfx-fmtbar.disabled .fb-btn, .vfx-fmtbar.disabled .fb-color { opacity: .35; pointer-events: none; }
+.fb-grp { display: flex; gap: 3px; align-items: center; padding-right: 8px; border-right: 1px solid #262931; }
+.fb-btn { min-width: 30px; height: 28px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: #ddd; cursor: pointer; font-size: 14px; font-family: Georgia, 'Times New Roman', serif; display: inline-flex; align-items: center; justify-content: center; }
+.fb-btn:hover { background: #1f232b; border-color: #333; }
+.fb-btn.active { background: #213347; border-color: #64b5f6; color: #fff; }
+.al { display: inline-flex; flex-direction: column; gap: 2px; width: 14px; }
+.al i { display: block; height: 2px; background: currentColor; border-radius: 1px; }
+.al i:nth-child(2) { width: 65%; } .al i:nth-child(1), .al i:nth-child(3) { width: 100%; }
+.al-c { align-items: center; } .al-r { align-items: flex-end; } .al-l { align-items: flex-start; }
+.fb-color { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #111; box-shadow: 0 0 0 1px #444; background: var(--c); cursor: pointer; padding: 0; font-size: 10px; font-weight: 800; color: #ccc; }
+.fb-color.auto { background: conic-gradient(#ff5252, #ffeb3b, #69f0ae, #64b5f6, #ff5252); color: #000; }
+.fb-color.active { box-shadow: 0 0 0 2px #fff; }
+.fb-info { color: #777; font-size: 11.5px; margin-left: 4px; }
+@media (max-width: 820px) { .fb-info { display: none; } }
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
@@ -3342,7 +3379,7 @@ const MemFB = (() => {
             });
             ws[pid] = {
                 projectName: proj.projectName || 'Untitled Project', totalEpisodes: parseInt(proj.totalEpisodes) || DEFAULT_EPISODES,
-                notes: clone(proj.notes || {}), episodeNotes: clone(proj.episodeNotes || {}), scripts: clone(proj.scripts || {}), meetings: clone(proj.meetings || []), todos: clone(proj.todos || {}), vfxShots: clone(proj.vfxShots || {}), vfxRounds: clone(proj.vfxRounds || {}), stats: {},
+                notes: clone(proj.notes || {}), episodeNotes: clone(proj.episodeNotes || {}), scripts: clone(proj.scripts || {}), meetings: clone(proj.meetings || []), todos: clone(proj.todos || {}), vfxShots: clone(proj.vfxShots || {}), vfxRounds: clone(proj.vfxRounds || {}), vfxLayout: clone(proj.vfxLayout || {}), stats: {},
                 activeVersionId: active, activeVersionName: activeName, versionCount: list.length, createdAt: t0, lastUpdated: t0,
                 ownerUid: 'offline', members: {}, memberEmails: []
             };
@@ -3793,6 +3830,7 @@ function resetModulesFor(project) {
     if (!isPlainObject(project.todos)) project.todos = {};
     if (!isPlainObject(project.vfxShots)) project.vfxShots = {};
     if (!isPlainObject(project.vfxRounds)) project.vfxRounds = {};
+    if (!isPlainObject(project.vfxLayout)) project.vfxLayout = {};
     $('vfxModule').innerHTML = '';
     $('meetingsModule').innerHTML = '';
     $('todosModule').innerHTML = '';
@@ -3803,6 +3841,7 @@ function flatProject(src) {
     const m = new Map();
     m.set('projectName', { j: stableJ(src.projectName || ''), v: src.projectName || '' });
     m.set('meetings', { j: stableJ(src.meetings || []), v: src.meetings || [] });
+    m.set('vfxLayout', { j: stableJ(src.vfxLayout || {}), v: src.vfxLayout || {} });
     ['episodeNotes', 'scripts', 'todos', 'vfxShots', 'vfxRounds'].forEach(f => Object.entries(src[f] || {}).forEach(([k, v]) => m.set(f + '.' + k, { j: stableJ(v), v })));
     return m;
 }
@@ -3810,12 +3849,13 @@ function localProjectState() {
     return {
         projectName: $('projectName').value.trim() || 'Untitled Project',
         meetings: App.project.meetings, episodeNotes: App.project.episodeNotes || {}, scripts: App.project.scripts || {},
-        todos: App.project.todos || {}, vfxShots: App.project.vfxShots || {}, vfxRounds: App.project.vfxRounds || {}
+        todos: App.project.todos || {}, vfxShots: App.project.vfxShots || {}, vfxRounds: App.project.vfxRounds || {}, vfxLayout: App.project.vfxLayout || {}
     };
 }
 function remoteProjectState(d) {
     return { projectName: d.projectName || '', meetings: d.meetings || [], episodeNotes: isPlainObject(d.episodeNotes) ? d.episodeNotes : {}, scripts: isPlainObject(d.scripts) ? d.scripts : {}, todos: isPlainObject(d.todos) ? d.todos : {},
-        vfxShots: isPlainObject(d.vfxShots) ? d.vfxShots : {}, vfxRounds: isPlainObject(d.vfxRounds) ? d.vfxRounds : {} };
+        vfxShots: isPlainObject(d.vfxShots) ? d.vfxShots : {}, vfxRounds: isPlainObject(d.vfxRounds) ? d.vfxRounds : {},
+        vfxLayout: isPlainObject(d.vfxLayout) ? d.vfxLayout : {} };
 }
 const jsonMap = (m) => new Map([...m].map(([k, x]) => [k, x.j]));
 
@@ -3852,6 +3892,7 @@ async function openProject(id, data) {
         todos: isPlainObject(data.todos) ? data.todos : {},
         vfxShots: isPlainObject(data.vfxShots) ? data.vfxShots : {},
         vfxRounds: isPlainObject(data.vfxRounds) ? data.vfxRounds : {},
+        vfxLayout: isPlainObject(data.vfxLayout) ? data.vfxLayout : {},
         createdAt: data.createdAt || new Date().toISOString(),
         ownerUid: data.ownerUid, ownerEmail: data.ownerEmail, ownerName: data.ownerName,
         members: clone(data.members || {})
@@ -3899,7 +3940,8 @@ function openSharedView(data) {
     if (App.shareKind === 'vfx') {
         resetModulesFor({ id: null, projectName: data.projectName || '', totalEpisodes: parseInt(data.totalEpisodes) || DEFAULT_EPISODES,
             scripts: {}, episodeNotes: {}, meetings: [], todos: {},
-            vfxShots: isPlainObject(data.vfxShots) ? data.vfxShots : {}, vfxRounds: isPlainObject(data.vfxRounds) ? data.vfxRounds : {}, createdAt: '' });
+            vfxShots: isPlainObject(data.vfxShots) ? data.vfxShots : {}, vfxRounds: isPlainObject(data.vfxRounds) ? data.vfxRounds : {},
+            vfxLayout: isPlainObject(data.vfxLayout) ? data.vfxLayout : {}, createdAt: '' });
         $('projectName').value = data.projectName || '';
         $('readOnlyText').textContent = t('vfxSharedTitle');
         App.versions = [];
@@ -4154,6 +4196,7 @@ function onRemoteProject(d, reason) {
             const val = r ? clone(r.v) : undefined;
             if (k === 'projectName') { if (document.activeElement !== $('projectName')) { $('projectName').value = val || ''; App.project.projectName = val || ''; } }
             else if (k === 'meetings') App.project.meetings = val || [];
+            else if (k === 'vfxLayout') App.project.vfxLayout = val || {};
             else {
                 const [field, sub] = [k.slice(0, k.indexOf('.')), k.slice(k.indexOf('.') + 1)];
                 if (!isPlainObject(App.project[field])) App.project[field] = {};
@@ -4168,7 +4211,7 @@ function onRemoteProject(d, reason) {
         if (App.module === 'notes' && changedKeys.some(k => k.startsWith('episodeNotes.'))) EpisodeNotes.render();
         if (App.module === 'script' && changedKeys.some(k => k.startsWith('scripts.'))) ScriptNotes.render();
         if (App.module === 'meetings' && changedKeys.includes('meetings')) refreshMeetingsSafely();
-        if (App.module === 'vfx' && changedKeys.some(k => k.startsWith('vfxShots.') || k.startsWith('vfxRounds.'))) refreshVfxSafely();
+        if (App.module === 'vfx' && changedKeys.some(k => k.startsWith('vfxShots.') || k.startsWith('vfxRounds.') || k === 'vfxLayout')) refreshVfxSafely();
         if (changedKeys.some(k => k.startsWith('todos.'))) { if (App.module === 'todos') refreshTodosSafely(); renderModuleNav(); }
         showRemoteStatus(d.lastEditedBy);
     }
@@ -4241,7 +4284,8 @@ $('shareBtn').onclick = async () => {
         try {
             const url = await FB.shareProject({
                 kind: 'vfx', projectName: $('projectName').value.trim() || App.project.projectName || '',
-                totalEpisodes: App.project.totalEpisodes, vfxShots: App.project.vfxShots, vfxRounds: App.project.vfxRounds
+                totalEpisodes: App.project.totalEpisodes, vfxShots: App.project.vfxShots, vfxRounds: App.project.vfxRounds,
+                vfxLayout: App.project.vfxLayout || {}
             });
             if (Object.keys(App.vfxThumbs).length) {
                 showInfoToast('🖼 ' + t('vimSaving'));
@@ -5944,6 +5988,7 @@ function renderVfxModule() {
             </div>
             ${epTabs}
             <div class="vfx-summary" id="vfxSummary"></div>
+            ${vfxFmtBarHtml()}
             <div class="vfx-table-wrap" id="vfxTableWrap"></div>
         </div>`;
     renderVfxSummary();
@@ -5972,56 +6017,98 @@ function renderVfxSummary() {
             ${hCancel ? `<span class="muted">· ${escapeHtml(tf('vfxHoursCancelled', { h: fmtH(hCancel) }))}</span>` : ''}</div>`;
 }
 
+// --- Sütun genişlikleri (Excel gibi kenardan sürükle) — projeye kaydedilir, herkeste aynı ---
+const VFX_COL_DEFAULT = { num: 46, thumb: 104, ep: 74, tc: 104, code: 78, desc: 300, round: 220, addround: 128, extras: 150, vendor: 120, hours: 70, due: 118, status: 120, menu: 62 };
+const VFX_COL_MIN = { thumb: 80, desc: 120, round: 100, tc: 90, code: 60, ep: 60, extras: 80, vendor: 70, hours: 50, due: 100, status: 100 };
+function vfxColW(col) {
+    const lay = (App.project && App.project.vfxLayout) || {};
+    const w = lay.w && lay.w[col];
+    return w || VFX_COL_DEFAULT[col.startsWith('r:') ? 'round' : col] || 120;
+}
+function vfxThumbBox() {
+    const bw = vfxColW('thumb') - 8;
+    return [bw, Math.round(bw * 9 / 16)];
+}
+function vfxColCss(cols) {
+    const [bw, bh] = vfxThumbBox();
+    return `.vfx-table { --tbw: ${bw}px; --tbh: ${bh}px; }\n` + cols.map(c => {
+        const w = vfxColW(c);
+        return `.vfx-table [data-col="${c}"] { width: ${w}px; min-width: ${w}px; max-width: ${w}px; }`;
+    }).join('\n');
+}
+
+// --- Hücre biçimi (kalın, italik, üstü çizili, hizalama, renk) — shot.fmt[sütun] ---
+const VFX_FMT_KEYS = ['tc', 'code', 'desc', 'extras', 'vendor', 'hours'];
+const VFX_TEXT_COLORS = ['', '#ff5252', '#ffa726', '#ffeb3b', '#69f0ae', '#64b5f6', '#ffffff', '#000000'];
+function vfxFmtStyle(s, key) {
+    const f = (s.fmt || {})[key];
+    if (!f) return '';
+    const st = [];
+    if (f.b) st.push('font-weight:800');
+    if (f.i) st.push('font-style:italic');
+    if (f.s) st.push('text-decoration:line-through');
+    if (f.a) st.push('text-align:' + ({ l: 'left', c: 'center', r: 'right' }[f.a] || 'left'));
+    if (f.c) st.push('color:' + f.c);
+    return st.length ? ` style="${st.join(';')}"` : '';
+}
+
 function vfxRow(s, rounds, showEp, ro, idx) {
     const st = vfxStatusOf(s);
     const dis = ro ? 'disabled' : '', rdo = ro ? 'readonly' : '';
     const eps = parseInt(App.project.totalEpisodes) || 1;
+    const F = (k) => vfxFmtStyle(s, k);
     return `<tr class="vfx-row st-${st}" data-sid="${escapeHtml(s.id)}">
-        <td class="c-num" ${ro ? '' : 'data-help="help_vfxDrag"'}><span class="grip">⋮⋮</span><b>${idx}</b></td>
-        <td class="c-thumb">${vfxThumbHtml(s, ro)}</td>
-        ${showEp ? `<td class="c-ep"><select data-f="ep" ${dis}><option value="0">—</option>${Array.from({ length: eps }, (_, i) =>
+        <td class="c-num" data-col="num" ${ro ? '' : 'data-help="help_vfxDrag"'}><span class="grip">⋮⋮</span><b>${idx}</b></td>
+        <td class="c-thumb" data-col="thumb">${vfxThumbHtml(s, ro)}</td>
+        ${showEp ? `<td class="c-ep" data-col="ep"><select data-f="ep" ${dis}><option value="0">—</option>${Array.from({ length: eps }, (_, i) =>
             `<option value="${i + 1}" ${parseInt(s.ep) === i + 1 ? 'selected' : ''}>EP${String(i + 1).padStart(2, '0')}</option>`).join('')}</select></td>` : ''}
-        <td class="c-tc"><input data-f="tc" ${rdo} value="${escapeHtml(s.tc || '')}" placeholder="00:00:00:00" maxlength="11" inputmode="numeric" data-help="help_vfxTc"></td>
-        <td class="c-code"><input data-f="code" ${rdo} value="${escapeHtml(s.code || '')}" maxlength="24"></td>
-        <td class="c-desc"><textarea data-f="desc" ${rdo} rows="1">${escapeHtml(s.desc || '')}</textarea></td>
-        ${rounds.map(r => { const n = (s.notes || {})[r.id] || {}; return `<td class="c-round ${n.done ? 'resolved' : ''} ${n.text ? 'has' : ''}">
-            <textarea data-round="${escapeHtml(r.id)}" ${rdo} rows="1">${escapeHtml(n.text || '')}</textarea>
+        <td class="c-tc" data-col="tc" data-key="tc"><input data-f="tc" ${rdo} value="${escapeHtml(s.tc || '')}" placeholder="00:00:00:00" maxlength="11" inputmode="numeric" data-help="help_vfxTc"${F('tc')}></td>
+        <td class="c-code" data-col="code" data-key="code"><input data-f="code" ${rdo} value="${escapeHtml(s.code || '')}" maxlength="24"${F('code')}></td>
+        <td class="c-desc" data-col="desc" data-key="desc"><textarea data-f="desc" ${rdo} rows="1"${F('desc')}>${escapeHtml(s.desc || '')}</textarea></td>
+        ${rounds.map(r => { const n = (s.notes || {})[r.id] || {}; const k = 'r:' + r.id; return `<td class="c-round ${n.done ? 'resolved' : ''} ${n.text ? 'has' : ''}" data-col="${escapeHtml(k)}" data-key="${escapeHtml(k)}">
+            <textarea data-round="${escapeHtml(r.id)}" ${rdo} rows="1"${F(k)}>${escapeHtml(n.text || '')}</textarea>
             ${ro ? '' : `<button class="vfx-ok" data-vact="toggleNote" data-rid="${escapeHtml(r.id)}" data-help="help_vfxNoteToggle" title="${escapeHtml(t('vfxMarkResolved'))}">✓</button>`}</td>`; }).join('')}
-        <td class="c-addround"></td>
-        <td class="c-extras"><textarea data-f="extras" ${rdo} rows="1">${escapeHtml(s.extras || '')}</textarea></td>
-        <td class="c-vendor"><input data-f="vendor" ${rdo} value="${escapeHtml(s.vendor || '')}" maxlength="60"></td>
-        <td class="c-hours"><input data-f="hours" ${rdo} inputmode="decimal" value="${escapeHtml(s.hours || '')}" maxlength="6"></td>
-        <td class="c-due"><input type="date" data-f="due" ${dis} value="${escapeHtml(s.due || '')}"></td>
-        <td class="c-status"><select data-f="status" class="vfx-status" ${dis} data-help="help_vfxStatus">${VFX_STATUS.map(x =>
+        <td class="c-addround" data-col="addround"></td>
+        <td class="c-extras" data-col="extras" data-key="extras"><textarea data-f="extras" ${rdo} rows="1"${F('extras')}>${escapeHtml(s.extras || '')}</textarea></td>
+        <td class="c-vendor" data-col="vendor" data-key="vendor"><input data-f="vendor" ${rdo} value="${escapeHtml(s.vendor || '')}" maxlength="60"${F('vendor')}></td>
+        <td class="c-hours" data-col="hours" data-key="hours"><input data-f="hours" ${rdo} inputmode="decimal" value="${escapeHtml(s.hours || '')}" maxlength="6"${F('hours')}></td>
+        <td class="c-due" data-col="due"><input type="date" data-f="due" ${dis} value="${escapeHtml(s.due || '')}"></td>
+        <td class="c-status" data-col="status"><select data-f="status" class="vfx-status" ${dis} data-help="help_vfxStatus">${VFX_STATUS.map(x =>
             `<option value="${x}" ${x === st ? 'selected' : ''}>${escapeHtml(t('vfx_' + x))}</option>`).join('')}</select></td>
-        <td class="c-menu">${ro ? '' : `<button class="icon-btn vfx-plus" data-vact="insertBelow" data-help="help_vfxInsert">＋</button><button class="icon-btn" data-vact="rowMenu">⋯</button>`}</td>
+        <td class="c-menu" data-col="menu">${ro ? '' : `<button class="icon-btn vfx-plus" data-vact="insertBelow" data-help="help_vfxInsert">＋</button><button class="icon-btn" data-vact="rowMenu">⋯</button>`}</td>
     </tr>`;
+}
+
+function vfxCols(rounds, showEp) {
+    return ['num', 'thumb', ...(showEp ? ['ep'] : []), 'tc', 'code', 'desc', ...rounds.map(r => 'r:' + r.id), 'addround', 'extras', 'vendor', 'hours', 'due', 'status', 'menu'];
 }
 
 function renderVfxTable() {
     const wrap = $('vfxTableWrap');
     if (!wrap) return;
-    const sx = wrap.scrollLeft, sy = $('vfxModule').querySelector('.vfx-wrap') ? $('vfxModule').querySelector('.vfx-wrap').scrollTop : 0;
+    const sx = wrap.scrollLeft, sy = wrap.scrollTop;
     const ro = App.readOnly;
     ensureVfxOrders();
     const rounds = vfxRoundsList();
     const showEp = (parseInt(App.project.totalEpisodes) || 1) > 1 && vfxState.ep === 'all';
     const rows = vfxVisible();
+    const rs = (c) => `<span class="col-rs" data-rs="${escapeHtml(c)}" data-help="help_vfxColResize"></span>`;
+    const th = (col, cls, label, key) => `<th class="${cls}" data-col="${escapeHtml(col)}"${key && !ro ? ` data-key="${escapeHtml(key)}"` : ''}>${label}${col !== 'num' && col !== 'menu' && col !== 'addround' ? rs(col) : ''}</th>`;
     const head = `<thead><tr>
-        <th class="c-num">${escapeHtml(t('vfxCount'))}</th>
-        <th class="c-thumb">${escapeHtml(t('vfxThumb'))}</th>
-        ${showEp ? `<th class="c-ep">${escapeHtml(t('vfxEp'))}</th>` : ''}
-        <th class="c-tc">${escapeHtml(t('vfxTc'))}</th>
-        <th class="c-code">${escapeHtml(t('vfxCode'))}</th>
-        <th class="c-desc">${escapeHtml(t('vfxDesc'))}</th>
-        ${rounds.map(r => `<th class="c-round"><button class="vfx-round-h" data-vact="roundMenu" data-rid="${escapeHtml(r.id)}" ${ro ? 'disabled' : ''}>${escapeHtml(r.label || '')}</button></th>`).join('')}
-        <th class="c-addround">${ro ? '' : `<button class="vfx-addround" data-vact="addRound" data-help="help_vfxAddRound">+ ${escapeHtml(t('vfxAddRound'))}</button>`}</th>
-        <th class="c-extras">${escapeHtml(t('vfxExtras'))}</th>
-        <th class="c-vendor">${escapeHtml(t('vfxVendor'))}</th>
-        <th class="c-hours">${escapeHtml(t('vfxHours'))}</th>
-        <th class="c-due">${escapeHtml(t('vfxDue'))}</th>
-        <th class="c-status">${escapeHtml(t('vfxStatus'))}</th>
-        <th class="c-menu"></th>
+        ${th('num', 'c-num', escapeHtml(t('vfxCount')))}
+        ${th('thumb', 'c-thumb', escapeHtml(t('vfxThumb')))}
+        ${showEp ? th('ep', 'c-ep', escapeHtml(t('vfxEp'))) : ''}
+        ${th('tc', 'c-tc', escapeHtml(t('vfxTc')), 'tc')}
+        ${th('code', 'c-code', escapeHtml(t('vfxCode')), 'code')}
+        ${th('desc', 'c-desc', escapeHtml(t('vfxDesc')), 'desc')}
+        ${rounds.map(r => th('r:' + r.id, 'c-round', `<span class="vfx-round-lbl">${escapeHtml(r.label || '')}</span>${ro ? '' : `<button class="vfx-round-h" data-vact="roundMenu" data-rid="${escapeHtml(r.id)}" title="${escapeHtml(t('vfxRenameRound'))}">▾</button>`}`, 'r:' + r.id)).join('')}
+        <th class="c-addround" data-col="addround">${ro ? '' : `<button class="vfx-addround" data-vact="addRound" data-help="help_vfxAddRound">+ ${escapeHtml(t('vfxAddRound'))}</button>`}</th>
+        ${th('extras', 'c-extras', escapeHtml(t('vfxExtras')), 'extras')}
+        ${th('vendor', 'c-vendor', escapeHtml(t('vfxVendor')), 'vendor')}
+        ${th('hours', 'c-hours', escapeHtml(t('vfxHours')), 'hours')}
+        ${th('due', 'c-due', escapeHtml(t('vfxDue')))}
+        ${th('status', 'c-status', escapeHtml(t('vfxStatus')))}
+        ${th('menu', 'c-menu', '')}
     </tr></thead>`;
     let body = rows.map((s, i) => vfxRow(s, rounds, showEp, ro, i + 1)).join('');
     if (!rows.length) {
@@ -6029,11 +6116,13 @@ function renderVfxTable() {
         body = `<tr class="vfx-empty-row"><td colspan="${13 + rounds.length + (showEp ? 1 : 0)}"><div class="dash-empty"><div class="dash-empty-icon">✨</div>
             <b>${escapeHtml(t(any ? 'vfxNoMatch' : 'vfxEmpty'))}</b>${any || ro ? '' : `<p>${escapeHtml(t('vfxEmptyHint'))}</p>`}</div></td></tr>`;
     }
-    wrap.innerHTML = `<table class="vfx-table">${head}<tbody>${body}</tbody></table>
+    wrap.innerHTML = `<style id="vfxColStyle">${vfxColCss(vfxCols(rounds, showEp))}</style>
+        <table class="vfx-table">${head}<tbody>${body}</tbody></table>
         ${ro || !rows.length ? '' : `<button class="ghost-btn vfx-add-bottom" data-vact="addShot">+ ${escapeHtml(t('vfxAddShot'))}</button>`}`;
     growAllTextareas(wrap);
     wrap.scrollLeft = sx;
-    if ($('vfxModule').querySelector('.vfx-wrap')) $('vfxModule').querySelector('.vfx-wrap').scrollTop = sy;
+    wrap.scrollTop = sy;
+    paintVfxSel();
 }
 
 // Çok satırda hızlı: önce hepsini sıfırla, sonra bir seferde ölç, sonra yaz (tek layout)
@@ -6337,8 +6426,9 @@ function vfxExportRows() {
     const multiEp = (parseInt(App.project.totalEpisodes) || 1) > 1;
     const head = ['#', ...(multiEp ? [t('vfxEp')] : []), t('vfxTc'), t('vfxCode'), t('vfxDesc'), ...rounds.map(r => r.label || ''),
         t('vfxExtras'), t('vfxVendor'), t('vfxHours'), t('vfxDue'), t('vfxStatus')];
+    const keys = ['#', ...(multiEp ? ['ep'] : []), 'tc', 'code', 'desc', ...rounds.map(r => 'r:' + r.id), 'extras', 'vendor', 'hours', 'due', 'status'];
     const rows = vfxVisible().map((s, i) => ({
-        s, st: vfxStatusOf(s),
+        s, st: vfxStatusOf(s), fmt: keys.map(k => (s.fmt || {})[k] || null),
         cells: [i + 1, ...(multiEp ? [parseInt(s.ep) ? 'EP' + String(s.ep).padStart(2, '0') : ''] : []), s.tc || '', s.code || '', s.desc || '',
             ...rounds.map(r => ((s.notes || {})[r.id] || {}).text || ''), s.extras || '', s.vendor || '',
             hoursOf(s) || '', s.due ? formatDate(s.due) : '', t('vfx_' + vfxStatusOf(s))],
@@ -6347,31 +6437,52 @@ function vfxExportRows() {
     return { head, rows, descCol: multiEp ? 4 : 3, roundsFrom: multiEp ? 5 : 4, nRounds: rounds.length };
 }
 
-function exportVfxExcel() {
-    if (typeof XLSX === "undefined") { alert("Excel kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin."); return; }
+async function exportVfxExcel() {
     const { head, rows, descCol, roundsFrom, nRounds } = vfxExportRows();
-    const ws = XLSX.utils.aoa_to_sheet([head, ...rows.map(r => r.cells)]);
-    const border = { top: { style: 'thin', color: { rgb: '999999' } }, bottom: { style: 'thin', color: { rgb: '999999' } }, left: { style: 'thin', color: { rgb: '999999' } }, right: { style: 'thin', color: { rgb: '999999' } } };
-    head.forEach((_, c) => {
-        const ref = XLSX.utils.encode_cell({ r: 0, c });
-        ws[ref].s = { font: { bold: true, sz: 10 }, fill: { fgColor: { rgb: 'C27BA0' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border };
-    });
-    rows.forEach((row, i) => row.cells.forEach((_, c) => {
-        const ref = XLSX.utils.encode_cell({ r: i + 1, c });
-        if (!ws[ref]) ws[ref] = { t: 's', v: '' };
-        const col = VFX_COLORS[row.st];
-        ws[ref].s = {
-            font: { sz: 9, bold: c === head.length - 1, color: { rgb: col.fg }, strike: row.resolved[c] || (row.st === 'cancel' && c === descCol) },
-            fill: { fgColor: { rgb: col.bg } }, border,
-            alignment: { horizontal: c === descCol || (c >= roundsFrom && c < roundsFrom + nRounds) ? 'left' : 'center', vertical: 'center', wrapText: true }
-        };
-    }));
-    ws['!cols'] = head.map((_, c) => ({ wch: c === 0 ? 5 : c === descCol ? 45 : (c >= roundsFrom && c < roundsFrom + nRounds) ? 32 : c === head.length - 1 ? 14 : 12 }));
-    ws['!rows'] = [{ hpt: 30 }, ...rows.map(() => ({ hpt: 42 }))];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'VFX');
+    // "Shot" (görsel) sütunu 2. sıraya eklenir
+    const IMG_W = 160;
+    const hasImgs = rows.some(r => App.vfxThumbs[r.s.id]);
+    const imgH = Math.round(IMG_W * 9 / 16);
+    const H = ['#', t('vfxThumb'), ...head.slice(1)];
+    const shift = (c) => c === 0 ? 0 : c + 1;                       // eski sütun → yeni sütun
+    const isWide = (c) => c === descCol || (c >= roundsFrom && c < roundsFrom + nRounds);
+    const sheet = {
+        name: 'VFX',
+        cols: H.map((_, c) => ({ w: c === 0 ? 5 : c === 1 ? (hasImgs ? Math.ceil((IMG_W + 10) / 7) : 10) : isWide(c - 1) ? 45 : c === H.length - 1 ? 14 : 13 })),
+        rows: [{ h: 30, cells: H.map(v => ({ v, st: { b: 1, fill: 'C27BA0', align: 'center', wrap: 1, border: 1, sz: 10 } })) }],
+        images: []
+    };
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i], col = VFX_COLORS[row.st];
+        const cells = [];
+        row.cells.forEach((v, c) => {
+            const f = row.fmt[c] || {};
+            const st = {
+                b: c === head.length - 1 || !!f.b, i: !!f.i, s: !!f.s || row.resolved[c] || (row.st === 'cancel' && c === descCol),
+                color: f.c ? f.c.replace('#', '').toUpperCase() : col.fg, fill: col.bg, border: 1, wrap: 1, sz: 9,
+                align: f.a ? { l: 'left', c: 'center', r: 'right' }[f.a] : (isWide(c) ? 'left' : 'center')
+            };
+            cells[shift(c)] = { v: typeof v === 'number' ? v : String(v === undefined || v === null ? '' : v), st };
+        });
+        cells[1] = { v: '', st: { fill: VFX_COLORS[row.st].bg, border: 1 } };
+        const th = App.vfxThumbs[row.s.id];
+        if (th) {
+            try {
+                const img = await flattenThumbWithMarks(th, row.s.marks, IMG_W * 2);   // 2x: Excel'de yakınlaştırınca da net
+                const h = Math.round(IMG_W * img.h / img.w);
+                sheet.images.push({ r: i + 1, c: 1, b64: img.b64, w: IMG_W, h, dx: 4, dy: 4 });
+            } catch (e) { console.warn('Görsel Excel\'e eklenemedi', e); }
+        }
+        sheet.rows.push({ h: hasImgs ? Math.round((imgH + 8) * 0.75) : 32, cells });
+    }
+    const blob = XlsxLite.build(sheet);
     const name = ($('projectName').value || 'Proje').replace(/[\\/:*?"<>|]/g, '');
-    XLSX.writeFile(wb, `${name}_VFX_Breakdown_${todayISO()}.xlsx`);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${name}_VFX_Breakdown_${todayISO()}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
 }
 
 function pdfThumbCell(s) {
@@ -6396,7 +6507,7 @@ function exportVfxPdf() {
         <p class="meta">${escapeHtml(tf('vfxProgress', { p: active ? Math.round(done / active * 100) : 0 }))} · ${escapeHtml(tf('vfxShots', { n: active }))}</p>
         <table class="vfx"><thead><tr>${head.map((h, i) => (i === 1 ? `<th>${escapeHtml(t('vfxThumb'))}</th>` : '') + `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
         <tbody>${rows.map(r => `<tr style="background:#${VFX_COLORS[r.st].bg};color:#${VFX_COLORS[r.st].fg}">${r.cells.map((c, i) => (i === 1 ? pdfThumbCell(r.s) : '') +
-            `<td class="${i === descCol ? 'desc' : ''} ${r.resolved[i] ? 'res' : ''}">${escapeHtml(String(c))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+            `<td class="${i === descCol ? 'desc' : ''} ${r.resolved[i] ? 'res' : ''}"${vfxFmtStyle({ fmt: { x: r.fmt[i] } }, 'x')}>${escapeHtml(String(c))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     printDocument(t('modVfx'), rows.length ? body : `<p class="empty">${escapeHtml(t('vfxEmpty'))}</p>`);
 }
 
@@ -6527,7 +6638,7 @@ function marksSvg(marks, w, h, cls = '', withHit = false) {
 function vfxThumbHtml(s, ro) {
     const th = App.vfxThumbs[s.id], url = App.vfxThumbUrls[s.id];
     if (!th || !url) return `<button class="vfx-thumb" data-vact="thumb" data-help="help_vfxThumb" ${ro ? 'disabled' : ''}>+</button>`;
-    const bw = 96, bh = 54, ar = (th.w || 16) / (th.h || 9);
+    const [bw, bh] = vfxThumbBox(), ar = (th.w || 16) / (th.h || 9);
     const [w, h] = ar > bw / bh ? [bw, bw / ar] : [bh * ar, bh];
     return `<button class="vfx-thumb has-img" data-vact="thumb" data-help="help_vfxThumbImg">
         <span class="vt-inner" style="width:${w.toFixed(0)}px;height:${h.toFixed(0)}px"><img src="${url}" alt="" draggable="false">${(s.marks || []).length ? marksSvg(s.marks, th.w, th.h) : ''}</span></button>`;
@@ -6874,6 +6985,375 @@ document.addEventListener('paste', async (e) => {
 });
 
 // ---------------------------------------------------------------------
+// 10e) VFX — Excel gibi: sütun genişletme, çoklu hücre seçimi, biçim çubuğu
+// ---------------------------------------------------------------------
+Object.assign(I18N.en, {
+    fmtBold: "Bold (Ctrl+B)", fmtItalic: "Italic (Ctrl+I)", fmtStrike: "Strikethrough", fmtLeft: "Align left", fmtCenter: "Center",
+    fmtRight: "Align right", fmtColor: "Text colour", fmtAuto: "Automatic", fmtClear: "Clear formatting",
+    fmtSel: "{n} cells selected", fmtNone: "Select cells: click · drag across · Shift+click · Ctrl+click · click a column header",
+    help_vfxFmtBar: "Formatting for the selected cells. Select by dragging across cells, Shift+click for a range, Ctrl+click to add, or click a column title for the whole column.",
+    help_vfxColResize: "Drag the edge of a column title to resize (like Excel). Widening the Shot column enlarges the images. Double-click the edge to reset."
+});
+Object.assign(I18N.tr, {
+    fmtBold: "Kalın (Ctrl+B)", fmtItalic: "İtalik (Ctrl+I)", fmtStrike: "Üstü çizili", fmtLeft: "Sola hizala", fmtCenter: "Ortala",
+    fmtRight: "Sağa hizala", fmtColor: "Yazı rengi", fmtAuto: "Otomatik", fmtClear: "Biçimi temizle",
+    fmtSel: "{n} hücre seçili", fmtNone: "Hücre seç: tıkla · hücreler üzerinde sürükle · Shift+tık · Ctrl+tık · sütun başlığına tıkla",
+    help_vfxFmtBar: "Seçili hücrelerin biçimi. Hücreler üzerinde sürükleyerek, Shift+tık ile aralık, Ctrl+tık ile tek tek ya da sütun başlığına tıklayarak tüm sütunu seçebilirsin.",
+    help_vfxColResize: "Sütun başlığının kenarından tutup sürükle: genişlet/daralt (Excel gibi). Shot sütununu genişletince görseller büyür. Kenara çift tıkla: varsayılana dön."
+});
+
+function vfxFmtBarHtml() {
+    if (App.readOnly) return '';
+    const btn = (k, v, ic, lb) => `<button class="fb-btn" data-fmt="${k}" data-v="${v}" title="${escapeHtml(t(lb))}">${ic}</button>`;
+    return `<div class="vfx-fmtbar" id="vfxFmtBar" data-help="help_vfxFmtBar">
+        <div class="fb-grp">${btn('b', 1, '<b>B</b>', 'fmtBold')}${btn('i', 1, '<i>I</i>', 'fmtItalic')}${btn('s', 1, '<s>S</s>', 'fmtStrike')}</div>
+        <div class="fb-grp">${btn('a', 'l', '<span class="al al-l"><i></i><i></i><i></i></span>', 'fmtLeft')}${btn('a', 'c', '<span class="al al-c"><i></i><i></i><i></i></span>', 'fmtCenter')}${btn('a', 'r', '<span class="al al-r"><i></i><i></i><i></i></span>', 'fmtRight')}</div>
+        <div class="fb-grp" title="${escapeHtml(t('fmtColor'))}">${VFX_TEXT_COLORS.map(c => `<button class="fb-color ${c ? '' : 'auto'}" data-fmt="c" data-v="${c}" style="--c:${c || 'transparent'}" title="${escapeHtml(c ? c : t('fmtAuto'))}">${c ? '' : 'A'}</button>`).join('')}</div>
+        <div class="fb-grp">${`<button class="fb-btn" data-fmt="clear" data-v="1" title="${escapeHtml(t('fmtClear'))}">⌫</button>`}</div>
+        <span class="fb-info" id="vfxFmtInfo"></span>
+    </div>`;
+}
+
+// --- Seçim ---
+const vsel = { cells: new Set(), anchor: null, down: null, dragging: false };
+const selId = (td) => { const tr = td && td.closest('.vfx-row'); return tr && td.dataset.key ? tr.dataset.sid + '|' + td.dataset.key : null; };
+
+function paintVfxSel() {
+    const wrap = $('vfxTableWrap');
+    if (!wrap) return;
+    // Artık görünmeyen hücreleri seçimden çıkar
+    const present = new Set();
+    wrap.querySelectorAll('tbody td[data-key]').forEach(td => {
+        const id = selId(td);
+        present.add(id);
+        td.classList.toggle('sel', vsel.cells.has(id));
+    });
+    [...vsel.cells].forEach(id => { if (!present.has(id)) vsel.cells.delete(id); });
+    // Sütunun tamamı seçiliyse başlık da vurgulansın
+    wrap.querySelectorAll('thead th[data-key]').forEach(th => {
+        const tds = wrap.querySelectorAll(`tbody td[data-key="${CSS.escape(th.dataset.key)}"]`);
+        th.classList.toggle('sel', tds.length > 0 && [...tds].every(td => td.classList.contains('sel')));
+    });
+    updateFmtBar();
+}
+function clearVfxSel() {
+    if (!vsel.cells.size) return;
+    vsel.cells.clear();
+    vsel.anchor = null;
+    paintVfxSel();
+}
+function vfxSelRange(a, b) {
+    const rows = [...$('vfxTableWrap').querySelectorAll('tbody .vfx-row')];
+    const ra = rows.indexOf(a.closest('.vfx-row')), rb = rows.indexOf(b.closest('.vfx-row'));
+    const ca = a.cellIndex, cb = b.cellIndex;
+    const out = [];
+    rows.slice(Math.min(ra, rb), Math.max(ra, rb) + 1).forEach(tr => {
+        [...tr.cells].forEach(td => { if (td.dataset.key && td.cellIndex >= Math.min(ca, cb) && td.cellIndex <= Math.max(ca, cb)) out.push(selId(td)); });
+    });
+    return out;
+}
+function vfxColCells(key) {
+    return [...$('vfxTableWrap').querySelectorAll(`tbody td[data-key="${CSS.escape(key)}"]`)].map(selId);
+}
+
+$('vfxModule').addEventListener('mousedown', (e) => {
+    if (App.readOnly || e.button !== 0) return;
+    if (e.target.closest('.col-rs, .vfx-ok, button')) return;
+    // Sütun başlığı → tüm sütun
+    const th = e.target.closest('thead th[data-key]');
+    if (th) {
+        e.preventDefault();
+        const ids = vfxColCells(th.dataset.key);
+        if (e.ctrlKey || e.metaKey) {
+            const all = ids.every(id => vsel.cells.has(id));
+            ids.forEach(id => all ? vsel.cells.delete(id) : vsel.cells.add(id));
+        } else if (e.shiftKey && vsel.anchorCol) {
+            const ths = [...th.parentElement.querySelectorAll('th[data-key]')];
+            const i1 = ths.findIndex(x => x.dataset.key === vsel.anchorCol), i2 = ths.indexOf(th);
+            vsel.cells.clear();
+            ths.slice(Math.min(i1, i2), Math.max(i1, i2) + 1).forEach(x => vfxColCells(x.dataset.key).forEach(id => vsel.cells.add(id)));
+        } else {
+            vsel.cells = new Set(ids);
+            vsel.anchorCol = th.dataset.key;
+        }
+        if (document.activeElement && $('vfxTableWrap').contains(document.activeElement)) document.activeElement.blur();
+        paintVfxSel();
+        return;
+    }
+    const td = e.target.closest('tbody td[data-key]');
+    if (!td) return;
+    const id = selId(td);
+    if (e.shiftKey && vsel.anchor && document.body.contains(vsel.anchor)) {
+        e.preventDefault();
+        vsel.cells = new Set(vfxSelRange(vsel.anchor, td));
+    } else if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        vsel.cells.has(id) ? vsel.cells.delete(id) : vsel.cells.add(id);
+        vsel.anchor = td;
+    } else {
+        vsel.cells = new Set([id]);
+        vsel.anchor = td;
+        vsel.down = { td };
+    }
+    paintVfxSel();
+});
+// Hücreler üzerinde sürükleyerek aralık seç
+document.addEventListener('mousemove', (e) => {
+    if (!vsel.down || !(e.buttons & 1)) { vsel.down = null; return; }
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const td = el && el.closest && el.closest('#vfxTableWrap tbody td[data-key]');
+    if (!td) return;
+    if (td === vsel.down.td && !vsel.dragging) return;
+    if (!vsel.dragging) {
+        vsel.dragging = true;
+        if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+        document.body.classList.add('vfx-selecting');
+    }
+    e.preventDefault();
+    try { window.getSelection().removeAllRanges(); } catch (err) {}
+    vsel.cells = new Set(vfxSelRange(vsel.down.td, td));
+    paintVfxSel();
+});
+document.addEventListener('mouseup', () => {
+    if (vsel.dragging) document.body.classList.remove('vfx-selecting');
+    vsel.down = null;
+    vsel.dragging = false;
+});
+// Tablonun / çubuğun dışına tıklayınca seçim kalksın
+document.addEventListener('mousedown', (e) => {
+    if (!vsel.cells.size || App.module !== 'vfx') return;
+    if (e.target.closest('#vfxTableWrap table, #vfxFmtBar, #contextMenu, .help-tip')) return;
+    clearVfxSel();
+});
+
+// --- Biçim uygula ---
+function selShots() {
+    return [...vsel.cells].map(id => { const i = id.indexOf('|'); return { s: App.project.vfxShots[id.slice(0, i)], key: id.slice(i + 1) }; }).filter(x => x.s);
+}
+function applyVfxFmt(prop, val) {
+    if (App.readOnly) return;
+    const items = selShots();
+    if (!items.length) return;
+    let v = val;
+    if (['b', 'i', 's'].includes(prop)) v = !items.every(({ s, key }) => s.fmt && s.fmt[key] && s.fmt[key][prop]);   // hepsi açıksa kapat
+    if (prop === 'a' && items.every(({ s, key }) => s.fmt && s.fmt[key] && s.fmt[key].a === val)) v = '';
+    items.forEach(({ s, key }) => {
+        s.fmt = Object.assign({}, s.fmt);
+        let f = prop === 'clear' ? {} : Object.assign({}, s.fmt[key]);
+        if (prop !== 'clear') { if (v) f[prop] = v === true ? 1 : v; else delete f[prop]; }
+        if (Object.keys(f).length) s.fmt[key] = f; else delete s.fmt[key];
+        if (!Object.keys(s.fmt).length) delete s.fmt;
+    });
+    triggerAutoSave();
+    // Sadece ilgili hücrelerin stilini güncelle (yeniden çizim yok → odak kaybolmaz)
+    const wrap = $('vfxTableWrap');
+    items.forEach(({ s, key }) => {
+        const td = wrap.querySelector(`.vfx-row[data-sid="${CSS.escape(s.id)}"] td[data-key="${CSS.escape(key)}"]`);
+        const inp = td && td.querySelector('input, textarea');
+        if (!inp) return;
+        const m = vfxFmtStyle(s, key).match(/style="([^"]*)"/);
+        inp.setAttribute('style', m ? m[1] : '');
+        if (inp.tagName === 'TEXTAREA') { inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px'; }
+    });
+    updateFmtBar();
+}
+function updateFmtBar() {
+    const bar = $('vfxFmtBar');
+    if (!bar) return;
+    const items = selShots();
+    bar.classList.toggle('disabled', !items.length);
+    const all = (fn) => items.length > 0 && items.every(({ s, key }) => fn((s.fmt || {})[key] || {}));
+    bar.querySelectorAll('[data-fmt]').forEach(b => {
+        const p = b.dataset.fmt, v = b.dataset.v;
+        let on = false;
+        if (['b', 'i', 's'].includes(p)) on = all(f => f[p]);
+        else if (p === 'a') on = all(f => f.a === v);
+        else if (p === 'c') on = all(f => (f.c || '') === v);
+        b.classList.toggle('active', on);
+    });
+    const info = $('vfxFmtInfo');
+    if (info) info.textContent = items.length ? tf('fmtSel', { n: items.length }) : t('fmtNone');
+}
+$('vfxModule').addEventListener('mousedown', (e) => { if (e.target.closest('#vfxFmtBar')) e.preventDefault(); }, true);   // odak hücrede kalsın
+$('vfxModule').addEventListener('click', (e) => {
+    const b = e.target.closest('#vfxFmtBar [data-fmt]');
+    if (b) applyVfxFmt(b.dataset.fmt, b.dataset.v);
+});
+document.addEventListener('keydown', (e) => {
+    if (App.module !== 'vfx' || App.view !== 'workspace' || App.readOnly || (vim.el && !vim.el.hidden)) return;
+    if (e.key === 'Escape' && vsel.cells.size) { clearVfxSel(); return; }
+    if (!(e.ctrlKey || e.metaKey) || !vsel.cells.size) return;
+    const k = e.key.toLowerCase();
+    if (k === 'b' || k === 'i') { e.preventDefault(); applyVfxFmt(k, 1); }
+});
+
+// --- Sütun genişletme (başlık kenarından sürükle) ---
+let vfxRs = null;
+$('vfxModule').addEventListener('pointerdown', (e) => {
+    const h = e.target.closest('.col-rs');
+    if (!h) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const col = h.dataset.rs;
+    vfxRs = { col, x0: e.clientX, w0: vfxColW(col), raf: 0, w: vfxColW(col) };
+    h.setPointerCapture && h.setPointerCapture(e.pointerId);
+    document.body.classList.add('vfx-resizing');
+});
+document.addEventListener('pointermove', (e) => {
+    if (!vfxRs) return;
+    const min = VFX_COL_MIN[vfxRs.col.startsWith('r:') ? 'round' : vfxRs.col] || 50;
+    vfxRs.w = Math.round(Math.max(min, Math.min(900, vfxRs.w0 + e.clientX - vfxRs.x0)));
+    if (vfxRs.raf) return;
+    vfxRs.raf = requestAnimationFrame(() => {
+        if (!vfxRs) return;
+        vfxRs.raf = 0;
+        setVfxColW(vfxRs.col, vfxRs.w, false);
+    });
+});
+document.addEventListener('pointerup', () => {
+    if (!vfxRs) return;
+    const r = vfxRs;
+    vfxRs = null;
+    document.body.classList.remove('vfx-resizing');
+    cancelAnimationFrame(r.raf);
+    setVfxColW(r.col, r.w, true);
+});
+$('vfxModule').addEventListener('dblclick', (e) => {
+    const h = e.target.closest('.col-rs');
+    if (h) setVfxColW(h.dataset.rs, null, true);
+});
+function setVfxColW(col, w, commit) {
+    const lay = App.project.vfxLayout = Object.assign({}, App.project.vfxLayout);
+    lay.w = Object.assign({}, lay.w);
+    if (w) lay.w[col] = w; else delete lay.w[col];
+    const st = $('vfxColStyle');
+    const table = $('vfxTableWrap') && $('vfxTableWrap').querySelector('table');
+    if (st && table) {
+        const cols = [...table.querySelectorAll('thead th')].map(th => th.dataset.col);
+        st.textContent = vfxColCss(cols);
+    }
+    if (col === 'thumb') paintVfxThumbs();
+    if (commit) {
+        growAllTextareas($('vfxTableWrap'));
+        if (!App.readOnly) triggerAutoSave();       // görüntüleyicide sadece kendi ekranında değişir
+    }
+}
+
+// ---------------------------------------------------------------------
+// Küçük .xlsx yazıcı — görsel gömebilen Excel çıktısı için (dış kütüphane gerekmez)
+// sheet = { name, cols:[{w}], rows:[{h, cells:[{v, st}]}], images:[{r, c, b64, w, h}] }
+// st = { b, i, s, color, fill, align, valign, wrap, border, sz }
+// ---------------------------------------------------------------------
+const XlsxLite = (() => {
+    const enc = new TextEncoder();
+    const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+    const crc32 = (u8) => { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+    const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+    const colName = (c) => { let s = ''; c++; while (c) { const m = (c - 1) % 26; s = String.fromCharCode(65 + m) + s; c = Math.floor((c - 1) / 26); } return s; };
+
+    // Sıkıştırmasız (store) zip
+    function zip(files) {
+        const parts = [], central = [];
+        let off = 0;
+        files.forEach(f => {
+            const name = enc.encode(f.name), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data;
+            const crc = crc32(data), h = new DataView(new ArrayBuffer(30));
+            h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+            h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, name.length, true);
+            parts.push(new Uint8Array(h.buffer), name, data);
+            const c = new DataView(new ArrayBuffer(46));
+            c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true);
+            c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true); c.setUint16(28, name.length, true); c.setUint32(42, off, true);
+            central.push(new Uint8Array(c.buffer), name);
+            off += 30 + name.length + data.length;
+        });
+        const csize = central.reduce((a, b) => a + b.length, 0), e = new DataView(new ArrayBuffer(22));
+        e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, csize, true); e.setUint32(16, off, true);
+        return new Blob([...parts, ...central, new Uint8Array(e.buffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    }
+
+    function build(sheet) {
+        // --- stiller (tekrar edenler tek kayıt) ---
+        const fonts = ['<font><sz val="10"/><name val="Arial"/></font>'], fills = ['<fill><patternFill patternType="none"/></fill>', '<fill><patternFill patternType="gray125"/></fill>'];
+        const borders = ['<border><left/><right/><top/><bottom/><diagonal/></border>', '<border><left style="thin"><color rgb="FF999999"/></left><right style="thin"><color rgb="FF999999"/></right><top style="thin"><color rgb="FF999999"/></top><bottom style="thin"><color rgb="FF999999"/></bottom><diagonal/></border>'];
+        const xfs = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'];
+        const idx = (arr, x) => { let i = arr.indexOf(x); if (i < 0) { arr.push(x); i = arr.length - 1; } return i; };
+        const styleId = (st) => {
+            if (!st) return 0;
+            const f = idx(fonts, `<font>${st.b ? '<b/>' : ''}${st.i ? '<i/>' : ''}${st.s ? '<strike/>' : ''}<sz val="${st.sz || 10}"/>${st.color ? `<color rgb="FF${st.color}"/>` : ''}<name val="Arial"/></font>`);
+            const fi = st.fill ? idx(fills, `<fill><patternFill patternType="solid"><fgColor rgb="FF${st.fill}"/><bgColor indexed="64"/></patternFill></fill>`) : 0;
+            const al = `<alignment horizontal="${st.align || 'general'}" vertical="${st.valign || 'center'}"${st.wrap ? ' wrapText="1"' : ''}/>`;
+            return idx(xfs, `<xf numFmtId="0" fontId="${f}" fillId="${fi}" borderId="${st.border ? 1 : 0}" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">${al}</xf>`);
+        };
+        // --- sayfa ---
+        const rowsXml = sheet.rows.map((row, r) => `<row r="${r + 1}"${row.h ? ` ht="${row.h}" customHeight="1"` : ''}>${row.cells.map((cell, c) => {
+            const ref = colName(c) + (r + 1), s = styleId(cell.st);
+            if (cell.v === null || cell.v === undefined || cell.v === '') return `<c r="${ref}" s="${s}"/>`;
+            if (typeof cell.v === 'number') return `<c r="${ref}" s="${s}"><v>${cell.v}</v></c>`;
+            return `<c r="${ref}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${esc(cell.v)}</t></is></c>`;
+        }).join('')}</row>`).join('');
+        const imgs = sheet.images || [];
+        const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>
+<sheetFormatPr defaultRowHeight="15"/>
+<cols>${sheet.cols.map((c, i) => `<col min="${i + 1}" max="${i + 1}" width="${c.w}" customWidth="1"/>`).join('')}</cols>
+<sheetData>${rowsXml}</sheetData>${imgs.length ? '<drawing r:id="rId1"/>' : ''}</worksheet>`;
+        // --- görseller (hücreye oturan resimler) ---
+        const EMU = 9525;
+        const drawingXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+${imgs.map((im, i) => `<xdr:oneCellAnchor><xdr:from><xdr:col>${im.c}</xdr:col><xdr:colOff>${(im.dx || 0) * EMU}</xdr:colOff><xdr:row>${im.r}</xdr:row><xdr:rowOff>${(im.dy || 0) * EMU}</xdr:rowOff></xdr:from>
+<xdr:ext cx="${Math.round(im.w * EMU)}" cy="${Math.round(im.h * EMU)}"/>
+<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${i + 2}" name="Shot ${i + 1}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr>
+<xdr:blipFill><a:blip r:embed="rId${i + 1}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>
+<xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${Math.round(im.w * EMU)}" cy="${Math.round(im.h * EMU)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor>`).join('\n')}
+</xdr:wsDr>`;
+        const b64ToU8 = (b64) => { const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
+        const files = [
+            { name: '[Content_Types].xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpeg" ContentType="image/jpeg"/>
+<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${imgs.length ? '<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>' : ''}</Types>` },
+            { name: '_rels/.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+            { name: 'xl/workbook.xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${esc(sheet.name || 'Sheet1')}" sheetId="1" r:id="rId1"/></sheets></workbook>` },
+            { name: 'xl/_rels/workbook.xml.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
+            { name: 'xl/worksheets/sheet1.xml', data: sheetXml },
+            { name: 'xl/styles.xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="${fonts.length}">${fonts.join('')}</fonts><fills count="${fills.length}">${fills.join('')}</fills><borders count="${borders.length}">${borders.join('')}</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="${xfs.length}">${xfs.join('')}</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>` }
+        ];
+        if (imgs.length) {
+            files.push({ name: 'xl/worksheets/_rels/sheet1.xml.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/></Relationships>` });
+            files.push({ name: 'xl/drawings/drawing1.xml', data: drawingXml });
+            files.push({ name: 'xl/drawings/_rels/drawing1.xml.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${imgs.map((im, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image${i + 1}.jpeg"/>`).join('')}</Relationships>` });
+            imgs.forEach((im, i) => files.push({ name: `xl/media/image${i + 1}.jpeg`, data: b64ToU8(im.b64) }));
+        }
+        return zip(files);
+    }
+    return { build };
+})();
+
+// Görsel + çizimleri tek JPEG'e çevir (Excel'e gömülecek)
+async function flattenThumbWithMarks(th, marks, outW) {
+    const im = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = th.data; });
+    const w = outW, h = Math.round(outW * (th.h || 9) / (th.w || 16));
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    const ctx = cv.getContext('2d');
+    ctx.drawImage(im, 0, 0, w, h);
+    if ((marks || []).length) {
+        const svg = marksSvg(marks, th.w, th.h).replace('<svg ', `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" `);
+        const ov = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
+        ctx.drawImage(ov, 0, 0, w, h);
+    }
+    return { b64: cv.toDataURL('image/jpeg', 0.85).split(',')[1], w, h };
+}
+
+// ---------------------------------------------------------------------
 // 11) YARDIM BALONLARI — fare bir aracın üzerinde 3 sn durunca ne işe yaradığını anlatır.
 // Bir öğeye yardım eklemek için: data-help="help_anahtar" + aşağıya çeviri.
 // ---------------------------------------------------------------------
@@ -7143,6 +7623,7 @@ const FB = {
             todos: proj.todos || {},
             vfxShots: proj.vfxShots || {},
             vfxRounds: proj.vfxRounds || {},
+            vfxLayout: proj.vfxLayout || {},
             stats: proj.stats || {},
             activeVersionId: active,
             activeVersionName: activeName,
