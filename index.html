@@ -1033,6 +1033,63 @@ body.vfx-dragging, body.vfx-dragging * { cursor: grabbing !important; user-selec
 .vfx-row.drop-after td.c-thumb { box-shadow: inset 0 -3px 0 var(--neon-green), 4px 0 6px -4px rgba(0,0,0,.6); }
 .read-only-mode .vfx-table .c-addround { display: none; }
 
+/* ---------- VFX görsel kutusu ---------- */
+.vfx-thumb.has-img { border: none; background: #000; padding: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.vfx-thumb.has-img:hover { outline: 2px solid var(--neon-green); outline-offset: -2px; }
+.vt-inner { position: relative; display: block; }
+.vt-inner img { width: 100%; height: 100%; display: block; pointer-events: none; }
+.vt-inner svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.vfx-table td.c-thumb.file-over { box-shadow: inset 0 0 0 3px var(--neon-green); }
+.vfx-table td.c-thumb.file-over .vfx-thumb { border-color: var(--neon-green); color: var(--neon-green); }
+.read-only-mode .vfx-thumb.has-img { cursor: zoom-in; }
+
+/* ---------- Büyük pencere + çizim ---------- */
+body.vim-open { overflow: hidden; }
+.vim { position: fixed; inset: 0; z-index: 25000; background: rgba(5,6,8,.96); display: flex; flex-direction: column; }
+.vim.file-over::after { content: ''; position: absolute; inset: 12px; border: 3px dashed var(--neon-green); border-radius: 14px; pointer-events: none; }
+.vim-top { display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-bottom: 1px solid #22252c; background: #0d0e12; flex-wrap: wrap; }
+.vim-title { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex: 1 1 200px; }
+.vim-title b { font-size: 16px; letter-spacing: 1px; }
+.vim-title span { color: #999; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vim-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.vim-group { display: flex; gap: 4px; align-items: center; padding: 0 8px; border-left: 1px solid #262931; }
+.vim-group:first-child { border-left: none; padding-left: 0; }
+.vim-tool { display: flex; flex-direction: column; align-items: center; gap: 1px; background: #15171c; border: 1px solid #2a2d35; color: #ccc; border-radius: 7px; padding: 4px 8px; cursor: pointer; font-family: inherit; min-width: 44px; }
+.vim-tool span { font-size: 16px; line-height: 1.1; }
+.vim-tool small { font-size: 9.5px; color: #888; }
+.vim-tool.active { background: #22301d; border-color: var(--neon-green); color: #fff; }
+.vim-tool.active small { color: var(--neon-green); }
+.vim-color { width: 22px; height: 22px; border-radius: 50%; background: var(--c); border: 2px solid #111; box-shadow: 0 0 0 1px #444; cursor: pointer; padding: 0; }
+.vim-color.active { box-shadow: 0 0 0 2px #fff; }
+.vim-size { width: 30px; height: 26px; background: #15171c; border: 1px solid #2a2d35; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+.vim-size i { display: block; width: 100%; background: #ccc; border-radius: 3px; }
+.vim-size.active { border-color: var(--neon-green); }
+.vim-size.active i { background: var(--neon-green); }
+.vim-nav { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.vim-nav .icon-btn { font-size: 15px; padding: 6px 9px; }
+.vim-pos { font-size: 12px; color: #888; min-width: 54px; text-align: center; }
+.vim-close { font-size: 18px !important; margin-left: 8px; }
+.vim-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; position: relative; touch-action: none; }
+.vim-canvas { position: relative; box-shadow: 0 10px 40px rgba(0,0,0,.7); background: #000; cursor: crosshair; }
+.vim.read-only .vim-canvas { cursor: default; }
+.vim.tool-eraser .vim-canvas { cursor: cell; }
+.vim-canvas img { width: 100%; height: 100%; display: block; user-select: none; pointer-events: none; }
+.vim-canvas svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.vim-canvas svg .mk { pointer-events: none; }
+.vim.tool-eraser .vim-canvas svg .mk { pointer-events: visiblePainted; cursor: pointer; }
+.vim.tool-eraser .vim-canvas svg .mk:hover { opacity: .45; }
+.vim-empty { color: #aaa; text-align: center; }
+.vim-drop { border: 2px dashed #3a3f4a; border-radius: 16px; padding: 60px 70px; }
+.vim-drop-ic { font-size: 46px; margin-bottom: 10px; opacity: .8; }
+.vim-drop .link-btn { background: none; border: none; color: var(--neon-green); font-size: 14px; padding: 0; font-family: inherit; }
+.vim-spin { width: 34px; height: 34px; border: 3px solid #333; border-top-color: var(--neon-green); border-radius: 50%; margin: 0 auto 12px; animation: vimSpin .8s linear infinite; }
+@keyframes vimSpin { to { transform: rotate(360deg); } }
+@media (max-width: 820px) {
+    .vim-tool small { display: none; }
+    .vim-tool { min-width: 36px; padding: 6px; }
+    .vim-group { padding: 0 4px; }
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
@@ -3263,7 +3320,7 @@ function setPath(obj, path, val) {
 
 // Offline mod için bellekte çalışan, FB ile aynı arayüze sahip depo
 const MemFB = (() => {
-    const ws = {}, vers = {}, rems = {};
+    const ws = {}, vers = {}, rems = {}, imgs = { th: {}, fr: {}, cbs: {} };
     let n = 0;
     const newId = (p) => `${p}-${Date.now().toString(36)}-${++n}`;
     const now = () => new Date().toISOString();
@@ -3306,6 +3363,10 @@ const MemFB = (() => {
         async deleteVersion(pid, vid) { delete vers[pid][vid]; },
         watchProject() { return () => {}; },
         watchVersion() { return () => {}; },
+        watchVfxThumbs(pid, cb) { imgs.cbs[pid] = cb; cb(clone(imgs.th[pid] || {})); return () => { delete imgs.cbs[pid]; }; },
+        async setVfxImage(pid, sid, th, fr) { (imgs.th[pid] = imgs.th[pid] || {})[sid] = clone(th); (imgs.fr[pid] = imgs.fr[pid] || {})[sid] = clone(fr); },
+        async getVfxFrame(pid, sid) { return (imgs.fr[pid] || {})[sid] || null; },
+        async deleteVfxImage(pid, sid) { delete (imgs.th[pid] || {})[sid]; delete (imgs.fr[pid] || {})[sid]; },
         async listMyReminders() { return Object.entries(rems).map(([id, data]) => ({ id, data: clone(data) })); },
         async setReminder(rid, data) { rems[rid] = Object.assign(clone(data), { email: myEmail(), name: '' }); },
         async updateReminder(rid, upd) { if (rems[rid]) Object.entries(upd).forEach(([k, v]) => setPath(rems[rid], k, v)); },
@@ -3764,6 +3825,7 @@ function stopWatching() {
         if (App.sync.unV) App.sync.unV();
     }
     App.sync = null;
+    if (typeof stopVfxThumbWatch === 'function' && vfxThumbPid !== undefined) { closeVim(); stopVfxThumbWatch(); }
 }
 
 function watchVersion() {
@@ -4181,6 +4243,10 @@ $('shareBtn').onclick = async () => {
                 kind: 'vfx', projectName: $('projectName').value.trim() || App.project.projectName || '',
                 totalEpisodes: App.project.totalEpisodes, vfxShots: App.project.vfxShots, vfxRounds: App.project.vfxRounds
             });
+            if (Object.keys(App.vfxThumbs).length) {
+                showInfoToast('🖼 ' + t('vimSaving'));
+                await FB.copyVfxImagesToShare(App.project.id, new URL(url).searchParams.get('share'));
+            }
             try { await navigator.clipboard.writeText(url); } catch (e) {}
             prompt(t('shareLinkPrompt'), url);
         } catch (e) { alert("Paylaşım linki oluşturulamadı: " + e.message); }
@@ -5882,6 +5948,7 @@ function renderVfxModule() {
         </div>`;
     renderVfxSummary();
     renderVfxTable();
+    ensureVfxThumbWatch();
 }
 
 function renderVfxSummary() {
@@ -5911,7 +5978,7 @@ function vfxRow(s, rounds, showEp, ro, idx) {
     const eps = parseInt(App.project.totalEpisodes) || 1;
     return `<tr class="vfx-row st-${st}" data-sid="${escapeHtml(s.id)}">
         <td class="c-num" ${ro ? '' : 'data-help="help_vfxDrag"'}><span class="grip">⋮⋮</span><b>${idx}</b></td>
-        <td class="c-thumb"><button class="vfx-thumb" data-vact="thumb" data-help="help_vfxThumb" ${dis}>+</button></td>
+        <td class="c-thumb">${vfxThumbHtml(s, ro)}</td>
         ${showEp ? `<td class="c-ep"><select data-f="ep" ${dis}><option value="0">—</option>${Array.from({ length: eps }, (_, i) =>
             `<option value="${i + 1}" ${parseInt(s.ep) === i + 1 ? 'selected' : ''}>EP${String(i + 1).padStart(2, '0')}</option>`).join('')}</select></td>` : ''}
         <td class="c-tc"><input data-f="tc" ${rdo} value="${escapeHtml(s.tc || '')}" placeholder="00:00:00:00" maxlength="11" inputmode="numeric" data-help="help_vfxTc"></td>
@@ -5978,6 +6045,7 @@ function growAllTextareas(root) {
 }
 
 function refreshVfxSafely() {
+    if (vim.el && !vim.el.hidden && vim.sid && !vim.draft && App.vfxThumbs[vim.sid]) redrawVimMarks();
     const a = document.activeElement;
     if (a && $('vfxTableWrap') && $('vfxTableWrap').contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) { vfxState.stale = true; renderVfxSummary(); return; }
     renderVfxSummary();
@@ -6082,7 +6150,11 @@ $('vfxModule').addEventListener('click', (e) => {
     const act = b.dataset.vact;
     if (act === 'excel') return exportVfxExcel();
     if (act === 'pdf') return exportVfxPdf();
-    if (act === 'thumb') return showInfoToast('🖼 ' + t('vfxThumbSoon'));
+    if (act === 'thumb') {
+        const sh = vfxShotOf(b);
+        if (sh && (App.vfxThumbs[sh.id] || !App.readOnly)) openVim(sh.id);
+        return;
+    }
     if (App.readOnly) return;
     if (act === 'addShot') return addVfxShot(null);
     if (act === 'renumber') return renumberVfx();
@@ -6126,7 +6198,7 @@ function showVfxRowMenu(s, btn) {
         if (b.dataset.m === 'below') addVfxShot(s);
         if (b.dataset.m === 'dup') {
             const id = uid();
-            App.project.vfxShots[id] = Object.assign(clone(s), { id, code: nextVfxCode(s.ep, s), order: vfxOrderAfter(s.ep, s), createdAt: new Date().toISOString() });
+            App.project.vfxShots[id] = Object.assign(clone(s), { id, code: nextVfxCode(s.ep, s), order: vfxOrderAfter(s.ep, s), marks: [], createdAt: new Date().toISOString() });
             triggerAutoSave(); renderVfxSummary(); renderVfxTable();
             const row = $('vfxTableWrap').querySelector(`[data-sid="${CSS.escape(id)}"]`);
             row && row.classList.add('flash');
@@ -6134,6 +6206,7 @@ function showVfxRowMenu(s, btn) {
         if (b.dataset.m === 'del') {
             if (!confirm(tf('vfxConfirmDelete', { code: s.code || '' }))) return;
             delete App.project.vfxShots[s.id];
+            if (App.vfxThumbs[s.id]) removeVfxImage(s.id);
             triggerAutoSave(); renderVfxSummary(); renderVfxTable();
         }
     });
@@ -6301,6 +6374,11 @@ function exportVfxExcel() {
     XLSX.writeFile(wb, `${name}_VFX_Breakdown_${todayISO()}.xlsx`);
 }
 
+function pdfThumbCell(s) {
+    const th = App.vfxThumbs[s.id];
+    if (!th) return '<td class="thumb"></td>';
+    return `<td class="thumb"><div class="pt" style="aspect-ratio:${th.w}/${th.h}"><img src="${th.data}">${(s.marks || []).length ? marksSvg(s.marks, th.w, th.h) : ''}</div></td>`;
+}
 function exportVfxPdf() {
     const { head, rows, descCol } = vfxExportRows();
     const list = vfxScope();
@@ -6310,13 +6388,490 @@ function exportVfxPdf() {
         table.vfx th { background: #c27ba0; font-size: 7.5pt; }
         table.vfx td.desc { text-align: left; } table.vfx td { text-align: center; white-space: pre-wrap; }
         table.vfx td.res { text-decoration: line-through; }
+        table.vfx td.thumb { width: 34mm; padding: 2px; }
+        table.vfx .pt { position: relative; width: 32mm; } table.vfx .pt img { width: 100%; height: 100%; display: block; object-fit: cover; }
+        table.vfx .pt svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+        tr { break-inside: avoid; }
         </style>
         <p class="meta">${escapeHtml(tf('vfxProgress', { p: active ? Math.round(done / active * 100) : 0 }))} · ${escapeHtml(tf('vfxShots', { n: active }))}</p>
-        <table class="vfx"><thead><tr>${head.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
-        <tbody>${rows.map(r => `<tr style="background:#${VFX_COLORS[r.st].bg};color:#${VFX_COLORS[r.st].fg}">${r.cells.map((c, i) =>
+        <table class="vfx"><thead><tr>${head.map((h, i) => (i === 1 ? `<th>${escapeHtml(t('vfxThumb'))}</th>` : '') + `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map(r => `<tr style="background:#${VFX_COLORS[r.st].bg};color:#${VFX_COLORS[r.st].fg}">${r.cells.map((c, i) => (i === 1 ? pdfThumbCell(r.s) : '') +
             `<td class="${i === descCol ? 'desc' : ''} ${r.resolved[i] ? 'res' : ''}">${escapeHtml(String(c))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     printDocument(t('modVfx'), rows.length ? body : `<p class="empty">${escapeHtml(t('vfxEmpty'))}</p>`);
 }
+
+// ---------------------------------------------------------------------
+// 10d) VFX GÖRSELLERİ + ÇİZİM (ok, daire, kutu, serbest, yazı)
+// Görsel iki boyutta saklanır: küçük önizleme (tablo) ve net hâl (büyük pencere).
+// Çizimler görselin üstüne yakılmaz; shot kaydında "marks" olarak (0–1 arası koordinat) tutulur,
+// böylece silinip düzeltilebilir ve hem tabloda hem büyük pencerede aynı görünür.
+// ---------------------------------------------------------------------
+Object.assign(I18N.en, {
+    vimDrop: "Drop an image here, paste with Ctrl+V, or", vimChoose: "choose a file", vimLoading: "Loading…",
+    vimSaving: "Saving image…", vimReplace: "Replace image", vimRemove: "Remove image",
+    vimConfirmRemove: "Remove the image and its drawings from this shot?", vimConfirmReplace: "The new image will clear the current drawings. Continue?",
+    vimTooBig: "This image could not be processed.", vimSaveError: "The image could not be saved: ",
+    vimArrow: "Arrow", vimCircle: "Circle", vimRect: "Box", vimPen: "Free draw", vimText: "Text", vimEraser: "Eraser",
+    vimUndo: "Undo (Ctrl+Z)", vimClear: "Clear drawings", vimConfirmClear: "Clear all drawings on this image?",
+    vimTextPrompt: "Text:", vimNoImage: "No image for this shot yet.",
+    help_vfxThumbImg: "Click to enlarge and draw on it. Drag an image file from your computer onto this box to add or replace it.",
+    help_vfxThumb: "Click to add an image — or drag an image file here from your computer."
+});
+Object.assign(I18N.tr, {
+    vimDrop: "Görseli buraya sürükle-bırak, Ctrl+V ile yapıştır ya da", vimChoose: "dosya seç", vimLoading: "Yükleniyor…",
+    vimSaving: "Görsel kaydediliyor…", vimReplace: "Görseli değiştir", vimRemove: "Görseli kaldır",
+    vimConfirmRemove: "Bu shot'ın görseli ve üzerindeki çizimler kaldırılsın mı?", vimConfirmReplace: "Yeni görsel mevcut çizimleri silecek. Devam edilsin mi?",
+    vimTooBig: "Bu görsel işlenemedi.", vimSaveError: "Görsel kaydedilemedi: ",
+    vimArrow: "Ok", vimCircle: "Daire", vimRect: "Kutu", vimPen: "Serbest çizim", vimText: "Yazı", vimEraser: "Silgi",
+    vimUndo: "Geri al (Ctrl+Z)", vimClear: "Çizimleri temizle", vimConfirmClear: "Bu görseldeki tüm çizimler silinsin mi?",
+    vimTextPrompt: "Yazı:", vimNoImage: "Bu shot için henüz görsel yok.",
+    help_vfxThumbImg: "Tıkla: büyüt ve üzerine çiz. Bilgisayardan bir görsel dosyasını bu kutuya sürükleyip bırakırsan görsel değişir.",
+    help_vfxThumb: "Tıkla ve görsel ekle — ya da bilgisayardan görsel dosyasını bu kutuya sürükle-bırak."
+});
+
+App.vfxThumbs = {};          // shotId → { data, w, h }
+App.vfxThumbUrls = {};       // shotId → blob: adresi (tablo hızlı çizilsin diye)
+const vfxFrameCache = {};    // shotId → net görsel (data URL)
+let vfxThumbUnsub = null, vfxThumbPid = undefined;
+
+// Firebase / çevrimdışı / salt-okunur link için doğru kaynak
+const imgApi = () => App.shareKind === 'vfx' ? null : api();
+
+function dataUrlToBlobUrl(dataUrl) {
+    try {
+        const [head, b64] = dataUrl.split(',');
+        const mime = (head.match(/data:(.*?);/) || [])[1] || 'image/jpeg';
+        const bin = atob(b64);
+        const arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        return URL.createObjectURL(new Blob([arr], { type: mime }));
+    } catch (e) { return dataUrl; }
+}
+
+function setVfxThumbs(map) {
+    const next = map || {};
+    Object.keys(App.vfxThumbUrls).forEach(id => {
+        if (!next[id] || !App.vfxThumbs[id] || next[id].data !== App.vfxThumbs[id].data) {
+            if (String(App.vfxThumbUrls[id]).startsWith('blob:')) URL.revokeObjectURL(App.vfxThumbUrls[id]);
+            delete App.vfxThumbUrls[id];
+            delete vfxFrameCache[id];
+        }
+    });
+    Object.entries(next).forEach(([id, v]) => { if (v && v.data && !App.vfxThumbUrls[id]) App.vfxThumbUrls[id] = dataUrlToBlobUrl(v.data); });
+    App.vfxThumbs = next;
+    paintVfxThumbs();
+    if (vim.sid && !vim.busy && vim.el && !vim.el.hidden) renderVim();
+}
+
+// VFX ekranı açılınca bu projenin görsellerini dinle (proje değişince yeniden)
+function ensureVfxThumbWatch() {
+    const pid = App.project ? App.project.id : null;
+    if (App.shareKind === 'vfx') {
+        if (vfxThumbPid === 'share:' + window.currentShareId) return;
+        vfxThumbPid = 'share:' + window.currentShareId;
+        if (window.currentShareId && window.FB && FB.listSharedVfxThumbs) FB.listSharedVfxThumbs(window.currentShareId).then(setVfxThumbs).catch(e => console.warn(e));
+        return;
+    }
+    if (vfxThumbPid === pid && vfxThumbUnsub) return;
+    stopVfxThumbWatch();
+    vfxThumbPid = pid;
+    const a = api();
+    if (pid && a.watchVfxThumbs) vfxThumbUnsub = a.watchVfxThumbs(pid, setVfxThumbs);
+}
+function stopVfxThumbWatch() {
+    if (vfxThumbUnsub) vfxThumbUnsub();
+    vfxThumbUnsub = null;
+    vfxThumbPid = undefined;
+    setVfxThumbs({});
+}
+
+// --- Çizimleri SVG olarak üret (tablo ve büyük pencere aynı fonksiyonu kullanır) ---
+const MARK_COLORS = ['#ff3b30', '#ffd60a', '#39ff14', '#00e5ff', '#ffffff'];
+const MARK_SIZES = { s: 4, m: 7, l: 12 };
+function marksSvg(marks, w, h, cls = '', withHit = false) {
+    const W = 1000, H = Math.round(1000 * (h || 9) / (w || 16));
+    const X = (v) => (v * W).toFixed(1), Y = (v) => (v * H).toFixed(1);
+    const shapes = (marks || []).map((m, i) => {
+        const sw = MARK_SIZES[m.s] || MARK_SIZES.m;
+        const st = `stroke="${m.c}" stroke-width="${sw}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+        const hit = (d) => withHit ? d.replace(/stroke="[^"]*" stroke-width="[^"]*"/, `stroke="transparent" stroke-width="${sw + 22}"`) : '';
+        let el = '';
+        if (m.t === 'arrow') {
+            const x1 = m.x1 * W, y1 = m.y1 * H, x2 = m.x2 * W, y2 = m.y2 * H;
+            const ang = Math.atan2(y2 - y1, x2 - x1), hl = 14 + sw * 2.6;
+            const p = (a) => `${(x2 - hl * Math.cos(a)).toFixed(1)},${(y2 - hl * Math.sin(a)).toFixed(1)}`;
+            const line = `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${(x2 - hl * 0.6 * Math.cos(ang)).toFixed(1)}" y2="${(y2 - hl * 0.6 * Math.sin(ang)).toFixed(1)}" ${st}/>`;
+            el = hit(line) + line + `<polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${p(ang - 0.45)} ${p(ang + 0.45)}" fill="${m.c}" stroke="${m.c}" stroke-width="2" stroke-linejoin="round"/>`;
+        } else if (m.t === 'circle') {
+            const e = `<ellipse cx="${X((m.x1 + m.x2) / 2)}" cy="${Y((m.y1 + m.y2) / 2)}" rx="${(Math.abs(m.x2 - m.x1) / 2 * W).toFixed(1)}" ry="${(Math.abs(m.y2 - m.y1) / 2 * H).toFixed(1)}" ${st}/>`;
+            el = hit(e) + e;
+        } else if (m.t === 'rect') {
+            const r = `<rect x="${X(Math.min(m.x1, m.x2))}" y="${Y(Math.min(m.y1, m.y2))}" width="${(Math.abs(m.x2 - m.x1) * W).toFixed(1)}" height="${(Math.abs(m.y2 - m.y1) * H).toFixed(1)}" rx="4" ${st}/>`;
+            el = hit(r) + r;
+        } else if (m.t === 'pen') {
+            const pts = [];
+            for (let k = 0; k + 1 < (m.p || []).length; k += 2) pts.push(`${X(m.p[k])},${Y(m.p[k + 1])}`);
+            const pl = `<polyline points="${pts.join(' ')}" ${st}/>`;
+            el = hit(pl) + pl;
+        } else if (m.t === 'text') {
+            const fs = { s: 30, m: 44, l: 64 }[m.s] || 44;
+            el = `<text x="${X(m.x1)}" y="${Y(m.y1)}" font-size="${fs}" font-weight="800" font-family="Arial, sans-serif" fill="${m.c}"
+                stroke="#000" stroke-width="${fs / 9}" paint-order="stroke" dominant-baseline="middle">${escapeHtml(m.text || '')}</text>`;
+        }
+        return `<g class="mk" data-i="${i}">${el}</g>`;
+    }).join('');
+    return `<svg class="${cls}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${shapes}</svg>`;
+}
+
+// Tablodaki kutu: görsel varsa görsel + çizimler, yoksa "+"
+function vfxThumbHtml(s, ro) {
+    const th = App.vfxThumbs[s.id], url = App.vfxThumbUrls[s.id];
+    if (!th || !url) return `<button class="vfx-thumb" data-vact="thumb" data-help="help_vfxThumb" ${ro ? 'disabled' : ''}>+</button>`;
+    const bw = 96, bh = 54, ar = (th.w || 16) / (th.h || 9);
+    const [w, h] = ar > bw / bh ? [bw, bw / ar] : [bh * ar, bh];
+    return `<button class="vfx-thumb has-img" data-vact="thumb" data-help="help_vfxThumbImg">
+        <span class="vt-inner" style="width:${w.toFixed(0)}px;height:${h.toFixed(0)}px"><img src="${url}" alt="" draggable="false">${(s.marks || []).length ? marksSvg(s.marks, th.w, th.h) : ''}</span></button>`;
+}
+function paintVfxThumbs(onlyId) {
+    const wrap = $('vfxTableWrap');
+    if (!wrap || !App.project) return;
+    wrap.querySelectorAll('.vfx-row').forEach(tr => {
+        if (onlyId && tr.dataset.sid !== onlyId) return;
+        const s = App.project.vfxShots[tr.dataset.sid];
+        const td = tr.querySelector('.c-thumb');
+        if (s && td) td.innerHTML = vfxThumbHtml(s, App.readOnly);
+    });
+}
+
+// --- Görseli küçült/sıkıştır (tarayıcıda) ---
+function loadImageFromBlob(blob) {
+    return new Promise((res, rej) => {
+        const url = URL.createObjectURL(blob);
+        const im = new Image();
+        im.onload = () => { res(im); setTimeout(() => URL.revokeObjectURL(url), 1000); };
+        im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('image')); };
+        im.src = url;
+    });
+}
+function encodeImage(im, maxW, quality, maxChars) {
+    let w = Math.min(maxW, im.naturalWidth), q = quality, out = '';
+    for (let tries = 0; tries < 8; tries++) {
+        const h = Math.max(1, Math.round(w * im.naturalHeight / im.naturalWidth));
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(im, 0, 0, w, h);
+        out = cv.toDataURL('image/jpeg', q);
+        if (out.length <= maxChars) return { data: out, w, h };
+        if (q > 0.55) q -= 0.1; else w = Math.round(w * 0.8);
+    }
+    return { data: out, w, h: Math.round(w * im.naturalHeight / im.naturalWidth) };
+}
+async function processVfxImage(blob) {
+    const im = await loadImageFromBlob(blob);
+    const frame = encodeImage(im, 1600, 0.84, 700000);     // büyük pencere için net hâl (Firestore 1 MB sınırının altında)
+    const thumb = encodeImage(im, 320, 0.72, 60000);       // tablodaki önizleme
+    return { frame, thumb, w: frame.w, h: frame.h };
+}
+
+async function uploadVfxImage(sid, blob) {
+    if (App.readOnly || !blob || !/^image\//.test(blob.type || '')) return false;
+    const s = App.project.vfxShots[sid];
+    if (!s) return false;
+    if ((s.marks || []).length && App.vfxThumbs[sid] && !confirm(t('vimConfirmReplace'))) return false;
+    const pid = App.project.id || 'offline';
+    showInfoToast('🖼 ' + t('vimSaving'));
+    let img;
+    try { img = await processVfxImage(blob); }
+    catch (e) { alert(t('vimTooBig')); return false; }
+    const meta = { w: img.w, h: img.h, updatedAt: new Date().toISOString(), by: myEmail() };
+    try {
+        await imgApi().setVfxImage(pid, sid, Object.assign({ data: img.thumb.data }, meta), Object.assign({ data: img.frame.data }, meta));
+    } catch (e) { alert(t('vimSaveError') + e.message); return false; }
+    vfxFrameCache[sid] = img.frame.data;
+    const map = Object.assign({}, App.vfxThumbs, { [sid]: Object.assign({ data: img.thumb.data }, meta) });
+    if (App.vfxThumbUrls[sid]) { URL.revokeObjectURL(App.vfxThumbUrls[sid]); delete App.vfxThumbUrls[sid]; }
+    const keepFrame = vfxFrameCache[sid];
+    s.marks = [];
+    triggerAutoSave();
+    setVfxThumbs(map);
+    vfxFrameCache[sid] = keepFrame;
+    return true;
+}
+
+async function removeVfxImage(sid) {
+    const s = App.project.vfxShots[sid];
+    try { if (imgApi()) await imgApi().deleteVfxImage(App.project.id || 'offline', sid); } catch (e) { console.warn(e); }
+    if (s) { s.marks = []; triggerAutoSave(); }
+    const map = Object.assign({}, App.vfxThumbs);
+    delete map[sid];
+    setVfxThumbs(map);
+}
+
+// --- Tablodaki kutuya dosya sürükle-bırak ---
+$('vfxModule').addEventListener('dragover', (e) => {
+    const box = e.target.closest('.c-thumb');
+    if (!box || App.readOnly || !e.dataTransfer || ![...e.dataTransfer.types].includes('Files')) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    $('vfxModule').querySelectorAll('.c-thumb.file-over').forEach(x => x !== box && x.classList.remove('file-over'));
+    box.classList.add('file-over');
+});
+$('vfxModule').addEventListener('dragleave', (e) => {
+    const box = e.target.closest('.c-thumb');
+    if (box && !box.contains(e.relatedTarget)) box.classList.remove('file-over');
+});
+$('vfxModule').addEventListener('drop', (e) => {
+    const box = e.target.closest('.c-thumb');
+    if (!box) return;
+    e.preventDefault();
+    box.classList.remove('file-over');
+    const tr = box.closest('.vfx-row');
+    const f = [...(e.dataTransfer.files || [])].find(x => /^image\//.test(x.type));
+    if (tr && f) uploadVfxImage(tr.dataset.sid, f);
+});
+// Tablo dışına bırakılan dosya tarayıcıda açılmasın
+['dragover', 'drop'].forEach(ev => document.addEventListener(ev, (e) => {
+    if (App.module === 'vfx' && e.dataTransfer && [...e.dataTransfer.types].includes('Files') && !e.defaultPrevented) e.preventDefault();
+}));
+
+// ---------------------------------------------------------------------
+// Büyük pencere + çizim araçları
+// ---------------------------------------------------------------------
+const vim = { el: null, sid: null, tool: 'arrow', color: MARK_COLORS[0], size: 'm', draft: null, undo: [], busy: false };
+
+function buildVim() {
+    const el = document.createElement('div');
+    el.className = 'vim';
+    el.hidden = true;
+    el.innerHTML = `
+        <div class="vim-top">
+            <div class="vim-title"><b class="vim-code"></b><span class="vim-desc"></span></div>
+            <div class="vim-tools"></div>
+            <div class="vim-nav">
+                <button class="icon-btn" data-vim="prev" title="←">◀</button><span class="vim-pos"></span><button class="icon-btn" data-vim="next" title="→">▶</button>
+                <button class="icon-btn vim-close" data-vim="close" title="Esc">✕</button>
+            </div>
+        </div>
+        <div class="vim-stage"><div class="vim-canvas"></div><div class="vim-empty"></div></div>
+        <input type="file" accept="image/*" class="vim-file" hidden>`;
+    document.body.appendChild(el);
+    vim.el = el;
+    el.addEventListener('click', onVimClick);
+    el.querySelector('.vim-file').addEventListener('change', async (e) => {
+        const f = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (f) { vim.busy = true; renderVim(); await uploadVfxImage(vim.sid, f); vim.busy = false; vim.undo = []; renderVim(); }
+    });
+    // Büyük pencereye dosya sürükle-bırak
+    el.addEventListener('dragover', (e) => { if (!App.readOnly && [...(e.dataTransfer.types || [])].includes('Files')) { e.preventDefault(); el.classList.add('file-over'); } });
+    el.addEventListener('dragleave', (e) => { if (!el.contains(e.relatedTarget)) el.classList.remove('file-over'); });
+    el.addEventListener('drop', async (e) => {
+        e.preventDefault(); el.classList.remove('file-over');
+        const f = [...(e.dataTransfer.files || [])].find(x => /^image\//.test(x.type));
+        if (f && !App.readOnly) { vim.busy = true; renderVim(); await uploadVfxImage(vim.sid, f); vim.busy = false; vim.undo = []; renderVim(); }
+    });
+    const stage = el.querySelector('.vim-stage');
+    stage.addEventListener('pointerdown', onVimPointerDown);
+    window.addEventListener('resize', () => { if (!el.hidden) fitVim(); });
+}
+
+function openVim(sid) {
+    if (!vim.el) buildVim();
+    vim.sid = sid;
+    vim.undo = [];
+    vim.el.hidden = false;
+    document.body.classList.add('vim-open');
+    renderVim();
+}
+function closeVim() {
+    if (!vim.el) return;
+    vim.el.hidden = true;
+    vim.sid = null;
+    document.body.classList.remove('vim-open');
+    paintVfxThumbs();
+}
+
+function vimTools() {
+    if (App.readOnly) return '';
+    const tools = [['arrow', '➜', 'vimArrow'], ['circle', '◯', 'vimCircle'], ['rect', '▭', 'vimRect'], ['pen', '✎', 'vimPen'], ['text', 'T', 'vimText'], ['eraser', '⌫', 'vimEraser']];
+    return `<div class="vim-group">${tools.map(([k, ic, lb]) =>
+        `<button class="vim-tool ${vim.tool === k ? 'active' : ''}" data-tool="${k}" title="${escapeHtml(t(lb))}"><span>${ic}</span><small>${escapeHtml(t(lb))}</small></button>`).join('')}</div>
+        <div class="vim-group">${MARK_COLORS.map(c => `<button class="vim-color ${vim.color === c ? 'active' : ''}" data-color="${c}" style="--c:${c}"></button>`).join('')}</div>
+        <div class="vim-group">${['s', 'm', 'l'].map(z => `<button class="vim-size ${vim.size === z ? 'active' : ''}" data-size="${z}"><i style="height:${MARK_SIZES[z] / 2 + 1}px"></i></button>`).join('')}</div>
+        <div class="vim-group">
+            <button class="icon-btn" data-vim="undo" title="${escapeHtml(t('vimUndo'))}">↶</button>
+            <button class="icon-btn" data-vim="clear" title="${escapeHtml(t('vimClear'))}">🧹</button>
+        </div>
+        <div class="vim-group">
+            <button class="ghost-btn" data-vim="replace">🖼 ${escapeHtml(t('vimReplace'))}</button>
+            <button class="ghost-btn danger" data-vim="remove">🗑</button>
+        </div>`;
+}
+
+async function renderVim() {
+    const s = App.project && App.project.vfxShots[vim.sid];
+    if (!s) { closeVim(); return; }
+    const list = vfxVisible();
+    const i = list.findIndex(x => x.id === s.id);
+    const el = vim.el;
+    el.querySelector('.vim-code').textContent = s.code || '';
+    el.querySelector('.vim-desc').textContent = s.desc || '';
+    el.querySelector('.vim-pos').textContent = i >= 0 ? `${i + 1} / ${list.length}` : '';
+    const th = App.vfxThumbs[s.id];
+    el.querySelector('.vim-tools').innerHTML = th ? vimTools() : '';
+    el.classList.toggle('read-only', !!App.readOnly);
+    el.classList.toggle('tool-eraser', vim.tool === 'eraser');
+    const canvas = el.querySelector('.vim-canvas'), empty = el.querySelector('.vim-empty');
+    if (vim.busy) {
+        canvas.hidden = true; empty.hidden = false;
+        empty.innerHTML = `<div class="vim-spin"></div><p>${escapeHtml(t('vimSaving'))}</p>`;
+        return;
+    }
+    if (!th) {
+        canvas.hidden = true; empty.hidden = false;
+        empty.innerHTML = App.readOnly ? `<p>${escapeHtml(t('vimNoImage'))}</p>`
+            : `<div class="vim-drop"><div class="vim-drop-ic">🖼</div><p>${escapeHtml(t('vimDrop'))}
+                <button class="link-btn" data-vim="choose">${escapeHtml(t('vimChoose'))}</button></p></div>`;
+        return;
+    }
+    empty.hidden = true; canvas.hidden = false;
+    // Önce küçük görseli göster, net hâli gelince değiştir
+    const sid = s.id;
+    let src = vfxFrameCache[sid];
+    canvas.dataset.w = th.w; canvas.dataset.h = th.h;
+    canvas.innerHTML = `<img src="${src || App.vfxThumbUrls[sid] || th.data}" alt="" draggable="false">${marksSvg(s.marks, th.w, th.h, 'vim-svg', !App.readOnly)}`;
+    fitVim();
+    if (!src) {
+        try {
+            const f = App.shareKind === 'vfx' ? await FB.getSharedVfxFrame(window.currentShareId, sid) : await api().getVfxFrame(App.project.id || 'offline', sid);
+            if (f && f.data) {
+                vfxFrameCache[sid] = f.data;
+                if (vim.sid === sid) { const im = canvas.querySelector('img'); if (im) im.src = f.data; }
+            }
+        } catch (e) { console.warn(e); }
+    }
+}
+
+function fitVim() {
+    const stage = vim.el.querySelector('.vim-stage'), canvas = vim.el.querySelector('.vim-canvas');
+    const w = +canvas.dataset.w || 16, h = +canvas.dataset.h || 9;
+    const sw = stage.clientWidth - 40, sh = stage.clientHeight - 40;
+    const k = Math.min(sw / w, sh / h);
+    canvas.style.width = Math.floor(w * k) + 'px';
+    canvas.style.height = Math.floor(h * k) + 'px';
+}
+
+function redrawVimMarks() {
+    const s = App.project.vfxShots[vim.sid];
+    const th = App.vfxThumbs[vim.sid];
+    const canvas = vim.el.querySelector('.vim-canvas');
+    const old = canvas.querySelector('svg.vim-svg');
+    const marks = vim.draft ? [...(s.marks || []), vim.draft] : (s.marks || []);
+    old.outerHTML = marksSvg(marks, th.w, th.h, 'vim-svg', !App.readOnly);
+}
+
+function commitMarks(next) {
+    const s = App.project.vfxShots[vim.sid];
+    vim.undo.push(clone(s.marks || []));
+    if (vim.undo.length > 50) vim.undo.shift();
+    s.marks = next;
+    triggerAutoSave();
+    redrawVimMarks();
+}
+
+function vimPoint(e) {
+    const r = vim.el.querySelector('.vim-canvas').getBoundingClientRect();
+    const cl = (v) => Math.max(0, Math.min(1, v));
+    return { x: +cl((e.clientX - r.left) / r.width).toFixed(4), y: +cl((e.clientY - r.top) / r.height).toFixed(4) };
+}
+
+function onVimPointerDown(e) {
+    if (App.readOnly || vim.busy || !App.vfxThumbs[vim.sid]) return;
+    if (!e.target.closest('.vim-canvas')) return;
+    const s = App.project.vfxShots[vim.sid];
+    if (vim.tool === 'eraser') {
+        const g = e.target.closest('.mk');
+        if (g) { const i = +g.dataset.i; commitMarks((s.marks || []).filter((_, k) => k !== i)); }
+        return;
+    }
+    const p = vimPoint(e);
+    if (vim.tool === 'text') {
+        const txt = prompt(t('vimTextPrompt'), '');
+        if (txt && txt.trim()) commitMarks([...(s.marks || []), { t: 'text', x1: p.x, y1: p.y, text: txt.trim().slice(0, 80), c: vim.color, s: vim.size }]);
+        return;
+    }
+    e.preventDefault();
+    vim.draft = vim.tool === 'pen' ? { t: 'pen', p: [p.x, p.y], c: vim.color, s: vim.size } : { t: vim.tool, x1: p.x, y1: p.y, x2: p.x, y2: p.y, c: vim.color, s: vim.size };
+    const move = (ev) => {
+        const q = vimPoint(ev);
+        if (vim.draft.t === 'pen') {
+            const n = vim.draft.p.length;
+            if (Math.hypot(q.x - vim.draft.p[n - 2], q.y - vim.draft.p[n - 1]) > 0.004) vim.draft.p.push(q.x, q.y);
+        } else { vim.draft.x2 = q.x; vim.draft.y2 = q.y; }
+        redrawVimMarks();
+    };
+    const up = () => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        const d = vim.draft;
+        vim.draft = null;
+        const big = d.t === 'pen' ? d.p.length >= 4 : Math.hypot(d.x2 - d.x1, d.y2 - d.y1) > 0.01;
+        if (big) commitMarks([...(s.marks || []), d]); else redrawVimMarks();
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+}
+
+function vimStep(dir) {
+    const list = vfxVisible();
+    const i = list.findIndex(x => x.id === vim.sid);
+    const n = list[i + dir];
+    if (n) { vim.sid = n.id; vim.undo = []; renderVim(); }
+}
+
+function onVimClick(e) {
+    const b = e.target.closest('[data-vim], [data-tool], [data-color], [data-size]');
+    if (!b) { if (e.target.classList.contains('vim-stage') || e.target.classList.contains('vim-empty')) closeVim(); return; }
+    const s = App.project.vfxShots[vim.sid];
+    if (b.dataset.tool) { vim.tool = b.dataset.tool; renderVimToolsOnly(); return; }
+    if (b.dataset.color) { vim.color = b.dataset.color; if (vim.tool === 'eraser') vim.tool = 'arrow'; renderVimToolsOnly(); return; }
+    if (b.dataset.size) { vim.size = b.dataset.size; renderVimToolsOnly(); return; }
+    const a = b.dataset.vim;
+    if (a === 'close') closeVim();
+    else if (a === 'prev') vimStep(-1);
+    else if (a === 'next') vimStep(1);
+    else if (a === 'choose' || a === 'replace') vim.el.querySelector('.vim-file').click();
+    else if (a === 'undo' && vim.undo.length) { s.marks = vim.undo.pop(); triggerAutoSave(); redrawVimMarks(); }
+    else if (a === 'clear' && (s.marks || []).length && confirm(t('vimConfirmClear'))) commitMarks([]);
+    else if (a === 'remove' && confirm(t('vimConfirmRemove'))) { removeVfxImage(vim.sid).then(() => { vim.undo = []; renderVim(); }); }
+}
+function renderVimToolsOnly() {
+    vim.el.querySelector('.vim-tools').innerHTML = vimTools();
+    vim.el.classList.toggle('tool-eraser', vim.tool === 'eraser');
+}
+
+// Klavye: Esc kapat, ←/→ önceki/sonraki shot, Ctrl+Z geri al
+document.addEventListener('keydown', (e) => {
+    if (!vim.el || vim.el.hidden) return;
+    if (e.key === 'Escape') { closeVim(); e.preventDefault(); }
+    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); vim.el.querySelector('[data-vim="undo"]') && vim.el.querySelector('[data-vim="undo"]').click(); }
+    else if (e.key === 'ArrowLeft') vimStep(-1);
+    else if (e.key === 'ArrowRight') vimStep(1);
+}, true);
+
+// Ctrl+V: büyük pencere açıkken panodaki görseli ekle
+document.addEventListener('paste', async (e) => {
+    if (!vim.el || vim.el.hidden || App.readOnly) return;
+    const item = [...((e.clipboardData && e.clipboardData.items) || [])].find(x => x.type && x.type.startsWith('image/'));
+    if (!item) return;
+    e.preventDefault();
+    const f = item.getAsFile();
+    vim.busy = true; renderVim();
+    await uploadVfxImage(vim.sid, f);
+    vim.busy = false; vim.undo = []; renderVim();
+});
 
 // ---------------------------------------------------------------------
 // 11) YARDIM BALONLARI — fare bir aracın üzerinde 3 sn durunca ne işe yaradığını anlatır.
@@ -6657,6 +7212,57 @@ const FB = {
         await deleteDoc(verDoc(pid, vid));
     },
 
+    // ---------- VFX görselleri ----------
+    // workspaces/{pid}/vfxThumbs/{shotId}  → tablodaki küçük önizleme (~25 KB)
+    // workspaces/{pid}/vfxFrames/{shotId}  → büyütünce açılan net görsel (~200 KB) — sadece açılınca okunur
+    watchVfxThumbs(pid, cb) {
+        return onSnapshot(collection(db, "workspaces", pid, "vfxThumbs"), (snap) => {
+            const m = {};
+            snap.forEach(d => { m[d.id] = d.data(); });
+            cb(m);
+        }, (err) => console.warn('Görsel dinleme hatası:', err));
+    },
+    async setVfxImage(pid, sid, thumb, frame) {
+        const b = writeBatch(db);
+        b.set(doc(db, "workspaces", pid, "vfxThumbs", sid), thumb);
+        b.set(doc(db, "workspaces", pid, "vfxFrames", sid), frame);
+        await b.commit();
+    },
+    async getVfxFrame(pid, sid) {
+        const s = await getDoc(doc(db, "workspaces", pid, "vfxFrames", sid));
+        return s.exists() ? s.data() : null;
+    },
+    async deleteVfxImage(pid, sid) {
+        const b = writeBatch(db);
+        b.delete(doc(db, "workspaces", pid, "vfxThumbs", sid));
+        b.delete(doc(db, "workspaces", pid, "vfxFrames", sid));
+        await b.commit();
+    },
+    // Salt-okunur breakdown linki için görsellerin kopyası (link sahibi projeye üye olmadığı için)
+    async copyVfxImagesToShare(pid, shareId) {
+        const ops = [];
+        for (const kind of ["vfxThumbs", "vfxFrames"]) {
+            const snap = await getDocs(collection(db, "workspaces", pid, kind));
+            snap.forEach(d => ops.push(b => b.set(doc(db, "sharedProjects", shareId, kind, d.id), d.data())));
+        }
+        // Görseller büyük olduğu için küçük paketlerle yaz
+        for (let i = 0; i < ops.length; i += 20) {
+            const b = writeBatch(db);
+            ops.slice(i, i + 20).forEach(fn => fn(b));
+            await b.commit();
+        }
+    },
+    async listSharedVfxThumbs(shareId) {
+        const snap = await getDocs(collection(db, "sharedProjects", shareId, "vfxThumbs"));
+        const m = {};
+        snap.forEach(d => { m[d.id] = d.data(); });
+        return m;
+    },
+    async getSharedVfxFrame(shareId, sid) {
+        const s = await getDoc(doc(db, "sharedProjects", shareId, "vfxFrames", sid));
+        return s.exists() ? s.data() : null;
+    },
+
     // ---------- Hatırlatmalar (reminders/{id}) ----------
     // Her kişinin kendi hatırlatması ayrı bir belge. Site açıkken uygulama içinde bildirim verir;
     // sunucu fonksiyonu kuruluysa (functions/) zamanı gelince e-posta da gönderir.
@@ -6746,6 +7352,7 @@ if (shareParam) {
             if (!snap.exists()) { showLogin("Bu paylaşım linki geçersiz veya artık mevcut değil."); return; }
             const data = snap.data();
             setLanguageSilent(data.lang || 'en');
+            window.currentShareId = shareParam;
             openSharedView(data);
             if (data.kind !== 'vfx') switchToCalendarView(); // yapımcılar için takvim görünümüyle açılır
         } catch (e) {
