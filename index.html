@@ -1009,6 +1009,30 @@ body.read-only-mode #newVersionBtn { display: none !important; }
 }
 .vfx-table td input::placeholder { color: currentColor; opacity: .28; }
 
+/* VFX — Adet sütunu + sürükle-bırak */
+.vfx-table .c-num { width: 46px; min-width: 46px; text-align: center; font-size: 13px; position: relative; user-select: none; }
+.vfx-table td.c-num { cursor: grab; touch-action: none; }
+.vfx-table td.c-num .grip { position: absolute; left: 3px; top: 50%; transform: translateY(-50%); font-size: 11px; letter-spacing: -2px; opacity: 0; transition: opacity .15s; }
+.vfx-row:hover td.c-num .grip { opacity: .5; }
+@media (hover: none) { .vfx-table td.c-num .grip { opacity: .45; } }
+.read-only-mode .vfx-table td.c-num { cursor: default; }
+.read-only-mode .vfx-table td.c-num .grip { display: none; }
+.vfx-thumb { touch-action: none; cursor: grab; }
+body.vfx-dragging, body.vfx-dragging * { cursor: grabbing !important; user-select: none !important; }
+.vfx-row.dragging td { opacity: .35; }
+.vfx-row.drop-before td { box-shadow: inset 0 3px 0 var(--neon-green); }
+.vfx-row.drop-after td { box-shadow: inset 0 -3px 0 var(--neon-green); }
+.vfx-ghost { position: fixed; z-index: 40000; pointer-events: none; transform: translateY(-50%); background: #1b1f27; color: #fff; border: 1px solid var(--neon-green);
+    border-radius: 6px; padding: 6px 10px; font-size: 12px; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,.5); white-space: nowrap; max-width: 360px; overflow: hidden; text-overflow: ellipsis; }
+.vfx-table .c-addround { min-width: 128px; width: 128px; }
+/* Adet + Shot sütunları yana kaydırırken sabit kalsın */
+.vfx-table .c-num { box-sizing: border-box; width: 46px; min-width: 46px; max-width: 46px; position: sticky; left: 0; z-index: 1; }
+.vfx-table .c-thumb { box-sizing: border-box; position: sticky; left: 46px; z-index: 1; box-shadow: 4px 0 6px -4px rgba(0,0,0,.6); }
+.vfx-table th.c-num, .vfx-table th.c-thumb { z-index: 3; }
+.vfx-row.drop-before td.c-thumb { box-shadow: inset 0 3px 0 var(--neon-green), 4px 0 6px -4px rgba(0,0,0,.6); }
+.vfx-row.drop-after td.c-thumb { box-shadow: inset 0 -3px 0 var(--neon-green), 4px 0 6px -4px rgba(0,0,0,.6); }
+.read-only-mode .vfx-table .c-addround { display: none; }
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
@@ -3808,7 +3832,21 @@ window.openProject = openProject;
 // Herkese açık salt-okunur link: sadece takvim + bölüm notları
 function openSharedView(data) {
     stopWatching();
+    App.shareKind = data.kind === 'vfx' ? 'vfx' : 'calendar';
     setReadOnlyUI({ readOnly: true, publicShare: true });
+    if (App.shareKind === 'vfx') {
+        resetModulesFor({ id: null, projectName: data.projectName || '', totalEpisodes: parseInt(data.totalEpisodes) || DEFAULT_EPISODES,
+            scripts: {}, episodeNotes: {}, meetings: [], todos: {},
+            vfxShots: isPlainObject(data.vfxShots) ? data.vfxShots : {}, vfxRounds: isPlainObject(data.vfxRounds) ? data.vfxRounds : {}, createdAt: '' });
+        $('projectName').value = data.projectName || '';
+        $('readOnlyText').textContent = t('vfxSharedTitle');
+        App.versions = [];
+        App.version = null;
+        showView('workspace');
+        showModule('vfx');
+        setSaveStatus('readonly');
+        return;
+    }
     resetModulesFor({ id: null, projectName: data.projectName || '', totalEpisodes: parseInt(data.totalEpisodes) || DEFAULT_EPISODES, scripts: {}, episodeNotes: episodeNotesFrom(data), meetings: [], createdAt: '' });
     App.versions = [];
     App.version = null;
@@ -4134,6 +4172,20 @@ $('peopleBtn').onclick = async () => {
 // Herkese açık salt-okunur link: aktif takvim versiyonu + bölüm notları
 $('shareBtn').onclick = async () => {
     if (!App.user || !App.project) { alert(t('signInFirst')); return; }
+    if (App.module === 'vfx') {
+        if (!vfxShotsList().length) { alert(t('vfxShareEmpty')); return; }
+        if (!confirm(t('vfxShareInfo'))) return;
+        await flushSave();
+        try {
+            const url = await FB.shareProject({
+                kind: 'vfx', projectName: $('projectName').value.trim() || App.project.projectName || '',
+                totalEpisodes: App.project.totalEpisodes, vfxShots: App.project.vfxShots, vfxRounds: App.project.vfxRounds
+            });
+            try { await navigator.clipboard.writeText(url); } catch (e) {}
+            prompt(t('shareLinkPrompt'), url);
+        } catch (e) { alert("Paylaşım linki oluşturulamadı: " + e.message); }
+        return;
+    }
     const data = collectProjectData($('projectName').value.trim() || 'Untitled Project');
     if (!data.cells.length) { alert(t('shareNoData')); return; }
     if (!confirm(t('shareInfo'))) return;
@@ -4508,7 +4560,7 @@ const MODULES = [
 
 function renderModuleNav() {
     $('moduleNav').innerHTML = MODULES
-        .filter(m => !(App.publicShare && m.private))
+        .filter(m => App.shareKind === 'vfx' ? m.key === 'vfx' : !(App.publicShare && m.private))
         .map(m => `<button class="sb-nav-item ${App.module === m.key ? 'active' : ''}" data-module="${m.key}" data-help="help_mod_${m.key}">
             <span class="sb-icon">${m.icon}</span><span>${escapeHtml(t(m.label))}</span>${navBadge(m.key)}</button>`)
         .join('');
@@ -4520,7 +4572,8 @@ $('moduleNav').addEventListener('click', (e) => {
 });
 
 function showModule(key) {
-    if (App.publicShare && MODULES.find(m => m.key === key && m.private)) key = 'calendar';
+    if (App.shareKind === 'vfx') key = 'vfx';
+    else if (App.publicShare && MODULES.find(m => m.key === key && m.private)) key = 'calendar';
     App.module = key;
     $('calendarModule').style.display = key === 'calendar' ? 'flex' : 'none';
     $('notesModule').style.display = key === 'notes' ? 'flex' : 'none';
@@ -5660,7 +5713,13 @@ Object.assign(I18N.en, {
     modVfx: "VFX Breakdown",
     vfxThumb: "Shot", vfxTc: "TC", vfxCode: "No", vfxDesc: "VFX-CGI note", vfxExtras: "Extras",
     vfxVendor: "Artist / Vendor", vfxHours: "Est. hours", vfxDue: "Due", vfxStatus: "Status", vfxEp: "Ep",
-    vfxAddShot: "Add shot", vfxAddRound: "Review round", vfxRoundPrompt: "Name of the review round:",
+    vfxAddShot: "Add shot", vfxAddRound: "Add note type", vfxRoundPrompt: "Name of the note type:",
+    vfxCount: "Qty", vfxRenumber: "Renumber", vfxConfirmRenumber: "Renumber the {n} visible shots in their current order as {first}, {second}…?",
+    vfxShareInfo: "A read-only link will be created for the VFX Breakdown. Anyone with the link can view it without signing in (but not change it). Continue?",
+    vfxShareEmpty: "There are no shots to share.", vfxSharedTitle: "This breakdown was shared read-only.",
+    help_vfxDrag: "Grab the number or the image box and drag to move the shot up or down.",
+    help_vfxRenumber: "Renumbers the visible shots in their current order as P0010, P0020…",
+    help_vfxTc: "Just type digits: 02054512 → 02:05:45:12",
     vfxRoundDefault: "{date} notes", vfxRenameRound: "Rename", vfxDeleteRound: "Delete column",
     vfxConfirmDeleteRound: "Delete the “{name}” column and all notes in it?",
     vfxAll: "All", vfxSearch: "Search shot, note…", vfxEmpty: "No shots yet",
@@ -5687,7 +5746,13 @@ Object.assign(I18N.tr, {
     modVfx: "VFX Breakdown",
     vfxThumb: "Shot", vfxTc: "TC", vfxCode: "No", vfxDesc: "VFX-CGI notu", vfxExtras: "Ekstralar",
     vfxVendor: "Sorumlu / Vendor", vfxHours: "Tahmini saat", vfxDue: "Teslim", vfxStatus: "Durum", vfxEp: "Bölüm",
-    vfxAddShot: "Shot ekle", vfxAddRound: "Not turu", vfxRoundPrompt: "Not turunun adı:",
+    vfxAddShot: "Shot ekle", vfxAddRound: "Not Türü Ekle", vfxRoundPrompt: "Not türünün adı:",
+    vfxCount: "Adet", vfxRenumber: "Numarala", vfxConfirmRenumber: "Görünen {n} shot sırasıyla {first}, {second}… olarak yeniden numaralansın mı?",
+    vfxShareInfo: "VFX Breakdown için salt-okunur bir link oluşturulacak. Linke sahip olan herkes giriş yapmadan breakdown'ı görüntüleyebilir (değiştiremez). Devam edilsin mi?",
+    vfxShareEmpty: "Paylaşılacak shot yok.", vfxSharedTitle: "Bu breakdown salt-okunur paylaşıldı.",
+    help_vfxDrag: "Adet ya da görsel kutusundan tutup sürükle: shot'ı yukarı/aşağı taşırsın.",
+    help_vfxRenumber: "Görünen shot'ları mevcut sırasına göre P0010, P0020… diye yeniden numaralar.",
+    help_vfxTc: "Sadece rakam yaz: 02054512 → 02:05:45:12",
     vfxRoundDefault: "{date} Notları", vfxRenameRound: "Yeniden adlandır", vfxDeleteRound: "Sütunu sil",
     vfxConfirmDeleteRound: "“{name}” sütunu ve içindeki tüm notlar silinsin mi?",
     vfxAll: "Tümü", vfxSearch: "Shot, not ara…", vfxEmpty: "Henüz shot yok",
@@ -5701,7 +5766,7 @@ Object.assign(I18N.tr, {
     vfxHoursCancelled: "İptaller yapılsaydı {h} saat",
     help_mod_vfx: "VFX shot listesi: not turları, durum renkleri, tahmini saatler. Projedeki herkesle canlı.",
     help_vfxAddShot: "Yeni shot ekler; numara sonuncudan devam eder (+10).",
-    help_vfxAddRound: "Yeni bir tarihli not sütunu ekler (ör. “14 Temmuz Notları”) — her inceleme turu için.",
+    help_vfxAddRound: "Yeni bir not sütunu ekler (ör. “14 Temmuz Notları”) — her inceleme turu ya da not türü için.",
     help_vfxStatus: "Shot'ın durumu. Satırın tamamı bu renge boyanır: Yapıldı = yeşil, Revizyon = turuncu, İptal = gri.",
     help_vfxChips: "Bir duruma tıkla, sadece o shot'lar görünsün. Tekrar tıklayınca hepsi.",
     help_vfxThumb: "Shot görseli (yakında).",
@@ -5727,8 +5792,30 @@ const vfxStatusOf = (s) => VFX_STATUS.includes(s.status) ? s.status : 'todo';
 const hoursOf = (s) => { const h = parseFloat(String(s.hours || '').replace(',', '.')); return isFinite(h) ? h : 0; };
 const fmtH = (h) => (Math.round(h * 10) / 10).toLocaleString(localeStr());
 
-function vfxSorted(list) {
-    return list.sort((a, b) => (parseInt(a.ep) || 0) - (parseInt(b.ep) || 0) || natCmp(a.code, b.code) || String(a.createdAt).localeCompare(String(b.createdAt)));
+const hasOrd = (s) => typeof s.order === 'number' && isFinite(s.order);
+function vfxCmp(a, b) {
+    return (parseInt(a.ep) || 0) - (parseInt(b.ep) || 0)
+        || (hasOrd(a) && hasOrd(b) ? a.order - b.order : 0)
+        || natCmp(a.code, b.code) || String(a.createdAt).localeCompare(String(b.createdAt));
+}
+function vfxSorted(list) { return list.sort(vfxCmp); }
+
+// Sırası olmayan (eski) shot'lara sıra numarası ver — sürükle-bırak bu sırayı kullanır
+function ensureVfxOrders() {
+    if (App.readOnly) return;
+    const all = vfxShotsList();
+    if (all.every(hasOrd)) return;
+    const groups = {};
+    vfxSorted(all).forEach(s => (groups[parseInt(s.ep) || 0] = groups[parseInt(s.ep) || 0] || []).push(s));
+    Object.values(groups).forEach(g => g.forEach((s, i) => { s.order = (i + 1) * 1000; }));
+    triggerAutoSave();
+}
+// a ile b arasına düşen sıra değeri (b yoksa sona)
+function orderBetween(a, b) {
+    if (a && b) return (a.order + b.order) / 2;
+    if (a) return a.order + 1000;
+    if (b) return b.order - 1000;
+    return 1000;
 }
 // Bölüm sekmesi + arama (durum filtresi hariç) — özet bu kümeden hesaplanır
 function vfxScope() {
@@ -5785,6 +5872,7 @@ function renderVfxModule() {
                     <input type="search" class="vfx-search" placeholder="${escapeHtml(t('vfxSearch'))}" value="${escapeHtml(vfxState.q)}">
                     <button class="ghost-btn" data-vact="excel" data-help="help_vfxExcel">📊 Excel</button>
                     <button class="ghost-btn" data-vact="pdf" data-help="help_vfxPdf">📄 ${escapeHtml(t('exportPdf'))}</button>
+                    ${ro ? '' : `<button class="ghost-btn" data-vact="renumber" data-help="help_vfxRenumber">🔢 ${escapeHtml(t('vfxRenumber'))}</button>`}
                     ${ro ? '' : `<button class="primary-btn small" data-vact="addShot" data-help="help_vfxAddShot">+ ${escapeHtml(t('vfxAddShot'))}</button>`}
                 </div>
             </div>
@@ -5817,15 +5905,16 @@ function renderVfxSummary() {
             ${hCancel ? `<span class="muted">· ${escapeHtml(tf('vfxHoursCancelled', { h: fmtH(hCancel) }))}</span>` : ''}</div>`;
 }
 
-function vfxRow(s, rounds, showEp, ro) {
+function vfxRow(s, rounds, showEp, ro, idx) {
     const st = vfxStatusOf(s);
     const dis = ro ? 'disabled' : '', rdo = ro ? 'readonly' : '';
     const eps = parseInt(App.project.totalEpisodes) || 1;
     return `<tr class="vfx-row st-${st}" data-sid="${escapeHtml(s.id)}">
+        <td class="c-num" ${ro ? '' : 'data-help="help_vfxDrag"'}><span class="grip">⋮⋮</span><b>${idx}</b></td>
         <td class="c-thumb"><button class="vfx-thumb" data-vact="thumb" data-help="help_vfxThumb" ${dis}>+</button></td>
         ${showEp ? `<td class="c-ep"><select data-f="ep" ${dis}><option value="0">—</option>${Array.from({ length: eps }, (_, i) =>
             `<option value="${i + 1}" ${parseInt(s.ep) === i + 1 ? 'selected' : ''}>EP${String(i + 1).padStart(2, '0')}</option>`).join('')}</select></td>` : ''}
-        <td class="c-tc"><input data-f="tc" ${rdo} value="${escapeHtml(s.tc || '')}" placeholder="00:00:00:00" maxlength="14"></td>
+        <td class="c-tc"><input data-f="tc" ${rdo} value="${escapeHtml(s.tc || '')}" placeholder="00:00:00:00" maxlength="11" inputmode="numeric" data-help="help_vfxTc"></td>
         <td class="c-code"><input data-f="code" ${rdo} value="${escapeHtml(s.code || '')}" maxlength="24"></td>
         <td class="c-desc"><textarea data-f="desc" ${rdo} rows="1">${escapeHtml(s.desc || '')}</textarea></td>
         ${rounds.map(r => { const n = (s.notes || {})[r.id] || {}; return `<td class="c-round ${n.done ? 'resolved' : ''} ${n.text ? 'has' : ''}">
@@ -5847,10 +5936,12 @@ function renderVfxTable() {
     if (!wrap) return;
     const sx = wrap.scrollLeft, sy = $('vfxModule').querySelector('.vfx-wrap') ? $('vfxModule').querySelector('.vfx-wrap').scrollTop : 0;
     const ro = App.readOnly;
+    ensureVfxOrders();
     const rounds = vfxRoundsList();
     const showEp = (parseInt(App.project.totalEpisodes) || 1) > 1 && vfxState.ep === 'all';
     const rows = vfxVisible();
     const head = `<thead><tr>
+        <th class="c-num">${escapeHtml(t('vfxCount'))}</th>
         <th class="c-thumb">${escapeHtml(t('vfxThumb'))}</th>
         ${showEp ? `<th class="c-ep">${escapeHtml(t('vfxEp'))}</th>` : ''}
         <th class="c-tc">${escapeHtml(t('vfxTc'))}</th>
@@ -5865,10 +5956,10 @@ function renderVfxTable() {
         <th class="c-status">${escapeHtml(t('vfxStatus'))}</th>
         <th class="c-menu"></th>
     </tr></thead>`;
-    let body = rows.map(s => vfxRow(s, rounds, showEp, ro)).join('');
+    let body = rows.map((s, i) => vfxRow(s, rounds, showEp, ro, i + 1)).join('');
     if (!rows.length) {
         const any = vfxShotsList().length;
-        body = `<tr class="vfx-empty-row"><td colspan="${12 + rounds.length + (showEp ? 1 : 0)}"><div class="dash-empty"><div class="dash-empty-icon">✨</div>
+        body = `<tr class="vfx-empty-row"><td colspan="${13 + rounds.length + (showEp ? 1 : 0)}"><div class="dash-empty"><div class="dash-empty-icon">✨</div>
             <b>${escapeHtml(t(any ? 'vfxNoMatch' : 'vfxEmpty'))}</b>${any || ro ? '' : `<p>${escapeHtml(t('vfxEmptyHint'))}</p>`}</div></td></tr>`;
     }
     wrap.innerHTML = `<table class="vfx-table">${head}<tbody>${body}</tbody></table>
@@ -5904,12 +5995,21 @@ function vfxShotOf(el) {
     return tr ? App.project.vfxShots[tr.dataset.sid] : null;
 }
 
+// "after" shot'ının hemen altı (yoksa bölümün sonu) için sıra değeri
+function vfxOrderAfter(ep, after) {
+    const group = vfxSorted(vfxShotsList().filter(s => (parseInt(s.ep) || 0) === (parseInt(ep) || 0) && hasOrd(s)));
+    if (!after) return orderBetween(group[group.length - 1], null);
+    const i = group.findIndex(s => s.id === after.id);
+    return orderBetween(after, group[i + 1]);
+}
+
 function addVfxShot(after) {
     const ep = after ? (parseInt(after.ep) || 0) : (vfxState.ep === 'all' ? 0 : parseInt(vfxState.ep) || 0);
     const id = uid();
+    ensureVfxOrders();
     App.project.vfxShots[id] = {
         id, ep, code: nextVfxCode(ep, after), tc: '', desc: '', notes: {}, extras: '', vendor: '', hours: '', due: '',
-        status: 'todo', createdAt: new Date().toISOString()
+        status: 'todo', order: vfxOrderAfter(ep, after), createdAt: new Date().toISOString()
     };
     if (vfxState.status && vfxState.status !== 'todo') vfxState.status = null;
     triggerAutoSave();
@@ -5935,6 +6035,11 @@ $('vfxModule').addEventListener('input', (e) => {
         s.notes = s.notes || {};
         s.notes[rid] = Object.assign({}, s.notes[rid], { text: tg.value });
         tg.closest('td').classList.toggle('has', !!tg.value);
+    } else if (tg.dataset.f === 'tc') {
+        // Sadece rakamlar; ikişerli gruplar arasına ":" → 02054512 → 02:05:45:12
+        const digits = tg.value.replace(/\D/g, '').slice(0, 8);
+        tg.value = (digits.match(/.{1,2}/g) || []).join(':');
+        s.tc = tg.value;
     } else if (tg.dataset.f && tg.tagName !== 'SELECT' && tg.type !== 'date') {
         s[tg.dataset.f] = tg.value;
         if (tg.dataset.f === 'hours') renderVfxSummary();
@@ -5973,12 +6078,14 @@ $('vfxModule').addEventListener('click', (e) => {
     if (chip) { vfxState.status = vfxState.status === chip.dataset.status ? null : chip.dataset.status; renderVfxSummary(); renderVfxTable(); return; }
     const b = e.target.closest('[data-vact]');
     if (!b) return;
+    if (Date.now() - vfxDragEndedAt < 300) return;
     const act = b.dataset.vact;
     if (act === 'excel') return exportVfxExcel();
     if (act === 'pdf') return exportVfxPdf();
     if (act === 'thumb') return showInfoToast('🖼 ' + t('vfxThumbSoon'));
     if (App.readOnly) return;
     if (act === 'addShot') return addVfxShot(null);
+    if (act === 'renumber') return renumberVfx();
     if (act === 'addRound') {
         const label = prompt(t('vfxRoundPrompt'), tf('vfxRoundDefault', { date: formatDate(todayISO(), { day: 'numeric', month: 'long' }) }));
         if (!label || !label.trim()) return;
@@ -6019,7 +6126,7 @@ function showVfxRowMenu(s, btn) {
         if (b.dataset.m === 'below') addVfxShot(s);
         if (b.dataset.m === 'dup') {
             const id = uid();
-            App.project.vfxShots[id] = Object.assign(clone(s), { id, code: nextVfxCode(s.ep, s), createdAt: new Date().toISOString() });
+            App.project.vfxShots[id] = Object.assign(clone(s), { id, code: nextVfxCode(s.ep, s), order: vfxOrderAfter(s.ep, s), createdAt: new Date().toISOString() });
             triggerAutoSave(); renderVfxSummary(); renderVfxTable();
             const row = $('vfxTableWrap').querySelector(`[data-sid="${CSS.escape(id)}"]`);
             row && row.classList.add('flash');
@@ -6056,20 +6163,115 @@ function showVfxRoundMenu(rid, btn) {
     });
 }
 
+// --- Görünen shot'ları sırasıyla yeniden numarala (P0010, P0020…) ---
+function renumberVfx() {
+    const rows = vfxVisible();
+    if (!rows.length) return;
+    const m = String(rows[0].code || '').match(/^(.*?)\d+$/);
+    const pre = m && m[1] ? m[1] : 'P';
+    const code = (i) => pre + String((i + 1) * 10).padStart(4, '0');
+    if (!confirm(tf('vfxConfirmRenumber', { n: rows.length, first: code(0), second: code(1) }))) return;
+    rows.forEach((s, i) => { s.code = code(i); });
+    triggerAutoSave();
+    renderVfxTable();
+}
+
+// --- Sürükle-bırak: Adet hücresinden ya da görsel kutusundan tutup taşı (fare + dokunmatik) ---
+let vfxDrag = null, vfxDragEndedAt = 0;
+$('vfxModule').addEventListener('pointerdown', (e) => {
+    const h = e.target.closest('.c-num, .vfx-thumb');
+    if (!h || App.readOnly || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const tr = h.closest('.vfx-row');
+    if (!tr) return;
+    vfxDrag = { tr, sid: tr.dataset.sid, y0: e.clientY, started: false, target: null, after: false, ghost: null, raf: 0, lastY: e.clientY };
+});
+function vfxDragTarget(y) {
+    const rows = [...$('vfxTableWrap').querySelectorAll('tbody .vfx-row')];
+    for (const r of rows) {
+        const rc = r.getBoundingClientRect();
+        if (y < rc.top + rc.height / 2) return { row: r, after: false };
+    }
+    return rows.length ? { row: rows[rows.length - 1], after: true } : null;
+}
+function vfxDragPaint() {
+    const d = vfxDrag;
+    if (!d) return;
+    const wrap = $('vfxTableWrap');
+    const wr = wrap.getBoundingClientRect();
+    // Kenara yaklaşınca tablo kendiliğinden kaysın
+    if (d.lastY < wr.top + 50) wrap.scrollTop -= 14;
+    else if (d.lastY > wr.bottom - 40) wrap.scrollTop += 14;
+    const tg = vfxDragTarget(d.lastY);
+    wrap.querySelectorAll('.drop-before, .drop-after').forEach(r => r.classList.remove('drop-before', 'drop-after'));
+    d.target = tg;
+    if (tg && tg.row !== d.tr) tg.row.classList.add(tg.after ? 'drop-after' : 'drop-before');
+    d.ghost.style.top = d.lastY + 'px';
+    d.raf = requestAnimationFrame(vfxDragPaint);
+}
+document.addEventListener('pointermove', (e) => {
+    const d = vfxDrag;
+    if (!d) return;
+    d.lastY = e.clientY;
+    if (!d.started) {
+        if (Math.abs(e.clientY - d.y0) < 6) return;
+        d.started = true;
+        closeMenu();
+        if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+        d.tr.classList.add('dragging');
+        document.body.classList.add('vfx-dragging');
+        const s = App.project.vfxShots[d.sid] || {};
+        d.ghost = document.createElement('div');
+        d.ghost.className = 'vfx-ghost';
+        d.ghost.textContent = '⇅ ' + (s.code || '') + (s.desc ? ' · ' + s.desc.slice(0, 40) : '');
+        d.ghost.style.left = (e.clientX + 14) + 'px';
+        document.body.appendChild(d.ghost);
+        d.raf = requestAnimationFrame(vfxDragPaint);
+    }
+    e.preventDefault();
+}, { passive: false });
+function vfxDragEnd(commit) {
+    const d = vfxDrag;
+    vfxDrag = null;
+    if (!d || !d.started) return;
+    cancelAnimationFrame(d.raf);
+    vfxDragEndedAt = Date.now();
+    d.ghost && d.ghost.remove();
+    document.body.classList.remove('vfx-dragging');
+    d.tr.classList.remove('dragging');
+    $('vfxTableWrap').querySelectorAll('.drop-before, .drop-after').forEach(r => r.classList.remove('drop-before', 'drop-after'));
+    const tg = d.target;
+    if (!commit || !tg || tg.row === d.tr) return;
+    const s = App.project.vfxShots[d.sid];
+    const ref = App.project.vfxShots[tg.row.dataset.sid];
+    if (!s || !ref) return;
+    ensureVfxOrders();
+    // Hedefin bölümüne taşı; komşu iki shot'ın arasına sıra ver
+    s.ep = parseInt(ref.ep) || 0;
+    const group = vfxSorted(vfxShotsList().filter(x => x.id !== s.id && (parseInt(x.ep) || 0) === s.ep));
+    const i = group.findIndex(x => x.id === ref.id);
+    s.order = tg.after ? orderBetween(group[i], group[i + 1]) : orderBetween(group[i - 1], group[i]);
+    triggerAutoSave();
+    renderVfxTable();
+    const row = $('vfxTableWrap').querySelector(`[data-sid="${CSS.escape(s.id)}"]`);
+    row && row.classList.add('flash');
+}
+document.addEventListener('pointerup', () => vfxDragEnd(true));
+document.addEventListener('pointercancel', () => vfxDragEnd(false));
+
 // --- Dışa aktarma ---
 function vfxExportRows() {
     const rounds = vfxRoundsList();
     const multiEp = (parseInt(App.project.totalEpisodes) || 1) > 1;
-    const head = [...(multiEp ? [t('vfxEp')] : []), t('vfxTc'), t('vfxCode'), t('vfxDesc'), ...rounds.map(r => r.label || ''),
+    const head = ['#', ...(multiEp ? [t('vfxEp')] : []), t('vfxTc'), t('vfxCode'), t('vfxDesc'), ...rounds.map(r => r.label || ''),
         t('vfxExtras'), t('vfxVendor'), t('vfxHours'), t('vfxDue'), t('vfxStatus')];
-    const rows = vfxVisible().map(s => ({
+    const rows = vfxVisible().map((s, i) => ({
         s, st: vfxStatusOf(s),
-        cells: [...(multiEp ? [parseInt(s.ep) ? 'EP' + String(s.ep).padStart(2, '0') : ''] : []), s.tc || '', s.code || '', s.desc || '',
+        cells: [i + 1, ...(multiEp ? [parseInt(s.ep) ? 'EP' + String(s.ep).padStart(2, '0') : ''] : []), s.tc || '', s.code || '', s.desc || '',
             ...rounds.map(r => ((s.notes || {})[r.id] || {}).text || ''), s.extras || '', s.vendor || '',
             hoursOf(s) || '', s.due ? formatDate(s.due) : '', t('vfx_' + vfxStatusOf(s))],
-        resolved: [...(multiEp ? [false] : []), false, false, false, ...rounds.map(r => !!((s.notes || {})[r.id] || {}).done), false, false, false, false, false]
+        resolved: [false, ...(multiEp ? [false] : []), false, false, false, ...rounds.map(r => !!((s.notes || {})[r.id] || {}).done), false, false, false, false, false]
     }));
-    return { head, rows, descCol: multiEp ? 3 : 2, roundsFrom: multiEp ? 4 : 3, nRounds: rounds.length };
+    return { head, rows, descCol: multiEp ? 4 : 3, roundsFrom: multiEp ? 5 : 4, nRounds: rounds.length };
 }
 
 function exportVfxExcel() {
@@ -6091,7 +6293,7 @@ function exportVfxExcel() {
             alignment: { horizontal: c === descCol || (c >= roundsFrom && c < roundsFrom + nRounds) ? 'left' : 'center', vertical: 'center', wrapText: true }
         };
     }));
-    ws['!cols'] = head.map((_, c) => ({ wch: c === descCol ? 45 : (c >= roundsFrom && c < roundsFrom + nRounds) ? 32 : c === head.length - 1 ? 14 : 12 }));
+    ws['!cols'] = head.map((_, c) => ({ wch: c === 0 ? 5 : c === descCol ? 45 : (c >= roundsFrom && c < roundsFrom + nRounds) ? 32 : c === head.length - 1 ? 14 : 12 }));
     ws['!rows'] = [{ hpt: 30 }, ...rows.map(() => ({ hpt: 42 }))];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'VFX');
@@ -6139,7 +6341,7 @@ Object.assign(I18N.en, {
     help_mod_script: "Technical notes taken while reading the script: VFX, special effects, music, locations… with scene/page references.",
     help_mod_meetings: "Meeting records: attendees, notes and action items with owners.",
     help_people: "Share the project with people by email: they can edit or only view. Changes update for everyone instantly.",
-    help_linkShare: "Creates a read-only link that opens without signing in (calendar + episode notes). Script and meeting notes stay private.",
+    help_linkShare: "Creates a read-only link that opens without signing in (calendar + episode notes). Script and meeting notes stay private. On the VFX Breakdown screen it creates a link to the breakdown instead.",
     help_saveStatus: "Save status. Changes are saved automatically within 2 seconds; press Ctrl+S to save right away.",
     help_lang: "Changes the interface language (English / Turkish).",
     help_newProject: "Creates a new project: name, number of episodes and start date.",
@@ -6173,7 +6375,7 @@ Object.assign(I18N.tr, {
     help_mod_script: "Senaryoyu okurken aldığın teknik notlar: VFX, özel efekt, müzik, lokasyon… sahne/sayfa bilgisiyle.",
     help_mod_meetings: "Toplantı kayıtları: katılımcılar, notlar ve sorumlusu atanabilen aksiyon listesi.",
     help_people: "Projeyi e-postayla başkalarıyla paylaş: düzenleyebilir ya da sadece görüntüleyebilir. Değişiklikler herkeste anında güncellenir.",
-    help_linkShare: "Giriş yapmadan açılabilen salt-okunur bir link oluşturur (takvim + bölüm notları). Senaryo ve toplantı notları gizli kalır.",
+    help_linkShare: "Giriş yapmadan açılabilen salt-okunur bir link oluşturur (takvim + bölüm notları). Senaryo ve toplantı notları gizli kalır. VFX Breakdown ekranındayken breakdown'ın görüntüleme linkini verir.",
     help_saveStatus: "Kayıt durumu. Değişiklikler 2 saniye içinde otomatik kaydedilir; Ctrl+S ile hemen kaydedebilirsin.",
     help_lang: "Arayüz dilini değiştirir (İngilizce / Türkçe).",
     help_newProject: "Yeni bir proje oluşturur: ad, bölüm sayısı ve başlangıç tarihi.",
@@ -6545,7 +6747,7 @@ if (shareParam) {
             const data = snap.data();
             setLanguageSilent(data.lang || 'en');
             openSharedView(data);
-            switchToCalendarView(); // yapımcılar için takvim görünümüyle açılır
+            if (data.kind !== 'vfx') switchToCalendarView(); // yapımcılar için takvim görünümüyle açılır
         } catch (e) {
             showLogin("Paylaşım verisi yüklenemedi: " + e.message);
         }
