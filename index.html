@@ -910,6 +910,105 @@ body.read-only-mode #newVersionBtn { display: none !important; }
     .todo-menu { padding: 8px 12px; }
 }
 
+/* ---------- VFX BREAKDOWN ---------- */
+#vfxModule { overflow: hidden; }
+.vfx-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 20px 24px 16px; box-sizing: border-box; }
+.vfx-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.vfx-head h2 { margin: 0; font-size: 20px; letter-spacing: 1px; }
+.vfx-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.vfx-search { background: #15171c; border: 1px solid #2c3039; color: #fff; padding: 8px 11px; border-radius: 7px; font-size: 13px; width: 200px; outline: none; font-family: inherit; }
+.vfx-search:focus { border-color: var(--neon-green); }
+.vfx-eps { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 2px; flex-shrink: 0; }
+.vfx-eps button { background: #15171c; border: 1px solid #262931; color: #999; border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer; white-space: nowrap; font-family: inherit; font-weight: 700; }
+.vfx-eps button span { color: #666; font-weight: 600; margin-left: 3px; }
+.vfx-eps button.active { background: #22262e; color: #fff; border-color: #444; }
+.vfx-summary { display: flex; align-items: center; gap: 14px 22px; flex-wrap: wrap; flex-shrink: 0; font-size: 12px; color: #aaa; }
+.vfx-progress { display: flex; align-items: center; gap: 8px; }
+.vfx-progress b { color: #fff; }
+.vfx-bar { width: 140px; height: 8px; background: #23262d; border-radius: 5px; overflow: hidden; }
+.vfx-bar i { display: block; height: 100%; background: #6aa84f; transition: width .3s; }
+.vfx-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.vfx-chip { display: inline-flex; align-items: center; gap: 6px; background: #15171c; border: 1px solid #2a2d35; color: #bbb; border-radius: 14px; padding: 4px 10px; font-size: 11.5px; cursor: pointer; font-family: inherit; }
+.vfx-chip i { width: 9px; height: 9px; border-radius: 50%; background: var(--st); }
+.vfx-chip b { color: #fff; }
+.vfx-chip.zero { opacity: .45; }
+.vfx-chip.active { border-color: var(--st); background: #1d2027; color: #fff; }
+.vfx-hours .muted { color: #777; }
+
+.vfx-table-wrap { flex: 1; min-height: 0; overflow: auto; border: 1px solid #262931; border-radius: 8px; background: #0e0f13; }
+.vfx-table { border-collapse: separate; border-spacing: 0; min-width: 100%; font-size: 12px; }
+.vfx-table th { position: sticky; top: 0; z-index: 2; background: #a8578a; color: #fff; font-size: 10.5px; letter-spacing: .5px; text-transform: uppercase; font-weight: 800;
+    padding: 8px 6px; border-right: 1px solid #8c4673; border-bottom: 1px solid #8c4673; white-space: nowrap; text-align: center; }
+.vfx-table td { border-right: 1px solid var(--line, #22252c); border-bottom: 1px solid var(--line, #22252c); padding: 0; vertical-align: middle; background: var(--rowbg, #121419); color: var(--rowfg, #e6e6e6); }
+.vfx-table td input, .vfx-table td textarea, .vfx-table td select {
+    width: 100%; box-sizing: border-box; background: transparent; border: 1px solid transparent; color: inherit; font: inherit; font-size: 12px;
+    padding: 8px 7px; outline: none; border-radius: 4px; text-align: center; }
+.vfx-table td textarea { resize: none; overflow: hidden; line-height: 1.4; min-height: 34px; display: block; text-align: left; }
+.vfx-table td input:focus, .vfx-table td textarea:focus { border-color: var(--neon-green); background: rgba(0,0,0,.45); }
+.vfx-table td input[type="date"] { color-scheme: dark; font-size: 11px; padding: 6px 2px; }
+.vfx-table td select { cursor: pointer; color-scheme: dark; }
+.vfx-table td select option { background: #1b1e24; color: #fff; }
+
+.vfx-table .c-thumb { width: 104px; min-width: 104px; padding: 4px; }
+.vfx-thumb { width: 96px; height: 54px; border: 1px dashed rgba(255,255,255,.25); background: rgba(0,0,0,.25); color: rgba(255,255,255,.45); border-radius: 4px; font-size: 22px; cursor: pointer; display: block; }
+.vfx-thumb:hover:not(:disabled) { border-color: var(--neon-green); color: var(--neon-green); }
+.vfx-table .c-ep { width: 74px; min-width: 74px; }
+.vfx-table .c-tc { width: 104px; min-width: 104px; }
+.vfx-table .c-tc input { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11.5px; }
+.vfx-table .c-code { width: 78px; min-width: 78px; }
+.vfx-table .c-code input { font-weight: 800; letter-spacing: .5px; }
+.vfx-table .c-desc { min-width: 260px; width: 30%; }
+.vfx-table .c-round { min-width: 220px; position: relative; }
+.vfx-table th.c-round { padding: 0; }
+.vfx-round-h { background: none; border: none; color: #fff; font: inherit; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; padding: 8px 10px; cursor: pointer; width: 100%; }
+.vfx-round-h:hover:not(:disabled) { background: rgba(0,0,0,.15); }
+.vfx-table td.c-round textarea { padding-right: 26px; }
+.vfx-table td.c-round.has textarea { color: #ff8a80; font-weight: 700; }
+.vfx-table td.c-round.resolved textarea { color: inherit; opacity: .6; text-decoration: line-through; font-weight: 400; }
+.vfx-ok { position: absolute; top: 4px; right: 3px; width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); background: rgba(0,0,0,.3); color: rgba(255,255,255,.5); font-size: 11px; cursor: pointer; padding: 0; display: none; }
+.vfx-table td.c-round.has .vfx-ok, .vfx-table td.c-round.resolved .vfx-ok { display: block; }
+.vfx-table td.c-round.resolved .vfx-ok { background: #6aa84f; color: #000; border-color: #6aa84f; }
+.vfx-table .c-addround { min-width: 96px; width: 96px; }
+.vfx-table th.c-addround { background: #1b1e24; border-color: #262931; padding: 4px; }
+.vfx-addround { background: none; border: 1px dashed #555; color: #ccc; border-radius: 5px; font-size: 10.5px; font-weight: 700; padding: 5px 6px; cursor: pointer; white-space: nowrap; font-family: inherit; }
+.vfx-addround:hover { border-color: var(--neon-green); color: var(--neon-green); }
+.vfx-table .c-extras { min-width: 150px; }
+.vfx-table .c-vendor { min-width: 120px; }
+.vfx-table .c-hours { width: 70px; min-width: 70px; }
+.vfx-table .c-hours input { font-weight: 800; }
+.vfx-table .c-due { width: 118px; min-width: 118px; }
+.vfx-table .c-status { width: 120px; min-width: 120px; padding: 4px 6px; }
+.vfx-status { font-weight: 800 !important; font-size: 12px !important; border-radius: 14px !important; background: rgba(0,0,0,.28) !important; border: 1px solid rgba(255,255,255,.18) !important; padding: 7px 4px !important; }
+.vfx-table .c-menu { width: 62px; min-width: 62px; white-space: nowrap; text-align: center; }
+.vfx-table td.c-menu .icon-btn { color: inherit; opacity: .55; }
+.vfx-table td.c-menu .icon-btn:hover { opacity: 1; background: rgba(0,0,0,.3); }
+.vfx-plus { opacity: 0 !important; transition: opacity .15s; }
+.vfx-row:hover .vfx-plus, .vfx-plus:focus { opacity: .8 !important; }
+@media (hover: none) { .vfx-plus { opacity: .6 !important; } }
+.vfx-row.flash td { animation: vfxFlash 1.4s ease-out; }
+@keyframes vfxFlash { 0% { box-shadow: inset 0 0 0 999px rgba(57,255,20,.18); } 100% { box-shadow: none; } }
+.vfx-add-bottom { margin: 10px; }
+.vfx-empty-row td { background: transparent !important; border: none !important; }
+
+/* Durum renkleri — satırın tamamı (tablodaki gibi) */
+.vfx-row.st-todo     { --rowbg: #121419; --rowfg: #e6e6e6; --line: #22252c; }
+.vfx-row.st-wip      { --rowbg: #1c3552; --rowfg: #e8f1fb; --line: #2a4a70; }
+.vfx-row.st-review   { --rowbg: #3a2f5c; --rowfg: #eeeaff; --line: #4f4278; }
+.vfx-row.st-revision { --rowbg: #8a5414; --rowfg: #fff4e6; --line: #a86a22; }
+.vfx-row.st-done     { --rowbg: #4f8a39; --rowfg: #ffffff; --line: #64a14c; }
+.vfx-row.st-cancel   { --rowbg: #1c1c1e; --rowfg: #7a7a7a; --line: #2a2a2d; }
+.vfx-row.st-cancel .c-desc textarea, .vfx-row.st-cancel .c-code input { text-decoration: line-through; }
+.vfx-row.st-done td.c-round.has textarea { color: #fff3a0; }
+.vfx-chip.st-todo { --st: #888; } .vfx-chip.st-wip { --st: #4a90e2; } .vfx-chip.st-review { --st: #9b7bea; }
+.vfx-chip.st-revision { --st: #f39c32; } .vfx-chip.st-done { --st: #6aa84f; } .vfx-chip.st-cancel { --st: #555; }
+
+@media (max-width: 820px) {
+    .vfx-wrap { padding: 12px 10px 10px; }
+    .vfx-search { width: 140px; }
+    .vfx-bar { width: 90px; }
+}
+.vfx-table td input::placeholder { color: currentColor; opacity: .28; }
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
@@ -1037,6 +1136,9 @@ body.read-only-mode #newVersionBtn { display: none !important; }
 
         <!-- SENARYO (workspace.js çizer) -->
         <div id="scriptModule" class="ws-module"></div>
+
+        <!-- VFX BREAKDOWN (workspace.js çizer) -->
+        <div id="vfxModule" class="ws-module"></div>
 
         <!-- TOPLANTI NOTLARI (workspace.js çizer) -->
         <div id="meetingsModule" class="ws-module"></div>
@@ -3159,7 +3261,7 @@ const MemFB = (() => {
             });
             ws[pid] = {
                 projectName: proj.projectName || 'Untitled Project', totalEpisodes: parseInt(proj.totalEpisodes) || DEFAULT_EPISODES,
-                notes: clone(proj.notes || {}), episodeNotes: clone(proj.episodeNotes || {}), scripts: clone(proj.scripts || {}), meetings: clone(proj.meetings || []), todos: clone(proj.todos || {}), stats: {},
+                notes: clone(proj.notes || {}), episodeNotes: clone(proj.episodeNotes || {}), scripts: clone(proj.scripts || {}), meetings: clone(proj.meetings || []), todos: clone(proj.todos || {}), vfxShots: clone(proj.vfxShots || {}), vfxRounds: clone(proj.vfxRounds || {}), stats: {},
                 activeVersionId: active, activeVersionName: activeName, versionCount: list.length, createdAt: t0, lastUpdated: t0,
                 ownerUid: 'offline', members: {}, memberEmails: []
             };
@@ -3325,6 +3427,8 @@ function projectStats(d) {
         scriptNotes: ScriptNotes.countAll(d),
         episodeNotes: EpisodeNotes.countAll(d),
         meetings: Array.isArray(d.meetings) ? d.meetings.length : 0,
+        vfxTotal: isPlainObject(d.vfxShots) ? Object.values(d.vfxShots).filter(x => x && x.status !== 'cancel').length : 0,
+        vfxDone: isPlainObject(d.vfxShots) ? Object.values(d.vfxShots).filter(x => x && x.status === 'done').length : 0,
         todosOpen: isPlainObject(d.todos) ? Object.values(d.todos).filter(x => x && !x.done).length : 0,
         members: Object.keys(d.members || {}).length
     };
@@ -3366,6 +3470,7 @@ function renderDashboard() {
             s.episodeNotes ? `📝 ${s.episodeNotes}` : '',
             s.scriptNotes ? `🎬 ${s.scriptNotes}` : '',
             s.meetings ? `🤝 ${s.meetings}` : '',
+            s.vfxTotal ? `✨ VFX ${s.vfxDone}/${s.vfxTotal}` : '',
             s.todosOpen ? `✅ ${s.todosOpen}` : ''
         ].filter(Boolean).map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('');
         return `<div class="project-card ${role !== 'owner' ? 'shared' : ''}" data-id="${escapeHtml(id)}" tabindex="0">
@@ -3601,6 +3706,9 @@ function resetModulesFor(project) {
     ScriptNotes.reset();
     EpisodeNotes.reset();
     if (!isPlainObject(project.todos)) project.todos = {};
+    if (!isPlainObject(project.vfxShots)) project.vfxShots = {};
+    if (!isPlainObject(project.vfxRounds)) project.vfxRounds = {};
+    $('vfxModule').innerHTML = '';
     $('meetingsModule').innerHTML = '';
     $('todosModule').innerHTML = '';
 }
@@ -3610,18 +3718,19 @@ function flatProject(src) {
     const m = new Map();
     m.set('projectName', { j: stableJ(src.projectName || ''), v: src.projectName || '' });
     m.set('meetings', { j: stableJ(src.meetings || []), v: src.meetings || [] });
-    ['episodeNotes', 'scripts', 'todos'].forEach(f => Object.entries(src[f] || {}).forEach(([k, v]) => m.set(f + '.' + k, { j: stableJ(v), v })));
+    ['episodeNotes', 'scripts', 'todos', 'vfxShots', 'vfxRounds'].forEach(f => Object.entries(src[f] || {}).forEach(([k, v]) => m.set(f + '.' + k, { j: stableJ(v), v })));
     return m;
 }
 function localProjectState() {
     return {
         projectName: $('projectName').value.trim() || 'Untitled Project',
         meetings: App.project.meetings, episodeNotes: App.project.episodeNotes || {}, scripts: App.project.scripts || {},
-        todos: App.project.todos || {}
+        todos: App.project.todos || {}, vfxShots: App.project.vfxShots || {}, vfxRounds: App.project.vfxRounds || {}
     };
 }
 function remoteProjectState(d) {
-    return { projectName: d.projectName || '', meetings: d.meetings || [], episodeNotes: isPlainObject(d.episodeNotes) ? d.episodeNotes : {}, scripts: isPlainObject(d.scripts) ? d.scripts : {}, todos: isPlainObject(d.todos) ? d.todos : {} };
+    return { projectName: d.projectName || '', meetings: d.meetings || [], episodeNotes: isPlainObject(d.episodeNotes) ? d.episodeNotes : {}, scripts: isPlainObject(d.scripts) ? d.scripts : {}, todos: isPlainObject(d.todos) ? d.todos : {},
+        vfxShots: isPlainObject(d.vfxShots) ? d.vfxShots : {}, vfxRounds: isPlainObject(d.vfxRounds) ? d.vfxRounds : {} };
 }
 const jsonMap = (m) => new Map([...m].map(([k, x]) => [k, x.j]));
 
@@ -3655,6 +3764,8 @@ async function openProject(id, data) {
         episodeNotes: episodeNotesFrom(data),
         meetings: Array.isArray(data.meetings) ? data.meetings : [],
         todos: isPlainObject(data.todos) ? data.todos : {},
+        vfxShots: isPlainObject(data.vfxShots) ? data.vfxShots : {},
+        vfxRounds: isPlainObject(data.vfxRounds) ? data.vfxRounds : {},
         createdAt: data.createdAt || new Date().toISOString(),
         ownerUid: data.ownerUid, ownerEmail: data.ownerEmail, ownerName: data.ownerName,
         members: clone(data.members || {})
@@ -3929,6 +4040,7 @@ function onRemoteProject(d, reason) {
         App.module === 'notes' && EpisodeNotes.render();
         App.module === 'meetings' && renderMeetingsModule();
         App.module === 'todos' && renderTodosModule();
+        App.module === 'vfx' && renderVfxModule();
     }
 
     const remote = flatProject(remoteProjectState(d));
@@ -3956,6 +4068,7 @@ function onRemoteProject(d, reason) {
         if (App.module === 'notes' && changedKeys.some(k => k.startsWith('episodeNotes.'))) EpisodeNotes.render();
         if (App.module === 'script' && changedKeys.some(k => k.startsWith('scripts.'))) ScriptNotes.render();
         if (App.module === 'meetings' && changedKeys.includes('meetings')) refreshMeetingsSafely();
+        if (App.module === 'vfx' && changedKeys.some(k => k.startsWith('vfxShots.') || k.startsWith('vfxRounds.'))) refreshVfxSafely();
         if (changedKeys.some(k => k.startsWith('todos.'))) { if (App.module === 'todos') refreshTodosSafely(); renderModuleNav(); }
         showRemoteStatus(d.lastEditedBy);
     }
@@ -4388,6 +4501,7 @@ const MODULES = [
     { key: 'calendar', icon: '📅', label: 'modCalendar' },
     { key: 'notes', icon: '📝', label: 'modNotes' },
     { key: 'script', icon: '🎬', label: 'modScript', private: true },
+    { key: 'vfx', icon: '✨', label: 'modVfx', private: true },
     { key: 'meetings', icon: '🤝', label: 'modMeetings', private: true },
     { key: 'todos', icon: '✅', label: 'modTodos', private: true }
 ];
@@ -4413,11 +4527,13 @@ function showModule(key) {
     $('scriptModule').style.display = key === 'script' ? 'flex' : 'none';
     $('meetingsModule').style.display = key === 'meetings' ? 'flex' : 'none';
     $('todosModule').style.display = key === 'todos' ? 'flex' : 'none';
+    $('vfxModule').style.display = key === 'vfx' ? 'flex' : 'none';
     closeMenu();
     if (key === 'notes') EpisodeNotes.render();
     if (key === 'script') ScriptNotes.render();
     if (key === 'meetings') renderMeetingsModule();
     if (key === 'todos') renderTodosModule();
+    if (key === 'vfx') renderVfxModule();
     renderModuleNav();
 }
 window.showModule = showModule;
@@ -4432,6 +4548,7 @@ window.onLanguageChange = function () {
         renderVersionBar();
         if (App.module === 'meetings') renderMeetingsModule();
         if (App.module === 'todos') renderTodosModule();
+        if (App.module === 'vfx') renderVfxModule();
         setSaveStatus($('saveStatus').dataset.state || 'saved');
     }
 };
@@ -5532,6 +5649,474 @@ setInterval(() => {
 document.addEventListener('visibilitychange', () => { if (!document.hidden) checkReminders(); });
 
 // ---------------------------------------------------------------------
+// 10c) VFX BREAKDOWN
+// Veri (her shot ayrı alan → iki kişi aynı anda farklı shot'larla çalışabilir):
+//   project.vfxShots  = { id: { id, ep, code, tc, desc, notes:{ turId:{text,done} }, extras,
+//                               vendor, hours, due, status, createdAt } }
+//   project.vfxRounds = { id: { id, label, date, createdAt } }   → "14 Temmuz Notları" gibi not turları
+// Durumlar: Bekliyor · Çalışılıyor · Onayda · Revizyon · Yapıldı · İptal
+// ---------------------------------------------------------------------
+Object.assign(I18N.en, {
+    modVfx: "VFX Breakdown",
+    vfxThumb: "Shot", vfxTc: "TC", vfxCode: "No", vfxDesc: "VFX-CGI note", vfxExtras: "Extras",
+    vfxVendor: "Artist / Vendor", vfxHours: "Est. hours", vfxDue: "Due", vfxStatus: "Status", vfxEp: "Ep",
+    vfxAddShot: "Add shot", vfxAddRound: "Review round", vfxRoundPrompt: "Name of the review round:",
+    vfxRoundDefault: "{date} notes", vfxRenameRound: "Rename", vfxDeleteRound: "Delete column",
+    vfxConfirmDeleteRound: "Delete the “{name}” column and all notes in it?",
+    vfxAll: "All", vfxSearch: "Search shot, note…", vfxEmpty: "No shots yet",
+    vfxEmptyHint: "Click “Add shot” — numbers continue automatically (P0010, P0020…).",
+    vfxNoMatch: "No shots match this filter.",
+    vfxThumbSoon: "Adding shot images is coming soon.",
+    vfxInsertBelow: "Insert shot below", vfxDuplicate: "Duplicate", vfxDeleteShot: "Delete shot",
+    vfxConfirmDelete: "Delete shot {code}?", vfxMarkResolved: "Mark note resolved / open",
+    vfx_todo: "Waiting", vfx_wip: "In progress", vfx_review: "In review", vfx_revision: "Revision", vfx_done: "Done", vfx_cancel: "Cancelled",
+    vfxShots: "{n} shots", vfxProgress: "{p}% done", vfxHoursTotal: "Est. {h} h", vfxHoursLeft: "{h} h left",
+    vfxHoursCancelled: "Cancelled would have been {h} h",
+    help_mod_vfx: "VFX shot list: notes per review round, status colours, estimated hours. Live with everyone on the project.",
+    help_vfxAddShot: "Adds a new shot; the number continues from the last one (+10).",
+    help_vfxAddRound: "Adds a dated review column (e.g. “14 July notes”) for the next round of comments.",
+    help_vfxStatus: "Shot status. The whole row takes the status colour: Done = green, Revision = orange, Cancelled = grey.",
+    help_vfxChips: "Click a status to show only those shots. Click again to show all.",
+    help_vfxThumb: "Shot image (coming soon).",
+    help_vfxInsert: "Adds a new row right below this shot (number in between, e.g. P0015).",
+    help_vfxNoteToggle: "Mark this note resolved (crossed out) or open again.",
+    help_vfxExcel: "Downloads the breakdown as an Excel file with status colours.",
+    help_vfxPdf: "Exports the breakdown as a landscape PDF."
+});
+Object.assign(I18N.tr, {
+    modVfx: "VFX Breakdown",
+    vfxThumb: "Shot", vfxTc: "TC", vfxCode: "No", vfxDesc: "VFX-CGI notu", vfxExtras: "Ekstralar",
+    vfxVendor: "Sorumlu / Vendor", vfxHours: "Tahmini saat", vfxDue: "Teslim", vfxStatus: "Durum", vfxEp: "Bölüm",
+    vfxAddShot: "Shot ekle", vfxAddRound: "Not turu", vfxRoundPrompt: "Not turunun adı:",
+    vfxRoundDefault: "{date} Notları", vfxRenameRound: "Yeniden adlandır", vfxDeleteRound: "Sütunu sil",
+    vfxConfirmDeleteRound: "“{name}” sütunu ve içindeki tüm notlar silinsin mi?",
+    vfxAll: "Tümü", vfxSearch: "Shot, not ara…", vfxEmpty: "Henüz shot yok",
+    vfxEmptyHint: "“Shot ekle”ye tıkla — numaralar otomatik devam eder (P0010, P0020…).",
+    vfxNoMatch: "Bu filtreye uyan shot yok.",
+    vfxThumbSoon: "Shot görseli ekleme yakında geliyor.",
+    vfxInsertBelow: "Altına shot ekle", vfxDuplicate: "Çoğalt", vfxDeleteShot: "Shot'ı sil",
+    vfxConfirmDelete: "{code} silinsin mi?", vfxMarkResolved: "Notu çözüldü / açık yap",
+    vfx_todo: "Bekliyor", vfx_wip: "Çalışılıyor", vfx_review: "Onayda", vfx_revision: "Revizyon", vfx_done: "Yapıldı", vfx_cancel: "İptal",
+    vfxShots: "{n} shot", vfxProgress: "%{p} tamam", vfxHoursTotal: "Tahmini {h} saat", vfxHoursLeft: "{h} saat kaldı",
+    vfxHoursCancelled: "İptaller yapılsaydı {h} saat",
+    help_mod_vfx: "VFX shot listesi: not turları, durum renkleri, tahmini saatler. Projedeki herkesle canlı.",
+    help_vfxAddShot: "Yeni shot ekler; numara sonuncudan devam eder (+10).",
+    help_vfxAddRound: "Yeni bir tarihli not sütunu ekler (ör. “14 Temmuz Notları”) — her inceleme turu için.",
+    help_vfxStatus: "Shot'ın durumu. Satırın tamamı bu renge boyanır: Yapıldı = yeşil, Revizyon = turuncu, İptal = gri.",
+    help_vfxChips: "Bir duruma tıkla, sadece o shot'lar görünsün. Tekrar tıklayınca hepsi.",
+    help_vfxThumb: "Shot görseli (yakında).",
+    help_vfxInsert: "Bu shot'ın hemen altına yeni satır ekler (numara araya girer, ör. P0015).",
+    help_vfxNoteToggle: "Bu notu çözüldü olarak işaretle (üstü çizilir) ya da tekrar aç.",
+    help_vfxExcel: "Breakdown'ı durum renkleriyle Excel dosyası olarak indirir.",
+    help_vfxPdf: "Breakdown'ı yatay PDF olarak alır."
+});
+
+const VFX_STATUS = ['todo', 'wip', 'review', 'revision', 'done', 'cancel'];
+// Excel/PDF renkleri (sitede CSS sınıfları kullanılır)
+const VFX_COLORS = {
+    todo: { bg: 'FFFFFF', fg: '000000' }, wip: { bg: 'CFE2F3', fg: '000000' }, review: { bg: 'D9D2E9', fg: '000000' },
+    revision: { bg: 'F6B26B', fg: '000000' }, done: { bg: '6AA84F', fg: '000000' }, cancel: { bg: 'CCCCCC', fg: '666666' }
+};
+const vfxState = { ep: 'all', status: null, q: '', stale: false };
+
+const vfxShotsList = () => Object.values((App.project && App.project.vfxShots) || {}).filter(x => x && x.id);
+const vfxRoundsList = () => Object.values((App.project && App.project.vfxRounds) || {}).filter(x => x && x.id)
+    .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || String(a.createdAt || '').localeCompare(String(b.createdAt || '')));
+const natCmp = (a, b) => String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+const vfxStatusOf = (s) => VFX_STATUS.includes(s.status) ? s.status : 'todo';
+const hoursOf = (s) => { const h = parseFloat(String(s.hours || '').replace(',', '.')); return isFinite(h) ? h : 0; };
+const fmtH = (h) => (Math.round(h * 10) / 10).toLocaleString(localeStr());
+
+function vfxSorted(list) {
+    return list.sort((a, b) => (parseInt(a.ep) || 0) - (parseInt(b.ep) || 0) || natCmp(a.code, b.code) || String(a.createdAt).localeCompare(String(b.createdAt)));
+}
+// Bölüm sekmesi + arama (durum filtresi hariç) — özet bu kümeden hesaplanır
+function vfxScope() {
+    let list = vfxShotsList();
+    if (vfxState.ep !== 'all') list = list.filter(s => String(parseInt(s.ep) || 0) === vfxState.ep);
+    const q = vfxState.q.trim().toLocaleLowerCase(localeStr());
+    if (q) list = list.filter(s => [s.code, s.tc, s.desc, s.extras, s.vendor, ...Object.values(s.notes || {}).map(n => n && n.text)]
+        .some(v => String(v || '').toLocaleLowerCase(localeStr()).includes(q)));
+    return list;
+}
+function vfxVisible() {
+    const list = vfxScope();
+    return vfxSorted(vfxState.status ? list.filter(s => vfxStatusOf(s) === vfxState.status) : list);
+}
+
+// Sıradaki shot numarası: aynı bölümdeki en büyük numara + 10 (P0010 → P0020)
+function nextVfxCode(ep, after) {
+    const same = vfxShotsList().filter(s => (parseInt(s.ep) || 0) === (parseInt(ep) || 0));
+    const parse = (c) => { const m = String(c || '').match(/^(.*?)(\d+)$/); return m ? { pre: m[1], n: parseInt(m[2], 10), w: m[2].length } : null; };
+    const used = new Set(same.map(s => String(s.code || '').toUpperCase()));
+    const mk = (pre, n, w) => pre + String(n).padStart(w, '0');
+    if (after) {
+        const p = parse(after.code);
+        if (p) {
+            const nexts = same.map(s => parse(s.code)).filter(x => x && x.pre === p.pre && x.n > p.n).map(x => x.n);
+            const upper = nexts.length ? Math.min(...nexts) : p.n + 20;
+            const mid = Math.floor((p.n + upper) / 2);
+            if (mid > p.n && !used.has(mk(p.pre, mid, p.w).toUpperCase())) return mk(p.pre, mid, p.w);
+        }
+    }
+    const parsed = same.map(s => parse(s.code)).filter(Boolean);
+    if (!parsed.length) return 'P0010';
+    const last = parsed.sort((a, b) => a.n - b.n)[parsed.length - 1];
+    return mk(last.pre, Math.floor(last.n / 10) * 10 + 10, Math.max(last.w, 4));
+}
+
+function renderVfxModule() {
+    if (!App.project) return;
+    const ro = App.readOnly;
+    const eps = parseInt(App.project.totalEpisodes) || 1;
+    if (vfxState.ep !== 'all' && parseInt(vfxState.ep) > eps) vfxState.ep = 'all';
+    const counts = {};
+    vfxShotsList().forEach(s => { const k = String(parseInt(s.ep) || 0); counts[k] = (counts[k] || 0) + 1; });
+    const epTabs = eps > 1 ? `<div class="vfx-eps">
+        <button data-ep="all" class="${vfxState.ep === 'all' ? 'active' : ''}">${escapeHtml(t('vfxAll'))} <span>${vfxShotsList().length || ''}</span></button>
+        ${Array.from({ length: eps }, (_, i) => String(i + 1)).map(e =>
+            `<button data-ep="${e}" class="${vfxState.ep === e ? 'active' : ''}">EP${e.padStart(2, '0')} <span>${counts[e] || ''}</span></button>`).join('')}
+    </div>` : '';
+    $('vfxModule').innerHTML = `
+        <div class="vfx-wrap">
+            <div class="vfx-head">
+                <h2>✨ ${escapeHtml(t('modVfx'))}</h2>
+                <div class="vfx-tools">
+                    <input type="search" class="vfx-search" placeholder="${escapeHtml(t('vfxSearch'))}" value="${escapeHtml(vfxState.q)}">
+                    <button class="ghost-btn" data-vact="excel" data-help="help_vfxExcel">📊 Excel</button>
+                    <button class="ghost-btn" data-vact="pdf" data-help="help_vfxPdf">📄 ${escapeHtml(t('exportPdf'))}</button>
+                    ${ro ? '' : `<button class="primary-btn small" data-vact="addShot" data-help="help_vfxAddShot">+ ${escapeHtml(t('vfxAddShot'))}</button>`}
+                </div>
+            </div>
+            ${epTabs}
+            <div class="vfx-summary" id="vfxSummary"></div>
+            <div class="vfx-table-wrap" id="vfxTableWrap"></div>
+        </div>`;
+    renderVfxSummary();
+    renderVfxTable();
+}
+
+function renderVfxSummary() {
+    const el = $('vfxSummary');
+    if (!el) return;
+    const list = vfxScope();
+    const by = {}; let hTotal = 0, hDone = 0, hCancel = 0;
+    list.forEach(s => {
+        const st = vfxStatusOf(s); by[st] = (by[st] || 0) + 1;
+        const h = hoursOf(s);
+        if (st === 'cancel') hCancel += h; else { hTotal += h; if (st === 'done') hDone += h; }
+    });
+    const active = list.length - (by.cancel || 0);
+    const pct = active ? Math.round((by.done || 0) / active * 100) : 0;
+    el.innerHTML = `
+        <div class="vfx-progress"><div class="vfx-bar"><i style="width:${pct}%"></i></div>
+            <b>${escapeHtml(tf('vfxProgress', { p: pct }))}</b> <span>· ${escapeHtml(tf('vfxShots', { n: active }))}</span></div>
+        <div class="vfx-chips" data-help="help_vfxChips">${VFX_STATUS.map(st => `<button class="vfx-chip st-${st} ${vfxState.status === st ? 'active' : ''} ${by[st] ? '' : 'zero'}" data-status="${st}">
+            <i></i>${escapeHtml(t('vfx_' + st))} <b>${by[st] || 0}</b></button>`).join('')}</div>
+        <div class="vfx-hours">⏱ ${escapeHtml(tf('vfxHoursTotal', { h: fmtH(hTotal) }))} · ${escapeHtml(tf('vfxHoursLeft', { h: fmtH(hTotal - hDone) }))}
+            ${hCancel ? `<span class="muted">· ${escapeHtml(tf('vfxHoursCancelled', { h: fmtH(hCancel) }))}</span>` : ''}</div>`;
+}
+
+function vfxRow(s, rounds, showEp, ro) {
+    const st = vfxStatusOf(s);
+    const dis = ro ? 'disabled' : '', rdo = ro ? 'readonly' : '';
+    const eps = parseInt(App.project.totalEpisodes) || 1;
+    return `<tr class="vfx-row st-${st}" data-sid="${escapeHtml(s.id)}">
+        <td class="c-thumb"><button class="vfx-thumb" data-vact="thumb" data-help="help_vfxThumb" ${dis}>+</button></td>
+        ${showEp ? `<td class="c-ep"><select data-f="ep" ${dis}><option value="0">—</option>${Array.from({ length: eps }, (_, i) =>
+            `<option value="${i + 1}" ${parseInt(s.ep) === i + 1 ? 'selected' : ''}>EP${String(i + 1).padStart(2, '0')}</option>`).join('')}</select></td>` : ''}
+        <td class="c-tc"><input data-f="tc" ${rdo} value="${escapeHtml(s.tc || '')}" placeholder="00:00:00:00" maxlength="14"></td>
+        <td class="c-code"><input data-f="code" ${rdo} value="${escapeHtml(s.code || '')}" maxlength="24"></td>
+        <td class="c-desc"><textarea data-f="desc" ${rdo} rows="1">${escapeHtml(s.desc || '')}</textarea></td>
+        ${rounds.map(r => { const n = (s.notes || {})[r.id] || {}; return `<td class="c-round ${n.done ? 'resolved' : ''} ${n.text ? 'has' : ''}">
+            <textarea data-round="${escapeHtml(r.id)}" ${rdo} rows="1">${escapeHtml(n.text || '')}</textarea>
+            ${ro ? '' : `<button class="vfx-ok" data-vact="toggleNote" data-rid="${escapeHtml(r.id)}" data-help="help_vfxNoteToggle" title="${escapeHtml(t('vfxMarkResolved'))}">✓</button>`}</td>`; }).join('')}
+        <td class="c-addround"></td>
+        <td class="c-extras"><textarea data-f="extras" ${rdo} rows="1">${escapeHtml(s.extras || '')}</textarea></td>
+        <td class="c-vendor"><input data-f="vendor" ${rdo} value="${escapeHtml(s.vendor || '')}" maxlength="60"></td>
+        <td class="c-hours"><input data-f="hours" ${rdo} inputmode="decimal" value="${escapeHtml(s.hours || '')}" maxlength="6"></td>
+        <td class="c-due"><input type="date" data-f="due" ${dis} value="${escapeHtml(s.due || '')}"></td>
+        <td class="c-status"><select data-f="status" class="vfx-status" ${dis} data-help="help_vfxStatus">${VFX_STATUS.map(x =>
+            `<option value="${x}" ${x === st ? 'selected' : ''}>${escapeHtml(t('vfx_' + x))}</option>`).join('')}</select></td>
+        <td class="c-menu">${ro ? '' : `<button class="icon-btn vfx-plus" data-vact="insertBelow" data-help="help_vfxInsert">＋</button><button class="icon-btn" data-vact="rowMenu">⋯</button>`}</td>
+    </tr>`;
+}
+
+function renderVfxTable() {
+    const wrap = $('vfxTableWrap');
+    if (!wrap) return;
+    const sx = wrap.scrollLeft, sy = $('vfxModule').querySelector('.vfx-wrap') ? $('vfxModule').querySelector('.vfx-wrap').scrollTop : 0;
+    const ro = App.readOnly;
+    const rounds = vfxRoundsList();
+    const showEp = (parseInt(App.project.totalEpisodes) || 1) > 1 && vfxState.ep === 'all';
+    const rows = vfxVisible();
+    const head = `<thead><tr>
+        <th class="c-thumb">${escapeHtml(t('vfxThumb'))}</th>
+        ${showEp ? `<th class="c-ep">${escapeHtml(t('vfxEp'))}</th>` : ''}
+        <th class="c-tc">${escapeHtml(t('vfxTc'))}</th>
+        <th class="c-code">${escapeHtml(t('vfxCode'))}</th>
+        <th class="c-desc">${escapeHtml(t('vfxDesc'))}</th>
+        ${rounds.map(r => `<th class="c-round"><button class="vfx-round-h" data-vact="roundMenu" data-rid="${escapeHtml(r.id)}" ${ro ? 'disabled' : ''}>${escapeHtml(r.label || '')}</button></th>`).join('')}
+        <th class="c-addround">${ro ? '' : `<button class="vfx-addround" data-vact="addRound" data-help="help_vfxAddRound">+ ${escapeHtml(t('vfxAddRound'))}</button>`}</th>
+        <th class="c-extras">${escapeHtml(t('vfxExtras'))}</th>
+        <th class="c-vendor">${escapeHtml(t('vfxVendor'))}</th>
+        <th class="c-hours">${escapeHtml(t('vfxHours'))}</th>
+        <th class="c-due">${escapeHtml(t('vfxDue'))}</th>
+        <th class="c-status">${escapeHtml(t('vfxStatus'))}</th>
+        <th class="c-menu"></th>
+    </tr></thead>`;
+    let body = rows.map(s => vfxRow(s, rounds, showEp, ro)).join('');
+    if (!rows.length) {
+        const any = vfxShotsList().length;
+        body = `<tr class="vfx-empty-row"><td colspan="${12 + rounds.length + (showEp ? 1 : 0)}"><div class="dash-empty"><div class="dash-empty-icon">✨</div>
+            <b>${escapeHtml(t(any ? 'vfxNoMatch' : 'vfxEmpty'))}</b>${any || ro ? '' : `<p>${escapeHtml(t('vfxEmptyHint'))}</p>`}</div></td></tr>`;
+    }
+    wrap.innerHTML = `<table class="vfx-table">${head}<tbody>${body}</tbody></table>
+        ${ro || !rows.length ? '' : `<button class="ghost-btn vfx-add-bottom" data-vact="addShot">+ ${escapeHtml(t('vfxAddShot'))}</button>`}`;
+    growAllTextareas(wrap);
+    wrap.scrollLeft = sx;
+    if ($('vfxModule').querySelector('.vfx-wrap')) $('vfxModule').querySelector('.vfx-wrap').scrollTop = sy;
+}
+
+// Çok satırda hızlı: önce hepsini sıfırla, sonra bir seferde ölç, sonra yaz (tek layout)
+function growAllTextareas(root) {
+    const tas = [...root.querySelectorAll('textarea')];
+    tas.forEach(ta => { ta.style.height = 'auto'; });
+    const hs = tas.map(ta => ta.scrollHeight);
+    tas.forEach((ta, i) => { ta.style.height = hs[i] + 'px'; });
+}
+
+function refreshVfxSafely() {
+    const a = document.activeElement;
+    if (a && $('vfxTableWrap') && $('vfxTableWrap').contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) { vfxState.stale = true; renderVfxSummary(); return; }
+    renderVfxSummary();
+    renderVfxTable();
+}
+$('vfxModule').addEventListener('focusout', (e) => {
+    if (!vfxState.stale) return;
+    if (e.relatedTarget && $('vfxTableWrap') && $('vfxTableWrap').contains(e.relatedTarget)) return;
+    vfxState.stale = false;
+    setTimeout(() => { if (App.module === 'vfx') renderVfxTable(); }, 0);
+});
+
+function vfxShotOf(el) {
+    const tr = el.closest('.vfx-row');
+    return tr ? App.project.vfxShots[tr.dataset.sid] : null;
+}
+
+function addVfxShot(after) {
+    const ep = after ? (parseInt(after.ep) || 0) : (vfxState.ep === 'all' ? 0 : parseInt(vfxState.ep) || 0);
+    const id = uid();
+    App.project.vfxShots[id] = {
+        id, ep, code: nextVfxCode(ep, after), tc: '', desc: '', notes: {}, extras: '', vendor: '', hours: '', due: '',
+        status: 'todo', createdAt: new Date().toISOString()
+    };
+    if (vfxState.status && vfxState.status !== 'todo') vfxState.status = null;
+    triggerAutoSave();
+    renderVfxSummary();
+    renderVfxTable();
+    const row = $('vfxTableWrap').querySelector(`[data-sid="${CSS.escape(id)}"]`);
+    if (row) { row.classList.add('flash'); row.scrollIntoView({ block: 'nearest' }); const d = row.querySelector('[data-f="desc"]'); d && d.focus(); }
+}
+
+$('vfxModule').addEventListener('input', (e) => {
+    const tg = e.target;
+    if (tg.classList.contains('vfx-search')) {
+        vfxState.q = tg.value;
+        renderVfxSummary(); renderVfxTable();
+        return;
+    }
+    if (App.readOnly) return;
+    const s = vfxShotOf(tg);
+    if (!s) return;
+    if (tg.tagName === 'TEXTAREA') { tg.style.height = 'auto'; tg.style.height = tg.scrollHeight + 'px'; }
+    if (tg.dataset.round) {
+        const rid = tg.dataset.round;
+        s.notes = s.notes || {};
+        s.notes[rid] = Object.assign({}, s.notes[rid], { text: tg.value });
+        tg.closest('td').classList.toggle('has', !!tg.value);
+    } else if (tg.dataset.f && tg.tagName !== 'SELECT' && tg.type !== 'date') {
+        s[tg.dataset.f] = tg.value;
+        if (tg.dataset.f === 'hours') renderVfxSummary();
+    } else return;
+    triggerAutoSave();
+});
+
+$('vfxModule').addEventListener('change', (e) => {
+    const tg = e.target;
+    if (App.readOnly) return;
+    const s = vfxShotOf(tg);
+    if (!s || !tg.dataset.f) return;
+    const f = tg.dataset.f;
+    if (f === 'status') {
+        s.status = tg.value;
+        const tr = tg.closest('.vfx-row');
+        VFX_STATUS.forEach(x => tr.classList.toggle('st-' + x, x === s.status));
+        renderVfxSummary();
+    } else if (f === 'ep') {
+        s.ep = parseInt(tg.value) || 0;
+        renderVfxTable();
+    } else if (f === 'due') {
+        s.due = tg.value;
+    } else if (f === 'code') {
+        s.code = tg.value.trim().toUpperCase();
+        tg.value = s.code;
+        setTimeout(() => { if (App.module === 'vfx' && !$('vfxTableWrap').contains(document.activeElement)) renderVfxTable(); }, 0);
+    } else return;
+    triggerAutoSave();
+});
+
+$('vfxModule').addEventListener('click', (e) => {
+    const ep = e.target.closest('[data-ep]');
+    if (ep) { vfxState.ep = ep.dataset.ep; vfxState.status = null; renderVfxModule(); return; }
+    const chip = e.target.closest('[data-status]');
+    if (chip) { vfxState.status = vfxState.status === chip.dataset.status ? null : chip.dataset.status; renderVfxSummary(); renderVfxTable(); return; }
+    const b = e.target.closest('[data-vact]');
+    if (!b) return;
+    const act = b.dataset.vact;
+    if (act === 'excel') return exportVfxExcel();
+    if (act === 'pdf') return exportVfxPdf();
+    if (act === 'thumb') return showInfoToast('🖼 ' + t('vfxThumbSoon'));
+    if (App.readOnly) return;
+    if (act === 'addShot') return addVfxShot(null);
+    if (act === 'addRound') {
+        const label = prompt(t('vfxRoundPrompt'), tf('vfxRoundDefault', { date: formatDate(todayISO(), { day: 'numeric', month: 'long' }) }));
+        if (!label || !label.trim()) return;
+        const id = uid();
+        App.project.vfxRounds[id] = { id, label: label.trim(), date: todayISO(), createdAt: new Date().toISOString() };
+        triggerAutoSave();
+        renderVfxTable();
+        const wrap = $('vfxTableWrap');
+        const ta = wrap.querySelector(`textarea[data-round="${CSS.escape(id)}"]`);
+        if (ta) ta.closest('td').scrollIntoView({ inline: 'center', block: 'nearest' });
+        return;
+    }
+    if (act === 'roundMenu') return showVfxRoundMenu(b.dataset.rid, b);
+    const s = vfxShotOf(b);
+    if (!s) return;
+    if (act === 'toggleNote') {
+        const rid = b.dataset.rid;
+        s.notes = s.notes || {};
+        const n = Object.assign({ text: '' }, s.notes[rid]);
+        n.done = !n.done;
+        s.notes[rid] = n;
+        b.closest('td').classList.toggle('resolved', n.done);
+        triggerAutoSave();
+    } else if (act === 'insertBelow') addVfxShot(s);
+    else if (act === 'rowMenu') showVfxRowMenu(s, b);
+});
+
+function showVfxRowMenu(s, btn) {
+    menu.innerHTML = `
+        <div class="item" data-m="below">➕&nbsp; ${escapeHtml(t('vfxInsertBelow'))}</div>
+        <div class="item" data-m="dup">⧉&nbsp; ${escapeHtml(t('vfxDuplicate'))}</div>
+        <div class="menu-sep"></div>
+        <div class="item danger" data-m="del">🗑&nbsp; ${escapeHtml(t('vfxDeleteShot'))}</div>`;
+    const r = btn.getBoundingClientRect();
+    positionMenu(r.right - 200, r.bottom + 4);
+    menu.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
+        closeMenu();
+        if (b.dataset.m === 'below') addVfxShot(s);
+        if (b.dataset.m === 'dup') {
+            const id = uid();
+            App.project.vfxShots[id] = Object.assign(clone(s), { id, code: nextVfxCode(s.ep, s), createdAt: new Date().toISOString() });
+            triggerAutoSave(); renderVfxSummary(); renderVfxTable();
+            const row = $('vfxTableWrap').querySelector(`[data-sid="${CSS.escape(id)}"]`);
+            row && row.classList.add('flash');
+        }
+        if (b.dataset.m === 'del') {
+            if (!confirm(tf('vfxConfirmDelete', { code: s.code || '' }))) return;
+            delete App.project.vfxShots[s.id];
+            triggerAutoSave(); renderVfxSummary(); renderVfxTable();
+        }
+    });
+}
+
+function showVfxRoundMenu(rid, btn) {
+    const r = App.project.vfxRounds[rid];
+    if (!r) return;
+    menu.innerHTML = `
+        <div class="item" data-m="rename">✏️&nbsp; ${escapeHtml(t('vfxRenameRound'))}</div>
+        <div class="item danger" data-m="del">🗑&nbsp; ${escapeHtml(t('vfxDeleteRound'))}</div>`;
+    const rc = btn.getBoundingClientRect();
+    positionMenu(rc.left, rc.bottom + 4);
+    menu.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
+        closeMenu();
+        if (b.dataset.m === 'rename') {
+            const v = prompt(t('vfxRoundPrompt'), r.label || '');
+            if (!v || !v.trim()) return;
+            r.label = v.trim();
+        } else {
+            if (!confirm(tf('vfxConfirmDeleteRound', { name: r.label || '' }))) return;
+            delete App.project.vfxRounds[rid];
+            vfxShotsList().forEach(s => { if (s.notes && s.notes[rid]) delete s.notes[rid]; });
+        }
+        triggerAutoSave();
+        renderVfxTable();
+    });
+}
+
+// --- Dışa aktarma ---
+function vfxExportRows() {
+    const rounds = vfxRoundsList();
+    const multiEp = (parseInt(App.project.totalEpisodes) || 1) > 1;
+    const head = [...(multiEp ? [t('vfxEp')] : []), t('vfxTc'), t('vfxCode'), t('vfxDesc'), ...rounds.map(r => r.label || ''),
+        t('vfxExtras'), t('vfxVendor'), t('vfxHours'), t('vfxDue'), t('vfxStatus')];
+    const rows = vfxVisible().map(s => ({
+        s, st: vfxStatusOf(s),
+        cells: [...(multiEp ? [parseInt(s.ep) ? 'EP' + String(s.ep).padStart(2, '0') : ''] : []), s.tc || '', s.code || '', s.desc || '',
+            ...rounds.map(r => ((s.notes || {})[r.id] || {}).text || ''), s.extras || '', s.vendor || '',
+            hoursOf(s) || '', s.due ? formatDate(s.due) : '', t('vfx_' + vfxStatusOf(s))],
+        resolved: [...(multiEp ? [false] : []), false, false, false, ...rounds.map(r => !!((s.notes || {})[r.id] || {}).done), false, false, false, false, false]
+    }));
+    return { head, rows, descCol: multiEp ? 3 : 2, roundsFrom: multiEp ? 4 : 3, nRounds: rounds.length };
+}
+
+function exportVfxExcel() {
+    if (typeof XLSX === "undefined") { alert("Excel kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin."); return; }
+    const { head, rows, descCol, roundsFrom, nRounds } = vfxExportRows();
+    const ws = XLSX.utils.aoa_to_sheet([head, ...rows.map(r => r.cells)]);
+    const border = { top: { style: 'thin', color: { rgb: '999999' } }, bottom: { style: 'thin', color: { rgb: '999999' } }, left: { style: 'thin', color: { rgb: '999999' } }, right: { style: 'thin', color: { rgb: '999999' } } };
+    head.forEach((_, c) => {
+        const ref = XLSX.utils.encode_cell({ r: 0, c });
+        ws[ref].s = { font: { bold: true, sz: 10 }, fill: { fgColor: { rgb: 'C27BA0' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border };
+    });
+    rows.forEach((row, i) => row.cells.forEach((_, c) => {
+        const ref = XLSX.utils.encode_cell({ r: i + 1, c });
+        if (!ws[ref]) ws[ref] = { t: 's', v: '' };
+        const col = VFX_COLORS[row.st];
+        ws[ref].s = {
+            font: { sz: 9, bold: c === head.length - 1, color: { rgb: col.fg }, strike: row.resolved[c] || (row.st === 'cancel' && c === descCol) },
+            fill: { fgColor: { rgb: col.bg } }, border,
+            alignment: { horizontal: c === descCol || (c >= roundsFrom && c < roundsFrom + nRounds) ? 'left' : 'center', vertical: 'center', wrapText: true }
+        };
+    }));
+    ws['!cols'] = head.map((_, c) => ({ wch: c === descCol ? 45 : (c >= roundsFrom && c < roundsFrom + nRounds) ? 32 : c === head.length - 1 ? 14 : 12 }));
+    ws['!rows'] = [{ hpt: 30 }, ...rows.map(() => ({ hpt: 42 }))];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'VFX');
+    const name = ($('projectName').value || 'Proje').replace(/[\\/:*?"<>|]/g, '');
+    XLSX.writeFile(wb, `${name}_VFX_Breakdown_${todayISO()}.xlsx`);
+}
+
+function exportVfxPdf() {
+    const { head, rows, descCol } = vfxExportRows();
+    const list = vfxScope();
+    const done = list.filter(s => vfxStatusOf(s) === 'done').length, active = list.filter(s => vfxStatusOf(s) !== 'cancel').length;
+    const body = `<style>@page { size: A4 landscape; margin: 10mm; }
+        table.vfx td, table.vfx th { border: 1px solid #999; padding: 4px 5px; font-size: 8pt; vertical-align: middle; }
+        table.vfx th { background: #c27ba0; font-size: 7.5pt; }
+        table.vfx td.desc { text-align: left; } table.vfx td { text-align: center; white-space: pre-wrap; }
+        table.vfx td.res { text-decoration: line-through; }
+        </style>
+        <p class="meta">${escapeHtml(tf('vfxProgress', { p: active ? Math.round(done / active * 100) : 0 }))} · ${escapeHtml(tf('vfxShots', { n: active }))}</p>
+        <table class="vfx"><thead><tr>${head.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map(r => `<tr style="background:#${VFX_COLORS[r.st].bg};color:#${VFX_COLORS[r.st].fg}">${r.cells.map((c, i) =>
+            `<td class="${i === descCol ? 'desc' : ''} ${r.resolved[i] ? 'res' : ''}">${escapeHtml(String(c))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    printDocument(t('modVfx'), rows.length ? body : `<p class="empty">${escapeHtml(t('vfxEmpty'))}</p>`);
+}
+
+// ---------------------------------------------------------------------
 // 11) YARDIM BALONLARI — fare bir aracın üzerinde 3 sn durunca ne işe yaradığını anlatır.
 // Bir öğeye yardım eklemek için: data-help="help_anahtar" + aşağıya çeviri.
 // ---------------------------------------------------------------------
@@ -5799,6 +6384,8 @@ const FB = {
             scripts: proj.scripts || {},
             meetings: proj.meetings || [],
             todos: proj.todos || {},
+            vfxShots: proj.vfxShots || {},
+            vfxRounds: proj.vfxRounds || {},
             stats: proj.stats || {},
             activeVersionId: active,
             activeVersionName: activeName,
