@@ -1127,6 +1127,78 @@ body.vfx-selecting, body.vfx-selecting * { user-select: none !important; cursor:
 .fb-info { color: #777; font-size: 11.5px; margin-left: 4px; }
 @media (max-width: 820px) { .fb-info { display: none; } }
 
+/* ---------- Takvim değişiklik raporu ---------- */
+.rep-modal { position: fixed; inset: 0; z-index: 24000; background: rgba(0,0,0,.65); display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+.rep-box { background: #111318; border: 1px solid #2a2d35; border-radius: 12px; width: min(920px, 100%); max-height: 100%; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.rep-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 8px; }
+.rep-head h2 { margin: 0; font-size: 18px; letter-spacing: .5px; }
+.rep-pick { display: flex; align-items: flex-end; gap: 12px; padding: 4px 20px 14px; border-bottom: 1px solid #22252c; flex-wrap: wrap; }
+.rep-pick label { display: flex; flex-direction: column; gap: 5px; flex: 1 1 240px; }
+.rep-pick label span { font-size: 10.5px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+.rep-pick select { background: #1b1e24; border: 1px solid #2f333c; color: #fff; padding: 9px 10px; border-radius: 7px; font-size: 13px; font-family: inherit; color-scheme: dark; }
+.rep-arrow { color: #666; font-size: 18px; padding-bottom: 8px; }
+.rep-body { overflow-y: auto; padding: 16px 20px; flex: 1; min-height: 120px; }
+.rep-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid #22252c; }
+.rep-sum { background: #161a20; border: 1px solid #262b33; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; }
+.rep-sum h3 { margin: 0 0 8px; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+.rep-sum h3 small { color: #888; font-weight: 600; letter-spacing: 0; text-transform: none; margin-left: 8px; }
+.rep-sum ul, .rep-ep ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: #ddd; }
+.rep-roots { margin-top: 10px; font-size: 13px; }
+.rep-roots ul { margin-top: 5px; }
+.rep-ep { border-left: 3px solid #333; padding: 2px 0 2px 14px; margin: 14px 0; }
+.rep-ep h4 { margin: 0 0 6px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 14px; }
+.rep-ep h4 > span:first-child { font-weight: 900; letter-spacing: 1px; }
+.rep-del { font-weight: 500; font-size: 13px; color: #ccc; }
+.rep-del.same { color: #777; font-size: 12px; }
+.rep-why { margin: 0 0 6px; font-size: 13px; color: #ffc857; }
+.rep-badge { display: inline-block; font-size: 11px; font-weight: 800; border-radius: 10px; padding: 1px 8px; margin-left: 4px; }
+.rep-badge.late { background: #4a1d1d; color: #ff8a80; }
+.rep-badge.early { background: #1d3a22; color: #8cf58a; }
+.rep-ep li.k-dur { color: #fff; }
+.rep-ep li.k-byPrev, .rep-ep li.k-byPrevEp { color: #aaa; }
+.rep-ep li.k-cut { color: #ff8a80; }
+/* PDF çıktısı */
+.rep-print .rep-sum { background: #f4f4f4; border: 1px solid #ccc; color: #000; }
+.rep-print ul { color: #000 !important; }
+.rep-print .rep-why { color: #a15c00; }
+.rep-print .rep-ep { border-left-color: #c00; }
+.rep-print .rep-badge.late { background: #fde2e2; color: #b00; } .rep-print .rep-badge.early { background: #e0f5e3; color: #0a6b1f; }
+
+/* Rapor önizleme: kâğıt görünümü + not alanları */
+.rep-hint { padding: 8px 20px; font-size: 12px; color: #9aa; border-bottom: 1px solid #22252c; }
+.rep-modal .rep-body { background: #2a2d33; padding: 22px; }
+.rep-paper { background: #fff; color: #1b1b1b; max-width: 760px; margin: 0 auto; padding: 28px 34px 34px; border-radius: 4px; box-shadow: 0 6px 30px rgba(0,0,0,.45); font-family: 'Segoe UI', Arial, sans-serif; min-height: 300px; }
+.rep-paper-head { border-bottom: 3px solid #e00; padding-bottom: 10px; margin-bottom: 16px; }
+.rep-paper-head .brand { font-weight: 900; letter-spacing: 3px; font-size: 10px; color: #e00; }
+.rep-paper-head h1 { margin: 6px 0 2px; font-size: 22px; color: #111; }
+.rep-paper-head .sub { color: #666; font-size: 12px; }
+.rep-paper .rep-sum { background: #f4f4f4; border: 1px solid #ddd; }
+.rep-paper .rep-sum h3 small { color: #777; }
+.rep-paper ul { color: #222 !important; }
+.rep-paper .rep-ep { border-left-color: #e00; }
+.rep-paper .rep-del { color: #333; } .rep-paper .rep-del.same { color: #888; }
+.rep-paper .rep-why { color: #a15c00; }
+.rep-paper .rep-ep li.k-dur { color: #000; font-weight: 600; } .rep-paper .rep-ep li.k-byPrev, .rep-paper .rep-ep li.k-byPrevEp { color: #666; }
+.rep-paper .rep-ep li.k-cut { color: #b00; }
+.rep-paper .rep-badge.late { background: #fde2e2; color: #b00; } .rep-paper .rep-badge.early { background: #e0f5e3; color: #0a6b1f; }
+.rep-paper .dash-empty b { color: #222; }
+.rep-note-edit { width: 100%; box-sizing: border-box; font-family: inherit; font-size: 13px; resize: none; overflow: hidden; background: #fffbea; border: 1px dashed #e5c76b; border-radius: 6px; padding: 7px 10px; color: #222; outline: none; }
+.rep-note-edit:focus { border-style: solid; border-color: #f0b400; background: #fff8dc; }
+textarea.rep-note-edit.ep { margin-top: 8px; min-height: 32px; }
+textarea.rep-note-edit.ep:placeholder-shown:not(:focus) { background: transparent; border-color: #ddd; }
+label.rep-note-edit.general { display: flex; flex-direction: column; gap: 6px; background: none; border: none; padding: 0; margin-bottom: 8px; }
+label.rep-note-edit.general span { font-size: 11px; font-weight: 800; color: #a15c00; letter-spacing: .5px; text-transform: uppercase; }
+label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; resize: none; overflow: hidden; background: #fffbea; border: 1px dashed #e5c76b; border-radius: 6px; padding: 8px 10px; color: #222; outline: none; min-height: 44px; }
+.rep-note { margin: 8px 0 4px; padding: 7px 10px; background: #fff8e1; border-left: 3px solid #f0b400; font-size: 13px; }
+
+/* Otomatik takvim kutucukları + başlıkta resmi tatil */
+.auto-checks { display: flex; flex-direction: column; gap: 8px; margin: 14px 0 4px; padding: 12px 14px; background: rgba(255,255,255,.03); border: 1px solid #2a2d35; border-radius: 8px; }
+.auto-check { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #ddd; cursor: pointer; }
+.auto-check input { width: 17px; height: 17px; accent-color: var(--neon-green); cursor: pointer; }
+.auto-checks small { color: #777; font-size: 11px; }
+.header .cell.date.holiday { background: #3a1414 !important; color: #ff8a80 !important; }
+.cell.date.holiday::after { content: '★'; position: absolute; top: 1px; right: 2px; font-size: 7px; color: #ff5252; }
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
@@ -1212,6 +1284,7 @@ body.vfx-selecting, body.vfx-selecting * { user-select: none !important; cursor:
                         <span class="caret">▾</span>
                     </button>
                     <button id="newVersionBtn" data-help="help_newVersion" class="nav-btn"><span>＋</span> <span data-i18n="newVersionBtn">NEW VERSION</span></button>
+                    <button id="reportBtn" data-help="help_report" class="nav-btn"><span>📊</span> <span data-i18n="repBtn">REPORT</span></button>
                 </div>
                 <div class="tb-sep"></div>
                 <button id="openModalBtn" data-help="help_setStart" class="nav-btn nav-btn-primary"><span>📅</span> <span data-i18n="setStartDate">SET START DATE</span></button>
@@ -1346,6 +1419,11 @@ body.vfx-selecting, body.vfx-selecting * { user-select: none !important; cursor:
             <div class="input-group"><label>MIX DAYS</label><input type="number" id="dMix" min="0" placeholder="2"></div>
             <div class="input-group"><label>SEND OFFSET</label><input type="number" id="offsetSend" min="0" placeholder="2"></div>
         </div>
+        <div class="auto-checks">
+            <label class="auto-check"><input type="checkbox" id="autoSkipSun" checked> <span data-i18n="autoSkipSun">Pazar günlerini boş bırak</span></label>
+            <label class="auto-check"><input type="checkbox" id="autoSkipHol" checked> <span data-i18n="autoSkipHol">Resmi tatilleri boş bırak (Türkiye)</span></label>
+            <small data-i18n="autoSkipHint">İşaretli günlere iş yazılmaz; süreler iş günü olarak sayılır ve sonraki aşamalar ona göre kayar.</small>
+        </div>
         <div class="modal-footer">
             <button id="runAutoSetupBtn" class="main-btn">GENERATE SCHEDULE</button>
             <button id="closeAutoModalBtn" class="cancel-btn">CANCEL</button>
@@ -1451,6 +1529,35 @@ function toLocalISO(d) {
 function dayDiff(a, b) { return Math.round((a - b) / 86400000); }
 function cutFg(type) { return CUT_TYPES[type] ? CUT_TYPES[type].fg : "#000000"; }
 function isWeekend(d) { return d.getDay() === 0 || d.getDay() === 6; }
+
+// Türkiye resmi tatilleri (arife yarım günleri iş günü sayılır)
+const TR_FIXED_HOLIDAYS = {
+    '01-01': 'Yılbaşı', '04-23': '23 Nisan', '05-01': '1 Mayıs', '05-19': '19 Mayıs',
+    '07-15': '15 Temmuz', '08-30': '30 Ağustos', '10-29': '29 Ekim'
+};
+// Dini bayramlar her yıl ~11 gün öne kayar. [ilk gün, gün sayısı, ad]
+// 2025–2027 Diyanet takvimine göre; 2028 tahmini — açıklanınca kontrol edilmeli. Yeni yıllar buraya eklenir.
+const TR_RELIGIOUS_HOLIDAYS = {
+    2025: [['03-30', 3, 'Ramazan Bayramı'], ['06-06', 4, 'Kurban Bayramı']],
+    2026: [['03-20', 3, 'Ramazan Bayramı'], ['05-27', 4, 'Kurban Bayramı']],
+    2027: [['03-09', 3, 'Ramazan Bayramı'], ['05-16', 4, 'Kurban Bayramı']],
+    2028: [['02-26', 3, 'Ramazan Bayramı'], ['05-05', 4, 'Kurban Bayramı']]
+};
+const holidayCache = new Map();
+function holidayName(d) {
+    const key = toLocalISO(d);
+    if (holidayCache.has(key)) return holidayCache.get(key);
+    let name = TR_FIXED_HOLIDAYS[key.slice(5)] || '';
+    if (!name) {
+        (TR_RELIGIOUS_HOLIDAYS[d.getFullYear()] || []).forEach(([md, n, label]) => {
+            const s0 = parseLocalDate(d.getFullYear() + '-' + md);
+            const diff = dayDiff(d, s0);
+            if (diff >= 0 && diff < n) name = label + ' ' + (diff + 1) + '. gün';
+        });
+    }
+    holidayCache.set(key, name);
+    return name;
+}
 
 // ---------------------------------------------------------------------
 // 3) DİL DESTEĞİ (EN / TR)
@@ -1924,7 +2031,8 @@ function buildHeader() {
     }
     const days = dates.map((d, i) => {
         const dayName = escapeHtml(d.toLocaleDateString(localeStr(), { weekday: 'short' }).toUpperCase());
-        return `<div class="cell date${milestoneCols.has(i) ? ' milestone' : ''}" data-col="${i}" style="grid-row: 2; grid-column: ${i + 1}">` +
+        const hol = holidayName(d);
+        return `<div class="cell date${milestoneCols.has(i) ? ' milestone' : ''}${hol ? ' holiday' : ''}" data-col="${i}" style="grid-row: 2; grid-column: ${i + 1}"${hol ? ` title="🇹🇷 ${escapeHtml(hol)}"` : ''}>` +
                `<div style="line-height:1.2; padding-top:2px;">${d.getDate()}/${d.getMonth() + 1}<br><span style="font-size:8px; opacity:0.7;">${dayName}</span></div></div>`;
     }).join("");
 
@@ -2982,6 +3090,7 @@ const autoModal = document.getElementById('autoSetupModal');
 document.getElementById('openAutoModalBtn').onclick = () => {
     const autoStart = document.getElementById('autoSetStart');
     if (!autoStart.value) autoStart.value = startDateInput.value;
+    try { const o = JSON.parse(localStorage.getItem('autoOff') || 'null'); if (o) { document.getElementById('autoSkipSun').checked = !!o.sun; document.getElementById('autoSkipHol').checked = !!o.hol; } } catch (e) {}
     autoModal.style.display = 'flex';
 };
 document.getElementById('closeAutoModalBtn').onclick = (e) => { e.preventDefault(); autoModal.style.display = 'none'; };
@@ -2996,15 +3105,30 @@ function paintCell(col, ep, type, text, cutType) {
 function simpleFill(start, dur, ep, type, text) {
     for (let i = 0; i < dur; i++) paintCell(start + i, ep, type, text);
 }
-// Pazar günlerini atlayarak doldurur; son doldurulan sütunu döndürür
-function fillWithSundays(start, dur, ep, type, text) {
-    let placed = 0, curr = start;
+// Otomatik takvim: pazar / resmi tatil günleri boş bırakılabilir (kutucuklarla seçilir)
+const autoOff = { sun: true, hol: true };
+function isOffCol(col) {
+    const d = dates[col];
+    if (!d) return false;
+    return (autoOff.sun && d.getDay() === 0) || (autoOff.hol && !!holidayName(d));
+}
+function nextWork(col) { let c = Math.max(0, col); while (isOffCol(c) && c < col + 60) c++; return c; }
+// İş günlerini sayarak doldurur; son doldurulan sütunu döndürür
+function fillWork(start, dur, ep, type, text) {
+    let placed = 0, curr = start, last = start - 1;
     while (placed < dur && curr < start + 3000) {
-        if (!dates[curr] || dates[curr].getDay() !== 0) { paintCell(curr, ep, type, text); placed++; }
+        if (!isOffCol(curr)) { paintCell(curr, ep, type, text); placed++; last = curr; }
         curr++;
     }
-    return curr - 1;
+    return last;
 }
+// "end" sütunundan geriye doğru dur iş günü sayıp başlangıcı bulur
+function workStartBefore(endExclusive, dur) {
+    let c = endExclusive - 1, placed = 0;
+    while (c >= 0 && placed < dur) { if (!isOffCol(c)) placed++; if (placed < dur) c--; }
+    return Math.max(0, c);
+}
+function fillWithSundays(start, dur, ep, type, text) { return fillWork(start, dur, ep, type, text); }
 
 document.getElementById('runAutoSetupBtn').onclick = function () {
     const setStart = document.getElementById('autoSetStart').value;
@@ -3046,27 +3170,32 @@ document.getElementById('runAutoSetupBtn').onclick = function () {
     milestoneCols.clear();
     createCalendarAction(setStart);
 
-    for (let s = 0; s < days.setTotal; s++) paintCell(s, 0, "set", "SET");
+    autoOff.sun = document.getElementById('autoSkipSun').checked;
+    autoOff.hol = document.getElementById('autoSkipHol').checked;
+    try { localStorage.setItem('autoOff', JSON.stringify(autoOff)); } catch (e) {}
+
+    const setEnd = days.setTotal ? fillWork(nextWork(0), days.setTotal, 0, "set", "SET") : -1;
 
     let lastMasterLockCol = 0;
     for (let i = 1; i <= epCount; i++) {
-        const cutsStart = (i === 1) ? days.setTotal + 2 : lastMasterLockCol + 2;
+        const cutsStart = nextWork((i === 1) ? setEnd + 2 : lastMasterLockCol + 2);
 
-        fillWithSundays(Math.max(0, cutsStart - days.edit), days.edit, i, "edit", "EDIT");
+        if (days.edit) fillWork(workStartBefore(cutsStart, days.edit), days.edit, i, "edit", "EDIT");
 
-        const masterLockCol = fillWithSundays(cutsStart, days.cuts, i, "cuts", "CUT");
+        const masterLockCol = fillWork(cutsStart, days.cuts, i, "cuts", "CUT");
         lastMasterLockCol = masterLockCol;
         paintCell(masterLockCol, i, "cuts", "", "master");
 
-        paintCell(masterLockCol + 1, i, "vfx", "EXPORT");
-        const techStart = masterLockCol + 2;
-        simpleFill(techStart, days.vfx, i, "vfx", "VFX");
-        simpleFill(techStart, days.color, i, "color", "COLOR");
-        simpleFill(techStart, days.music, i, "music", "MUSIC");
+        const exportCol = nextWork(masterLockCol + 1);
+        paintCell(exportCol, i, "vfx", "EXPORT");
+        const techStart = nextWork(exportCol + 1);
+        fillWork(techStart, days.vfx, i, "vfx", "VFX");
+        fillWork(techStart, days.color, i, "color", "COLOR");
+        const musicEnd = days.music ? fillWork(techStart, days.music, i, "music", "MUSIC") : techStart - 1;
 
-        const mixStart = techStart + days.music + 1;
-        simpleFill(mixStart, days.mix, i, "sound", "MIX");
-        simpleFill(mixStart + days.mix + days.offSend, 3, i, "send", "SEND");
+        const mixStart = nextWork(musicEnd + 2);
+        const mixEnd = days.mix ? fillWork(mixStart, days.mix, i, "sound", "MIX") : mixStart - 1;
+        fillWork(nextWork(mixEnd + 1 + days.offSend), 3, i, "send", "SEND");
     }
 
     autoModal.style.display = 'none';
@@ -4352,6 +4481,7 @@ function showVersionMenu(anchor) {
                     ${canDelete ? `<button class="icon-btn" data-vact="delete" title="${escapeHtml(t('delete'))}">🗑</button>` : ''}
                 </span>` : ''}
             </div>`).join('') +
+        `<div class="menu-sep"></div><div class="item" data-vact="report">📊&nbsp; ${escapeHtml(t('repMenu'))}</div>` +
         (canEdit ? `<div class="menu-sep"></div>
          <div class="item" data-vact="copy">＋&nbsp; ${escapeHtml(t('newVersionCopy'))}</div>
          <div class="item" data-vact="blank">＋&nbsp; ${escapeHtml(t('newVersionBlank'))}</div>` : '');
@@ -4368,6 +4498,7 @@ function showVersionMenu(anchor) {
         else if (act === 'delete') deleteVersion(vid);
         else if (act === 'copy') newVersion(true);
         else if (act === 'blank') newVersion(false);
+        else if (act === 'report') openReportModal();
     });
     menu.querySelectorAll('.ver-item').forEach(item => item.onclick = () => {
         closeMenu();
@@ -4446,6 +4577,343 @@ async function deleteVersion(vid) {
         triggerAutoSave();
     } catch (e) { alert(e.message); }
 }
+
+// ---------------------------------------------------------------------
+// 7d) TAKVİM DEĞİŞİKLİK RAPORU — iki versiyonu kıyaslar, teslimlerin neden kaydığını anlatır
+// Her bölüm × departman için: başlangıç, bitiş, gün sayısı (dolu hücre). Kayma sebebi:
+//   süre değişimi · aynı bölümde bir önceki aşamanın kayması · önceki bölümün kayması · elle taşıma
+// ---------------------------------------------------------------------
+Object.assign(I18N.en, {
+    repBtn: "REPORT", repTitle: "Calendar change report", repMenu: "Report calendar changes",
+    repOld: "Previous version", repNew: "Compare with", repCurrent: "{name} (open now)", repRun: "Compare",
+    repLoading: "Comparing…", repCopy: "Copy text", repCopied: "Report copied — you can paste it into an email.",
+    repNoChange: "No differences — the two calendars are the same.", repNeedTwo: "You need at least two calendar versions to compare. Create a new version first.",
+    repSummary: "Summary", repEpChanged: "{n} episodes changed", repDeadlineMoved: "Delivery moved in {n} episodes",
+    repProjectEnd: "Project end", repBiggest: "Biggest delay: {ep} ({d})", repRoots: "Main reasons",
+    repDelivery: "Delivery", repUnchangedDelivery: "Delivery unchanged", repWhy: "Why",
+    repDurChange: "{dept}: duration {a} → {b} days ({d})", repDurDates: "{os}–{oe} → {ns}–{ne}",
+    repByPrev: "{dept}: moved {os} → {ns} because {prev} moved {d}",
+    repByPrevEp: "{dept}: moved {os} → {ns} because {ep} {dept} moved {d}",
+    repMoved: "{dept}: moved from {os}–{oe} to {ns}–{ne} ({d})", repEndOnly: "{dept}: end {oe} → {ne} ({d})",
+    repAdded: "{dept}: added ({ns}–{ne}, {b} days)", repRemoved: "{dept}: removed (was {os}–{oe})",
+    repCut: "{label}: {o} → {n} ({d})", repCutAdded: "{label}: added on {n}", repCutRemoved: "{label}: removed (was {o})",
+    repRootDur: "{ep} {dept} {a} → {b} days", repRootMove: "{ep} {dept} moved {d}", repRootPrevEp: "knock-on from {ep}",
+    repDays: "{n} days", repDay: "1 day", repStartBy: "start moved because {prev} moved {d}", repStartShift: "Calendar start date changed: {o} → {n}",
+    dept_set: "Shoot", dept_edit: "Edit", dept_cuts: "Cuts", dept_vfx: "VFX", dept_color: "Color", dept_sound: "Sound", dept_music: "Music", dept_send: "Send",
+    repNoteGeneral: "General note (added to the report)", repNoteGeneralPh: "Anything you want to tell the producers… (left out if empty)",
+    repNoteEp: "Add a note for this episode…", repNotes: "Note", repPreviewHint: "Preview — add your notes, then export PDF or copy the text.",
+    autoSkipSun: "Leave Sundays empty", autoSkipHol: "Leave public holidays empty (Turkey)",
+    autoSkipHint: "Nothing is scheduled on ticked days; durations count working days and later stages shift accordingly.",
+    help_report: "Compares this calendar with an earlier version and explains, episode by episode, why deliveries moved — ready to send to producers."
+});
+Object.assign(I18N.tr, {
+    repBtn: "RAPOR", repTitle: "Takvim değişiklik raporu", repMenu: "Takvim değişikliğini raporla",
+    repOld: "Önceki versiyon", repNew: "Kıyaslanacak", repCurrent: "{name} (açık olan)", repRun: "Kıyasla",
+    repLoading: "Kıyaslanıyor…", repCopy: "Metni kopyala", repCopied: "Rapor kopyalandı — e-postaya yapıştırabilirsin.",
+    repNoChange: "Fark yok — iki takvim aynı.", repNeedTwo: "Kıyaslamak için en az iki takvim versiyonu gerekiyor. Önce yeni bir versiyon oluştur.",
+    repSummary: "Özet", repEpChanged: "{n} bölümde değişiklik var", repDeadlineMoved: "{n} bölümün teslim tarihi değişti",
+    repProjectEnd: "Proje bitişi", repBiggest: "En büyük kayma: {ep} ({d})", repRoots: "Ana sebepler",
+    repDelivery: "Teslim", repUnchangedDelivery: "Teslim tarihi değişmedi", repWhy: "Neden",
+    repDurChange: "{dept}: süre {a} → {b} gün ({d})", repDurDates: "{os}–{oe} → {ns}–{ne}",
+    repByPrev: "{dept}: {prev} {d} kaydığı için {os} → {ns} tarihine kaydı",
+    repByPrevEp: "{dept}: {ep} {dept} {d} kaydığı için {os} → {ns} tarihine kaydı",
+    repMoved: "{dept}: {os}–{oe} yerine {ns}–{ne} olarak taşındı ({d})", repEndOnly: "{dept}: bitiş {oe} → {ne} ({d})",
+    repAdded: "{dept}: eklendi ({ns}–{ne}, {b} gün)", repRemoved: "{dept}: kaldırıldı (önceden {os}–{oe})",
+    repCut: "{label}: {o} → {n} ({d})", repCutAdded: "{label}: {n} tarihine eklendi", repCutRemoved: "{label}: kaldırıldı (önceden {o})",
+    repRootDur: "{ep} {dept} {a} → {b} gün", repRootMove: "{ep} {dept} {d} taşındı", repRootPrevEp: "{ep}'deki kaymanın etkisi",
+    repDays: "{n} gün", repDay: "1 gün", repStartBy: "başlangıç, {prev} {d} kaydığı için kaydı", repStartShift: "Takvim başlangıç tarihi değişti: {o} → {n}",
+    dept_set: "Çekim", dept_edit: "Edit", dept_cuts: "Cuts", dept_vfx: "VFX", dept_color: "Color", dept_sound: "Ses", dept_music: "Müzik", dept_send: "Send",
+    repNoteGeneral: "Genel not (rapora eklenir)", repNoteGeneralPh: "Yapımcıya iletmek istediğin açıklama… (boş bırakılırsa raporda görünmez)",
+    repNoteEp: "Bu bölüm için not ekle…", repNotes: "Not", repPreviewHint: "Önizleme — notlarını ekle, sonra PDF al ya da metni kopyala.",
+    autoSkipSun: "Pazar günlerini boş bırak", autoSkipHol: "Resmi tatilleri boş bırak (Türkiye)",
+    autoSkipHint: "İşaretli günlere iş yazılmaz; süreler iş günü olarak sayılır ve sonraki aşamalar ona göre kayar.",
+    help_report: "Bu takvimi önceki bir versiyonla kıyaslar ve teslimlerin neden kaydığını bölüm bölüm açıklar — yapımcıya gönderilmeye hazır."
+});
+
+const REP_PROCS = ['set', ...PROC_ORDER];
+const repEp = (ep) => ep === 0 ? t('dept_set') : 'EP' + String(ep).padStart(2, '0');
+const repDept = (p) => t('dept_' + p) || p.toUpperCase();
+const repD = (iso) => formatDate(iso, { day: 'numeric', month: 'short' });
+const repSigned = (n) => (n > 0 ? '+' : n < 0 ? '−' : '') + (Math.abs(n) === 1 ? t('repDay') : tf('repDays', { n: Math.abs(n) }));
+const isoDiff = (a, b) => dayDiff(parseLocalDate(a), parseLocalDate(b));
+
+// Bir versiyonu bölüm × departman aralıklarına çevir (mutlak tarihlerle — başlangıç tarihi farklı olsa da doğru kıyaslanır)
+function calendarSpans(v) {
+    const base = parseLocalDate(v.startDate || toLocalISO(new Date()));
+    const iso = (col) => { const d = new Date(base); d.setDate(d.getDate() + (parseInt(col) || 0)); return toLocalISO(d); };
+    const spans = new Map(), cuts = new Map(), eps = new Set();
+    (v.cells || []).forEach(c => {
+        const ep = parseInt(c.ep) || 0, p = c.procType, d = iso(c.col);
+        eps.add(ep);
+        const k = ep + '|' + p;
+        const s = spans.get(k) || { start: d, end: d, n: 0 };
+        if (d < s.start) s.start = d;
+        if (d > s.end) s.end = d;
+        s.n++;
+        spans.set(k, s);
+        if (c.cutType) {
+            const lbl = (CUT_TYPES[c.cutType] && CUT_TYPES[c.cutType].label) || String(c.text || c.cutType);
+            const ck = ep + '|' + c.cutType;
+            const prev = cuts.get(ck);
+            if (!prev || d > prev.date) cuts.set(ck, { ep, type: c.cutType, label: lbl, date: d });
+        }
+    });
+    return { spans, cuts, eps };
+}
+function epDelivery(sp, ep) {
+    const send = sp.spans.get(ep + '|send');
+    if (send) return send.end;
+    let end = null;
+    REP_PROCS.forEach(p => { const s = sp.spans.get(ep + '|' + p); if (s && (!end || s.end > end)) end = s.end; });
+    return end;
+}
+
+function analyzeCalendarChange(oldV, newV) {
+    const A = calendarSpans(oldV), B = calendarSpans(newV);
+    const eps = [...new Set([...A.eps, ...B.eps])].sort((a, b) => a - b);
+    const out = { episodes: [], roots: [], startShift: null };
+    if (oldV.startDate && newV.startDate && oldV.startDate !== newV.startDate) out.startShift = { o: oldV.startDate, n: newV.startDate };
+    const endShift = {};       // "ep|proc" → bitiş kayması (gün)
+    const rootOf = {};         // "ep|proc" → kök sebep metni
+    eps.forEach(ep => {
+        const items = [];
+        let prevProc = null;   // aynı bölümde bir önceki dolu aşama
+        REP_PROCS.forEach(p => {
+            const k = ep + '|' + p, o = A.spans.get(k), n = B.spans.get(k);
+            if (!o && !n) return;
+            if (!o) { items.push({ p, kind: 'added', n }); rootOf[k] = tf('repRootDur', { ep: repEp(ep), dept: repDept(p), a: 0, b: n.n }); prevProc = p; return; }
+            if (!n) { items.push({ p, kind: 'removed', o }); prevProc = p; return; }
+            const ds = isoDiff(n.start, o.start), de = isoDiff(n.end, o.end), dn = n.n - o.n;
+            endShift[k] = de;
+            if (!ds && !de && !dn) { prevProc = p; return; }
+            const it = { p, o, n, ds, de, dn, prevEp: ep - 1 };
+            const pk = prevProc && (ep + '|' + prevProc);
+            const prevEpK = (ep - 1) + '|' + p;
+            if (dn) {
+                it.kind = 'dur';
+                rootOf[k] = tf('repRootDur', { ep: repEp(ep), dept: repDept(p), a: o.n, b: n.n });
+                // Süre değiştiği gibi başlangıç da kaydıysa, kayma kısmının sebebini de yaz
+                if (ds && pk && endShift[pk] && Math.sign(endShift[pk]) === Math.sign(ds)) { it.alsoBy = { type: 'prev', p: prevProc, d: endShift[pk] }; rootOf[k] = rootOf[pk] + ' + ' + rootOf[k]; }
+                else if (ds && endShift[prevEpK] && Math.sign(endShift[prevEpK]) === Math.sign(ds)) { it.alsoBy = { type: 'prevEp', d: endShift[prevEpK] }; }
+            } else if (ds && pk && endShift[pk] && Math.sign(endShift[pk]) === Math.sign(ds)) {
+                it.kind = 'byPrev'; it.by = prevProc; it.byD = endShift[pk];
+                rootOf[k] = rootOf[pk];
+            } else if (ds && endShift[prevEpK] && Math.sign(endShift[prevEpK]) === Math.sign(ds)) {
+                it.kind = 'byPrevEp'; it.byD = endShift[prevEpK];
+                rootOf[k] = rootOf[prevEpK] || tf('repRootPrevEp', { ep: repEp(ep - 1) });
+            } else if (ds) {
+                it.kind = 'moved';
+                rootOf[k] = tf('repRootMove', { ep: repEp(ep), dept: repDept(p), d: repSigned(ds) });
+            } else {
+                it.kind = 'endOnly';
+                rootOf[k] = tf('repRootMove', { ep: repEp(ep), dept: repDept(p), d: repSigned(de) });
+            }
+            items.push(it);
+            prevProc = p;
+        });
+        // Cut kilometre taşları (Director/Producer Cut, Master Lock, platform cut'ları)
+        const cutItems = [];
+        new Set([...A.cuts.keys(), ...B.cuts.keys()]).forEach(ck => {
+            if (!ck.startsWith(ep + '|')) return;
+            const o = A.cuts.get(ck), n = B.cuts.get(ck);
+            if (o && n && o.date === n.date) return;
+            cutItems.push({ label: (n || o).label, o: o && o.date, n: n && n.date, d: o && n ? isoDiff(n.date, o.date) : null });
+        });
+        const dO = epDelivery(A, ep), dN = epDelivery(B, ep);
+        const dd = dO && dN ? isoDiff(dN, dO) : null;
+        if (!items.length && !cutItems.length && !dd) return;
+        // Teslim neden kaydı: send (yoksa son aşama) için kök sebep
+        let why = null;
+        if (dd) {
+            const lastK = B.spans.get(ep + '|send') ? ep + '|send' : [...REP_PROCS].reverse().map(p => ep + '|' + p).find(k => B.spans.get(k));
+            why = rootOf[lastK] || (items.find(i => rootOf[ep + '|' + i.p]) ? rootOf[ep + '|' + items.find(i => rootOf[ep + '|' + i.p]).p] : null);
+        }
+        out.episodes.push({ ep, items, cutItems, delivery: { o: dO, n: dN, d: dd }, why });
+        items.forEach(i => {
+            if (i.kind === 'dur' || i.kind === 'added') out.roots.push(tf('repRootDur', { ep: repEp(ep), dept: repDept(i.p), a: i.o ? i.o.n : 0, b: i.n.n }));
+            else if (i.kind === 'moved' || i.kind === 'endOnly') out.roots.push(tf('repRootMove', { ep: repEp(ep), dept: repDept(i.p), d: repSigned(i.kind === 'moved' ? i.ds : i.de) }));
+        });
+    });
+    // Proje bitişi
+    const lastOf = (sp) => { let e = null; sp.spans.forEach(s => { if (!e || s.end > e) e = s.end; }); return e; };
+    const eO = lastOf(A), eN = lastOf(B);
+    out.projectEnd = { o: eO, n: eN, d: eO && eN ? isoDiff(eN, eO) : null };
+    out.roots = [...new Set(out.roots.filter(Boolean))];
+    return out;
+}
+
+// --- Rapor metinleri ---
+function repItemText(it) {
+    const D = repDept(it.p);
+    if (it.kind === 'added') return tf('repAdded', { dept: D, ns: repD(it.n.start), ne: repD(it.n.end), b: it.n.n });
+    if (it.kind === 'removed') return tf('repRemoved', { dept: D, os: repD(it.o.start), oe: repD(it.o.end) });
+    const dates = tf('repDurDates', { os: repD(it.o.start), oe: repD(it.o.end), ns: repD(it.n.start), ne: repD(it.n.end) });
+    if (it.kind === 'dur') {
+        let s = tf('repDurChange', { dept: D, a: it.o.n, b: it.n.n, d: repSigned(it.dn) }) + ' · ' + dates;
+        if (it.alsoBy) s += ' · ' + tf('repStartBy', { prev: it.alsoBy.type === 'prev' ? repDept(it.alsoBy.p) : repEp(it.prevEp) + ' ' + D, d: repSigned(it.alsoBy.d) });
+        return s;
+    }
+    if (it.kind === 'byPrev') return tf('repByPrev', { dept: D, prev: repDept(it.by), d: repSigned(it.byD), os: repD(it.o.start), ns: repD(it.n.start) });
+    if (it.kind === 'byPrevEp') return tf('repByPrevEp', { dept: D, ep: repEp(it.prevEp), d: repSigned(it.byD), os: repD(it.o.start), ns: repD(it.n.start) });
+    if (it.kind === 'moved') return tf('repMoved', { dept: D, os: repD(it.o.start), oe: repD(it.o.end), ns: repD(it.n.start), ne: repD(it.n.end), d: repSigned(it.ds) });
+    return tf('repEndOnly', { dept: D, oe: repD(it.o.end), ne: repD(it.n.end), d: repSigned(it.de) });
+}
+function repCutText(c) {
+    if (!c.o) return tf('repCutAdded', { label: c.label, n: repD(c.n) });
+    if (!c.n) return tf('repCutRemoved', { label: c.label, o: repD(c.o) });
+    return tf('repCut', { label: c.label, o: repD(c.o), n: repD(c.n), d: repSigned(c.d) });
+}
+
+const repNotes = { general: '', eps: {} };
+const noteBlock = (txt) => txt && txt.trim() ? `<div class="rep-note"><b>📝 ${escapeHtml(t('repNotes'))}:</b> ${escapeHtml(txt.trim()).replace(/\n/g, '<br>')}</div>` : '';
+function reportHtml(r, oldName, newName, editable) {
+    const genNote = editable
+        ? `<label class="rep-note-edit general"><span>📝 ${escapeHtml(t('repNoteGeneral'))}</span><textarea data-note="general" rows="2" placeholder="${escapeHtml(t('repNoteGeneralPh'))}">${escapeHtml(repNotes.general)}</textarea></label>`
+        : noteBlock(repNotes.general);
+    const epNote = (ep) => editable
+        ? `<textarea class="rep-note-edit ep" data-note="${ep}" rows="1" placeholder="${escapeHtml(t('repNoteEp'))}">${escapeHtml(repNotes.eps[ep] || '')}</textarea>`
+        : noteBlock(repNotes.eps[ep]);
+    if (!r.episodes.length && !r.startShift) return genNote +  `<div class="dash-empty"><div class="dash-empty-icon">✅</div><b>${escapeHtml(t('repNoChange'))}</b></div>`;
+    const moved = r.episodes.filter(e => e.delivery.d);
+    const biggest = moved.slice().sort((a, b) => b.delivery.d - a.delivery.d)[0];
+    const badge = (d) => d ? `<span class="rep-badge ${d > 0 ? 'late' : 'early'}">${escapeHtml(repSigned(d))}</span>` : '';
+    const sum = `<section class="rep-sum">
+        <h3>${escapeHtml(t('repSummary'))} <small>${escapeHtml(oldName)} → ${escapeHtml(newName)}</small></h3>
+        <ul>
+            ${r.startShift ? `<li>${escapeHtml(tf('repStartShift', { o: repD(r.startShift.o), n: repD(r.startShift.n) }))}</li>` : ''}
+            <li>${escapeHtml(tf('repEpChanged', { n: r.episodes.filter(e => e.ep > 0).length }))}${moved.length ? ' · ' + escapeHtml(tf('repDeadlineMoved', { n: moved.filter(e => e.ep > 0).length })) : ''}</li>
+            ${r.projectEnd.d ? `<li><b>${escapeHtml(t('repProjectEnd'))}:</b> ${escapeHtml(repD(r.projectEnd.o))} → ${escapeHtml(repD(r.projectEnd.n))} ${badge(r.projectEnd.d)}</li>` : ''}
+            ${biggest && biggest.delivery.d > 0 ? `<li>${escapeHtml(tf('repBiggest', { ep: repEp(biggest.ep), d: repSigned(biggest.delivery.d) }))}</li>` : ''}
+        </ul>
+        ${r.roots.length ? `<div class="rep-roots"><b>${escapeHtml(t('repRoots'))}:</b><ul>${r.roots.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul></div>` : ''}
+    </section>${genNote}`;
+    const eps = r.episodes.map(e => `<section class="rep-ep">
+        <h4><span>${escapeHtml(repEp(e.ep))}</span>
+            ${e.delivery.d ? `<span class="rep-del">${escapeHtml(t('repDelivery'))}: ${escapeHtml(repD(e.delivery.o))} → <b>${escapeHtml(repD(e.delivery.n))}</b> ${badge(e.delivery.d)}</span>`
+                : e.ep > 0 ? `<span class="rep-del same">${escapeHtml(t('repUnchangedDelivery'))}</span>` : ''}</h4>
+        ${e.why ? `<p class="rep-why"><b>${escapeHtml(t('repWhy'))}:</b> ${escapeHtml(e.why)}</p>` : ''}
+        <ul>${e.items.map(i => `<li class="k-${i.kind}">${escapeHtml(repItemText(i))}</li>`).join('')}
+            ${e.cutItems.map(c => `<li class="k-cut">✂ ${escapeHtml(repCutText(c))}</li>`).join('')}</ul>
+        ${epNote(e.ep)}
+    </section>`).join('');
+    return sum + eps;
+}
+
+function reportText(r, oldName, newName, project) {
+    const L = [];
+    L.push(`${t('repTitle')} — ${project}`, `${oldName} → ${newName}`, '');
+    if (!r.episodes.length && !r.startShift) { L.push(t('repNoChange')); return L.join('\n'); }
+    if (r.startShift) L.push('• ' + tf('repStartShift', { o: repD(r.startShift.o), n: repD(r.startShift.n) }));
+    const mv = r.episodes.filter(e => e.delivery.d && e.ep > 0).length;
+    L.push('• ' + tf('repEpChanged', { n: r.episodes.filter(e => e.ep > 0).length }) + (mv ? ' · ' + tf('repDeadlineMoved', { n: mv }) : ''));
+    if (r.projectEnd.d) L.push(`• ${t('repProjectEnd')}: ${repD(r.projectEnd.o)} → ${repD(r.projectEnd.n)} (${repSigned(r.projectEnd.d)})`);
+    if (r.roots.length) { L.push('', t('repRoots') + ':'); r.roots.forEach(x => L.push('  - ' + x)); }
+    if (repNotes.general.trim()) L.push('', t('repNotes') + ': ' + repNotes.general.trim());
+    r.episodes.forEach(e => {
+        L.push('', repEp(e.ep) + (e.delivery.d ? ` — ${t('repDelivery')}: ${repD(e.delivery.o)} → ${repD(e.delivery.n)} (${repSigned(e.delivery.d)})` : ''));
+        if (e.why) L.push(`  ${t('repWhy')}: ${e.why}`);
+        e.items.forEach(i => L.push('  • ' + repItemText(i)));
+        e.cutItems.forEach(c => L.push('  ✂ ' + repCutText(c)));
+        if ((repNotes.eps[e.ep] || '').trim()) L.push('  ' + t('repNotes') + ': ' + repNotes.eps[e.ep].trim());
+    });
+    return L.join('\n');
+}
+
+// --- Pencere ---
+let repEl = null, repLast = null;
+function openReportModal() {
+    if (!App.project || !App.version) return;
+    if (App.versions.length < 2) { alert(t('repNeedTwo')); return; }
+    if (!repEl) {
+        repEl = document.createElement('div');
+        repEl.className = 'rep-modal';
+        repEl.innerHTML = `<div class="rep-box">
+            <div class="rep-head"><h2>📊 ${escapeHtml(t('repTitle'))}</h2><button class="icon-btn" data-rep="close">✕</button></div>
+            <div class="rep-pick"></div>
+            <div class="rep-hint">👁 ${escapeHtml(t('repPreviewHint'))}</div>
+            <div class="rep-body"><div class="rep-paper"></div></div>
+            <div class="rep-foot">
+                <button class="ghost-btn" data-rep="copy">📋 ${escapeHtml(t('repCopy'))}</button>
+                <button class="ghost-btn" data-rep="pdf">📄 PDF</button>
+            </div></div>`;
+        document.body.appendChild(repEl);
+        repEl.addEventListener('click', (e) => {
+            if (e.target === repEl) return closeReport();
+            const b = e.target.closest('[data-rep]');
+            if (!b) return;
+            const a = b.dataset.rep;
+            if (a === 'close') closeReport();
+            if (a === 'run') runReport();
+            if (a === 'copy' && repLast) {
+                const txt = reportText(repLast.r, repLast.oldName, repLast.newName, $('projectName').value);
+                (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => showInfoToast('📋 ' + t('repCopied'))).catch(() => prompt(t('repCopy'), txt));
+            }
+            if (a === 'pdf' && repLast) printDocument(t('repTitle') + ' · ' + repLast.oldName + ' → ' + repLast.newName, `<style>
+                .rep-sum { background: #f4f4f4; border: 1px solid #ccc; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; }
+                .rep-sum h3 { margin: 0 0 6px; font-size: 12pt; } .rep-sum h3 small { color: #777; font-weight: 400; margin-left: 6px; }
+                ul { margin: 0; padding-left: 18px; } li { margin: 3px 0; font-size: 10.5pt; }
+                .rep-ep { border-left: 3px solid #e00; padding: 2px 0 2px 12px; margin: 12px 0; break-inside: avoid; }
+                .rep-ep h4 { margin: 0 0 4px; font-size: 12pt; display: flex; gap: 12px; align-items: center; }
+                .rep-del { font-weight: 400; font-size: 10.5pt; } .rep-del.same { color: #888; }
+                .rep-why { margin: 0 0 4px; color: #a15c00; font-size: 10.5pt; }
+                .rep-badge { font-size: 9pt; font-weight: 800; border-radius: 8px; padding: 1px 7px; }
+                .rep-badge.late { background: #fde2e2; color: #b00; } .rep-badge.early { background: #e0f5e3; color: #0a6b1f; }
+                .k-byPrev, .k-byPrevEp { color: #666; } .k-cut { color: #b00; } .rep-roots { margin-top: 8px; }
+                .rep-note { margin: 8px 0 4px; padding: 7px 10px; background: #fff8e1; border-left: 3px solid #f0b400; font-size: 10.5pt; }
+            </style>${reportHtml(repLast.r, repLast.oldName, repLast.newName, false)}`);
+        });
+        repEl.addEventListener('change', (e) => { if (e.target.matches('select')) runReport(); });
+        repEl.addEventListener('input', (e) => {
+            const k = e.target.dataset.note;
+            if (k === undefined) return;
+            if (k === 'general') repNotes.general = e.target.value; else repNotes.eps[k] = e.target.value;
+            e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px';
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && repEl && !repEl.hidden) closeReport(); });
+    }
+    // Varsayılan: açık versiyon ↔ ondan bir önceki (en son güncellenen diğer versiyon)
+    const list = App.versions.slice().sort((a, b) => String(b.lastUpdated || '').localeCompare(String(a.lastUpdated || '')));
+    const others = list.filter(v => v.id !== App.version.id);
+    const opt = (v, sel) => `<option value="${escapeHtml(v.id)}" ${sel ? 'selected' : ''}>${escapeHtml(v.id === App.version.id ? tf('repCurrent', { name: v.name }) : v.name)} · ${escapeHtml(formatDate(v.lastUpdated, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</option>`;
+    repEl.querySelector('.rep-pick').innerHTML = `
+        <label><span>${escapeHtml(t('repOld'))}</span><select class="rep-old">${others.map((v, i) => opt(v, i === 0)).join('')}${opt(list.find(v => v.id === App.version.id), false)}</select></label>
+        <span class="rep-arrow">→</span>
+        <label><span>${escapeHtml(t('repNew'))}</span><select class="rep-new">${list.map(v => opt(v, v.id === App.version.id)).join('')}</select></label>`;
+    repEl.hidden = false;
+    runReport();
+}
+function closeReport() { if (repEl) repEl.hidden = true; }
+
+async function loadVersionForReport(vid) {
+    if (vid === App.version.id) {
+        // Açık takvim: kaydedilmemiş son hâliyle
+        const cal = collectProjectData($('projectName').value);
+        return { name: App.version.name, startDate: cal.startDate, cells: cal.cells };
+    }
+    const v = await api().getVersion(App.project.id, vid);
+    if (!v) throw new Error('not found');
+    return { name: v.name || '', startDate: v.startDate, cells: versionCells(v) };
+}
+async function runReport() {
+    const body = repEl.querySelector('.rep-paper');
+    const oid = repEl.querySelector('.rep-old').value, nid = repEl.querySelector('.rep-new').value;
+    if (repLast && repLast.pair !== oid + '|' + nid) { repNotes.general = ''; repNotes.eps = {}; }   // farklı kıyas → notlar sıfırlanır
+    body.innerHTML = `<div class="dash-loading">${escapeHtml(t('repLoading'))}</div>`;
+    try {
+        const [o, n] = await Promise.all([loadVersionForReport(oid), loadVersionForReport(nid)]);
+        const r = analyzeCalendarChange(o, n);
+        repLast = { r, oldName: o.name, newName: n.name, pair: oid + '|' + nid };
+        const stamp = new Date().toLocaleString(localeStr(), { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        body.innerHTML = `<div class="rep-paper-head"><div class="brand">POSTPRO LAB</div>
+            <h1>${escapeHtml($('projectName').value || '')}</h1><div class="sub">${escapeHtml(t('repTitle'))} · ${escapeHtml(o.name)} → ${escapeHtml(n.name)} · ${escapeHtml(stamp)}</div></div>`
+            + reportHtml(r, o.name, n.name, true);
+        body.querySelectorAll('textarea').forEach(ta => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; });
+    } catch (e) {
+        body.innerHTML = `<div class="dash-empty"><b>${escapeHtml(t('versionLoadError'))}</b></div>`;
+    }
+}
+window.openReportModal = openReportModal;
+$('reportBtn').onclick = openReportModal;
 
 // ---------------------------------------------------------------------
 // 7c) ESKİ KAYITLARI PROJELERE AYIRMA
