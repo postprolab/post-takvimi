@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -1198,6 +1199,8 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 .auto-checks small { color: #777; font-size: 11px; }
 .header .cell.date.holiday { background: #3a1414 !important; color: #ff8a80 !important; }
 .cell.date.holiday::after { content: '★'; position: absolute; top: 1px; right: 2px; font-size: 7px; color: #ff5252; }
+.context-menu .menu-label.multi { color: #64b5f6; background: rgba(100,181,246,.08); padding: 6px 15px; letter-spacing: .5px; }
+.episode-v { cursor: context-menu; }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -1496,6 +1499,9 @@ PLATFORM_CUTS.forEach(p => {
     }
 });
 
+// 💬 Altyazı çalışması (CUTS menüsünün en altında)
+CUT_TYPES.subtitle = { label: "ALTYAZI", bg: "#00897B", fg: "#FFFFFF" };
+
 // 📦 SEND satırına özel türler (sağ tık menüsü). Yeni tür eklemek için buraya bir satır yeter.
 const SEND_TYPES = {
     qc: { label: "QC", bg: "#FF9800", fg: "#000000" }
@@ -1576,6 +1582,13 @@ const I18N = {
         readOnlyBannerText: "This is a read-only shared view — editing is disabled.",
         myProjects: "MY PROJECTS", deleteAll: "DELETE ALL", close: "CLOSE", deleteProject: "Delete Project",
         selectStartDate: "SELECT START DATE", apply: "APPLY", cancel: "CANCEL",
+        subtitleCut: "Subtitles", cellsSelected: "{n} cells selected — applies to all", renameMany: "New name for {n} cells:",
+        epCellsCount: "{n} filled cells", epCloneSame: "Clone this episode's plan to {next} (same days)",
+        epCloneShift: "Clone to {next} and shift… (suggested: {d} days)", epCloneMany: "Clone to several following episodes…",
+        epSelectAll: "Select all of this episode (to move it)", epClear: "Clear this episode",
+        epCloneEmpty: "This episode has no filled cells to clone.", epCloneOverwrite: "{eps} already have work. Replace it with the copy?",
+        epClearConfirm: "Clear all cells of {ep}?", epOffsetPrompt: "Shift the copy in {next} by how many days? (0 = same days, negative = earlier)",
+        epCountPrompt: "How many following episodes should get the copy?", epOffsetEachPrompt: "Days between each episode (each of the {n} copies shifts this much more):",
         rename: "Rename", color: "Color", delete: "Delete", cutType: "CUT TYPE", normalCut: "Back to normal CUT", platformCuts: "PLATFORM CUTS",
         sendType: "SEND TYPE", normalSend: "Back to normal SEND",
         askProjectName: "Enter project name:", nameRequired: "Project name is required.", savedAs: "Saved as",
@@ -1598,6 +1611,13 @@ const I18N = {
         readOnlyBannerText: "Bu bir salt-okunur paylaşım görünümüdür — düzenleme yapılamaz.",
         myProjects: "PROJELERİM", deleteAll: "TÜMÜNÜ SİL", close: "KAPAT", deleteProject: "Projeyi Sil",
         selectStartDate: "BAŞLANGIÇ TARİHİ SEÇ", apply: "UYGULA", cancel: "VAZGEÇ",
+        subtitleCut: "Altyazı", cellsSelected: "{n} hücre seçili — hepsine uygulanır", renameMany: "{n} hücrenin yeni adı:",
+        epCellsCount: "{n} dolu hücre", epCloneSame: "Planı alt bölüme klonla → {next} (aynı günler)",
+        epCloneShift: "Alt bölüme klonla ve kaydır… → {next} (önerilen: {d} gün)", epCloneMany: "Sonraki birkaç bölüme klonla…",
+        epSelectAll: "Bu bölümün tamamını seç (taşımak için)", epClear: "Bu bölümü temizle",
+        epCloneEmpty: "Bu bölümde klonlanacak dolu hücre yok.", epCloneOverwrite: "{eps} bölümünde zaten çalışma var. Kopyayla değiştirilsin mi?",
+        epClearConfirm: "{ep} bölümündeki tüm hücreler silinsin mi?", epOffsetPrompt: "{next} bölümündeki kopya kaç gün kaydırılsın? (0 = aynı günler, eksi = geriye)",
+        epCountPrompt: "Kopya kaç sonraki bölüme yapılsın?", epOffsetEachPrompt: "Bölümler arası gün farkı ({n} kopyanın her biri bu kadar daha kayar):",
         rename: "Yeniden Adlandır", color: "Renk", delete: "Sil", cutType: "CUT TÜRÜ", normalCut: "Normal CUT'a döndür", platformCuts: "PLATFORM CUT'LARI",
         sendType: "SEND TÜRÜ", normalSend: "Normal SEND'e döndür",
         askProjectName: "Proje adını girin:", nameRequired: "Proje adı gerekli.", savedAs: "Kaydedildi:",
@@ -2096,7 +2116,7 @@ function rebuildGrid(scrollToToday = true) {
     let days = `<div class="days-block">${rowCells("set", 0)}</div>`;
 
     for (let i = 1; i <= TOTAL_EPISODES; i++) {
-        let l = `<div class="cell sticky-col-1 episode-v" style="grid-row: span ${PROC_ORDER.length}">EPISODE ${String(i).padStart(2, "0")}</div>`;
+        let l = `<div class="cell sticky-col-1 episode-v" data-ep="${i}" data-help="help_epClone" style="grid-row: span ${PROC_ORDER.length}">EPISODE ${String(i).padStart(2, "0")}</div>`;
         let d = "";
         PROC_ORDER.forEach(p => {
             l += label("sticky-col-2", p, p.toUpperCase());
@@ -2181,6 +2201,7 @@ gridEl.addEventListener('mousedown', (e) => {
     if (!cell || e.button !== 0) return;
     if (cell.classList.contains('filled')) {
         dragSource = cell;
+        if (e.ctrlKey || e.metaKey) return;          // Ctrl/Cmd+tık: click'te ekle/çıkar
         if (!cell.classList.contains('selected')) {
             if (!e.shiftKey) clearActiveSelection();
             cell.classList.add('selected');
@@ -2225,6 +2246,9 @@ gridEl.addEventListener('click', (e) => {
             cell.classList.toggle('selected');
             if (cell.classList.contains('selected')) selectedCells.add(cell);
             else selectedCells.delete(cell);
+        } else if ((e.ctrlKey || e.metaKey) && cell.classList.contains('filled')) {
+            cell.classList.toggle('selected');
+            if (cell.classList.contains('selected')) selectedCells.add(cell); else selectedCells.delete(cell);
         } else if (cell.classList.contains('filled')) {
             clearActiveSelection();
             cell.classList.add('selected');
@@ -2309,7 +2333,9 @@ window.showGridMenu = function (x, y) {
     const isCuts = contextTarget.dataset.proc_type === 'cuts';
     const currentType = contextTarget.dataset.cut_type || "";
 
-    let html = `<div class="item" data-act="rename">✏️&nbsp; ${escapeHtml(t('rename'))}</div>
+    const nSel = getMenuTargets().length;
+    let html = (nSel > 1 ? `<div class="menu-label multi">☑ ${escapeHtml(tf('cellsSelected', { n: nSel }))}</div>` : '') +
+               `<div class="item" data-act="rename">✏️&nbsp; ${escapeHtml(t('rename'))}</div>
                 <div class="item" data-act="color">🎨&nbsp; ${escapeHtml(t('color'))}</div>`;
 
     if (isCuts) {
@@ -2341,6 +2367,13 @@ window.showGridMenu = function (x, y) {
                         <div class="submenu">${sub}</div>
                      </div>`;
         });
+
+        // Altyazı (en altta)
+        html += `<div class="menu-sep"></div>
+                 <div class="item" data-act="cut" data-cut="subtitle">
+                    <span class="swatch" style="background:${CUT_TYPES.subtitle.bg}"></span>💬 ${escapeHtml(t('subtitleCut'))}
+                    ${currentType === 'subtitle' ? '<span class="check">✓</span>' : ''}
+                 </div>`;
 
         if (currentType) {
             html += `<div class="item" data-act="cut" data-cut="">
@@ -2402,6 +2435,109 @@ window.showGridMenu = function (x, y) {
     });
 };
 
+// ---------------------------------------------------------------------
+// BÖLÜM ŞABLONU — EPISODE etiketine sağ tık: bölümün tüm çalışmasını alt bölüme klonla
+// ---------------------------------------------------------------------
+function episodeCells(ep) {
+    return Array.from(gridEl.querySelectorAll(`.cell.timeline.filled[data-ep="${ep}"]`)).map(readCell);
+}
+function episodeRange(ep) {
+    const cols = episodeCells(ep).map(c => parseInt(c.col));
+    return cols.length ? { first: Math.min(...cols), last: Math.max(...cols) } : null;
+}
+// Önerilen kaydırma: bir önceki bölümle arasındaki fark (yoksa bölümün uzunluğu)
+function suggestedOffset(ep) {
+    const cur = episodeRange(ep), prev = ep > 1 ? episodeRange(ep - 1) : null;
+    if (!cur) return 0;
+    if (prev && cur.first > prev.first) return cur.first - prev.first;
+    return cur.last - cur.first + 1;
+}
+function addEpisodeRows(n) {
+    const snapshot = serializeCells(), savedHistory = historyStack.slice();
+    const left = container.scrollLeft, top = container.scrollTop;
+    TOTAL_EPISODES += n;
+    createCalendarAction(startDateInput.value, { scrollToToday: false });
+    applyCells(snapshot);
+    historyStack = savedHistory;
+    setScrollInstant(left, top);
+}
+// src bölümünü hedef bölümlere kopyala; i. hedef için kaydırma = offset × i
+function cloneEpisode(src, count, offset) {
+    if (!(count >= 1)) return;
+    const cells = episodeCells(src);
+    if (!cells.length) { alert(t('epCloneEmpty')); return; }
+    const targets = Array.from({ length: count }, (_, i) => src + 1 + i);
+    const needEp = targets[targets.length - 1] - TOTAL_EPISODES;
+    const busy = targets.filter(ep => ep <= TOTAL_EPISODES && episodeCells(ep).length);
+    if (busy.length && !confirm(tf('epCloneOverwrite', { eps: busy.map(e => 'EP' + String(e).padStart(2, '0')).join(', ') }))) return;
+    if (needEp > 0) addEpisodeRows(needEp);
+    const maxCol = Math.max(...cells.map(c => parseInt(c.col)));
+    ensureDays(maxCol + offset * count);
+    targets.forEach((ep, i) => {
+        gridEl.querySelectorAll(`.cell.timeline.filled[data-ep="${ep}"]`).forEach(clearCell);
+        const shift = offset * (i + 1);
+        cells.forEach(c => {
+            const target = getCell(parseInt(c.col) + shift, ep, c.procType);
+            if (target) fillCell(target, { text: c.text, bg: c.bg, cutType: c.cutType });
+        });
+    });
+    clearActiveSelection();
+    commitChange();
+    if (isVerticalActive) renderVerticalDashboard();
+    // Kopyalanan bölüm(ler)i seçili bırak → hemen toplu kaydırılabilir
+    targets.forEach(ep => gridEl.querySelectorAll(`.cell.timeline.filled[data-ep="${ep}"]`).forEach(c => { c.classList.add('selected'); selectedCells.add(c); }));
+}
+function clearEpisode(ep) {
+    const cells = gridEl.querySelectorAll(`.cell.timeline.filled[data-ep="${ep}"]`);
+    if (!cells.length || !confirm(tf('epClearConfirm', { ep: 'EP' + String(ep).padStart(2, '0') }))) return;
+    cells.forEach(clearCell);
+    clearActiveSelection();
+    commitChange();
+}
+function selectEpisode(ep) {
+    clearActiveSelection();
+    gridEl.querySelectorAll(`.cell.timeline.filled[data-ep="${ep}"]`).forEach(c => { c.classList.add('selected'); selectedCells.add(c); });
+}
+gridEl.addEventListener('contextmenu', (e) => {
+    const lbl = e.target.closest('.episode-v');
+    if (!lbl) return;
+    e.preventDefault();
+    if (window.isReadOnlyShare) return;
+    const ep = parseInt(lbl.dataset.ep);
+    const epName = 'EP' + String(ep).padStart(2, '0'), next = 'EP' + String(ep + 1).padStart(2, '0');
+    const off = suggestedOffset(ep);
+    const n = episodeCells(ep).length;
+    menu.innerHTML = `
+        <div class="menu-label">${escapeHtml(epName)} · ${escapeHtml(tf('epCellsCount', { n }))}</div>
+        <div class="item" data-ep-act="clone0">📋&nbsp; ${escapeHtml(tf('epCloneSame', { next }))}</div>
+        <div class="item" data-ep-act="clone1">📋&nbsp; ${escapeHtml(tf('epCloneShift', { next, d: off }))}</div>
+        <div class="item" data-ep-act="cloneN">📚&nbsp; ${escapeHtml(t('epCloneMany'))}</div>
+        <div class="menu-sep"></div>
+        <div class="item" data-ep-act="select">☑&nbsp; ${escapeHtml(t('epSelectAll'))}</div>
+        <div class="item" data-ep-act="clear" style="color:#ff6b6b;">🗑&nbsp; ${escapeHtml(t('epClear'))}</div>`;
+    positionMenu(e.clientX, e.clientY);
+    menu.querySelectorAll('[data-ep-act]').forEach(b => b.onclick = (ev) => {
+        ev.stopPropagation();
+        closeMenu();
+        const a = b.dataset.epAct;
+        if (a === 'clone0') cloneEpisode(ep, 1, 0);
+        else if (a === 'clone1') {
+            const v = prompt(tf('epOffsetPrompt', { next }), String(off));
+            if (v === null) return;
+            const d = parseInt(v);
+            if (isNaN(d)) return;
+            cloneEpisode(ep, 1, d);
+        } else if (a === 'cloneN') {
+            const c = parseInt(prompt(t('epCountPrompt'), String(Math.max(1, TOTAL_EPISODES - ep))));
+            if (isNaN(c) || c < 1) return;
+            const d = parseInt(prompt(tf('epOffsetEachPrompt', { n: c }), String(off)));
+            if (isNaN(d)) return;
+            cloneEpisode(ep, Math.min(c, 60), d);
+        } else if (a === 'select') selectEpisode(ep);
+        else if (a === 'clear') clearEpisode(ep);
+    });
+});
+
 // Seçili hücrelere özel tür uygular (CUTS: director/platform…, SEND: QC).
 // Tür sadece kendi satırındaki hücrelere uygulanır; boş tür = satırın normal hâline döner.
 function applyCutType(type) {
@@ -2421,13 +2557,13 @@ function applyCutType(type) {
 
 function handleRename() {
     if (!contextTarget) return;
-    const n = prompt(t('newName'), contextTarget.textContent);
+    const targets = getMenuTargets();
+    closeMenu();
+    const n = prompt(targets.length > 1 ? tf('renameMany', { n: targets.length }) : t('newName'), contextTarget.textContent);
     if (n && n.trim()) {
-        contextTarget.textContent = n.trim().toUpperCase();
-        fitText(contextTarget);
+        targets.forEach(c => { c.textContent = n.trim().toUpperCase(); fitText(c); });
         commitChange();
     }
-    closeMenu();
 }
 
 function handleChangeColor() {
@@ -7837,6 +7973,7 @@ Object.assign(I18N.en, {
     help_newVersion: "Opens a copy of the current calendar as a new version. The old version stays as it is.",
     help_focus: "Click a department to highlight only that department; the others fade. Click again to show all.",
     help_extend: "Adds 110 more days to the end of the calendar.",
+    help_epClone: "Right-click: clone this episode's whole plan to the next episode (or several), select or clear the episode.",
     help_back: "Back to My Projects. Your changes are saved automatically.",
     help_projectName: "The project's name. You can change it here; it saves automatically.",
     help_mod_calendar: "Post-production calendar. Double-click: fill a cell · Right-click: rename, color, cut types · Drag: move · Shift+click: fill a range · Ctrl+Z: undo.",
@@ -7871,6 +8008,7 @@ Object.assign(I18N.tr, {
     help_newVersion: "Mevcut takvimin bir kopyasını yeni versiyon olarak açar; eski versiyon olduğu gibi kalır.",
     help_focus: "Bir departmana tıkla: sadece o departman öne çıkar, diğerleri soluklaşır. Tekrar tıklayınca hepsi görünür.",
     help_extend: "Takvimin sonuna 110 gün daha ekler.",
+    help_epClone: "Sağ tıkla: bu bölümün tüm çalışma planını alt bölüme (ya da sonraki birkaç bölüme) klonla, bölümü seç veya temizle.",
     help_back: "Projelerim ekranına döner. Değişikliklerin otomatik kaydedilir.",
     help_projectName: "Projenin adı. Buradan değiştirebilirsin; otomatik kaydedilir.",
     help_mod_calendar: "Post prodüksiyon takvimi. Çift tıkla: hücre doldur · Sağ tıkla: yeniden adlandır, renk, cut türleri · Sürükle: taşı · Shift+tık: aralık doldur · Ctrl+Z: geri al.",
