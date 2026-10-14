@@ -357,172 +357,6 @@ body.read-only-mode .cell.timeline { cursor: default; }
 /* =====================================================================
    workspace.css — Giriş ekranı, Projelerim paneli, çalışma alanı,
    Senaryo ve Toplantı Notları modülleri. (Takvim stilleri: style.css)
-   =============margin-left: auto; padding-left: 14px; color: #888; font-size: 11px; }
-.context-menu .submenu {
-    display: none; position: absolute; left: 100%; top: -6px; min-width: 150px; padding: 5px 0;
-    background: #1c1f26; border: 1px solid #444; border-radius: 4px; box-shadow: 0 6px 18px rgba(0,0,0,0.5); z-index: 1;
-}
-.context-menu .item.has-sub:hover > .submenu,
-.context-menu .item.has-sub.open > .submenu { display: block; }
-.context-menu .item.has-sub.flip > .submenu { left: auto; right: 100%; }
-.context-menu .item.has-sub:hover > .sub-arrow { color: #fff; }
-
-.date-summary-pop { position: fixed; background: #222; border: 1px solid #444; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.8); z-index: 11000; display: none; min-width: 200px; max-width: 300px; padding: 10px; color: #eee; font-size: 12px; }
-.pop-title { font-weight: bold; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 8px; color: var(--accent); }
-
-/* ---------- MODALLAR ---------- */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 20000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-.modal {
-    display: none; position: fixed; z-index: 9999; inset: 0;
-    background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px);
-    justify-content: center; align-items: center;
-}
-.modal-content {
-    background-color: #121417;
-    border: 1px solid #2a2d32;
-    border-radius: 16px;
-    padding: 40px;
-    width: 90%;
-    max-width: 600px;
-    box-sizing: border-box;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
-    animation: modalFadeIn 0.3s ease-out;
-    position: relative;
-    text-align: center;
-}
-.modal-content h3 { margin-top: 0; color: var(--accent); letter-spacing: 1px; }
-@keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-
-.modal-input { background: #000; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 6px; margin: 20px 0; width: 100%; box-sizing: border-box; font-size: 16px; outline: none; cursor: pointer; text-align: center; font-family: inherit; }
-input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; scale: 1.2; }
-.modal-buttons { display: flex; gap: 12px; justify-content: center; }
-.modal-btn { padding: 10px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; border: none; transition: 0.2s; }
-.btn-confirm { background: var(--neon-green); color: #000; }
-.btn-confirm:hover { background: #32e012; transform: scale(1.05); }
-.btn-cancel { background: #333; color: #fff; }
-.btn-cancel:hover { background: #444; }
-
-.modal-title { color: #00ff00; text-align: left; font-size: 24px; font-weight: 900; margin: 0 0 10px; }
-.modal-divider { height: 3px; background: linear-gradient(90deg, #00ff00, transparent); margin-bottom: 30px; }
-.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; text-align: left; }
-.section-subtitle { grid-column: span 2; color: #555; font-size: 11px; letter-spacing: 1.5px; margin-top: 15px; border-bottom: 1px solid #222; padding-bottom: 8px; }
-.input-group { display: flex; flex-direction: column; gap: 10px; }
-.input-group label { font-size: 11px; color: #888; text-transform: uppercase; }
-.input-group input { background: #1d1f23; border: 1px solid #333; color: #00ff00; padding: 12px; border-radius: 8px; font-size: 15px; outline: none; }
-.input-group input:focus { border-color: #00ff00; background: #000; }
-.modal-footer { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 40px; width: 100%; }
-.main-btn { background: #00ff00; color: #000; border: none; padding: 16px 40px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 14px; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,255,0,0.2); }
-.main-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,255,0,0.4); }
-.cancel-btn { background: transparent; color: #ff4d4d; border: none; cursor: pointer; font-size: 13px; text-decoration: underline; }
-
-/* ---------- SALT-OKUNUR PAYLAŞIM ---------- */
-body.read-only-mode { padding-top: 34px; box-sizing: border-box; }
-body.read-only-mode #openModalBtn,
-body.read-only-mode #toggleTodayBtn,
-body.read-only-mode #openAutoModalBtn,
-body.read-only-mode #saveBtn,
-body.read-only-mode #saveAsBtn,
-body.read-only-mode #loadBtn,
-body.read-only-mode #shareBtn,
-body.read-only-mode #userMenuWrapper,
-body.read-only-mode #googleLoginBtn { display: none !important; }
-body.read-only-mode #projectName { pointer-events: none; opacity: 0.8; }
-body.read-only-mode .cell.timeline { cursor: default; }
-
-/* ---------- TAKVİM (DİKEY) GÖRÜNÜM ---------- */
-#verticalViewContainer, #verticalViewContainer * { box-sizing: border-box !important; }
-#verticalViewContainer {
-    display: none; flex: 1; width: 100% !important; max-width: 100vw;
-    padding: 10px; background: #0a0b0e; overflow-x: hidden; overflow-y: auto;
-}
-.calendar-view-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #333; width: 100%; }
-.cal-day-cell {
-    background: var(--bg-dark); padding: 8px; display: flex; flex-direction: column;
-    min-height: 140px; position: relative; cursor: pointer; transition: background 0.2s;
-}
-.cal-day-cell.selected-day { border: 2px solid var(--accent) !important; background: rgba(255, 0, 0, 0.08); }
-.cal-day-cell.other-month { opacity: 0.3; cursor: default; }
-.cal-day-cell.today-cell { background: #161a21; border: 1px solid rgba(57, 255, 20, 0.3); }
-#verticalViewContainer .day-num { font-size: 8px; font-weight: 800; margin-bottom: 8px; color: #888; display: block; border-bottom: 1px solid #222; padding-bottom: 4px; }
-.cal-item-strip {
-    font-size: 10px; padding: 2px 4px; margin-bottom: 2px; border-radius: 2px;
-    color: #000; font-weight: 800; white-space: nowrap; overflow: hidden;
-    text-overflow: ellipsis; display: block; line-height: 1;
-}
-@media print { .month-section { page-break-before: always; break-before: page; } }
-
-/* ---------- SEKMELER ---------- */
-.tab-page { display: none; width: 100%; height: 100%; flex: 1; }
-.tab-page.active { display: flex; flex: 1; }
-#timelinePage { display: flex; }
-#notesPage { display: none; flex-direction: column; width: 100%; height: 100%; }
-
-.bottom-tabs { display: flex; gap: 4px; padding: 0 10px; background: #0b0c10; flex-shrink: 0; }
-.bottom-tabs button {
-    flex: none; min-width: 110px; height: 28px; padding: 0 16px;
-    border-radius: 6px 6px 0 0; background: #1a1d26; color: #aaa;
-    font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;
-    border: 1px solid #2b2f3a; border-bottom: none;
-}
-.bottom-tabs button:hover { background: #222733; color: white; }
-.bottom-tabs button.active { background: #0f1115; color: #00ff99; border-color: #00ff99; }
-
-/* ---------- NOTLAR ---------- */
-#notesGridBody { width: max-content; min-width: 100%; }
-.notes-board { width: 100%; height: 100%; padding-bottom: 90px; overflow: auto; background: #0d0f14; }
-.notes-grid-header {
-    display: grid; width: max-content; min-width: 100%;
-    position: sticky; top: 0; z-index: 50;
-    backdrop-filter: blur(10px); background: rgba(15,17,21,0.92);
-    border-bottom: 1px solid #2d3342; box-shadow: 0 4px 20px rgba(0,0,0,0.35);
-}
-.header-cell { background: #15171c; border: 1px solid #222; padding: 14px; font-size: 11px; font-weight: bold; text-align: center; }
-.notes-grid-header > div:first-child {
-    position: sticky; left: 0; z-index: 100; background: #111318;
-    min-width: 120px; width: 120px; box-sizing: border-box; border-right: 2px solid #333;
-}
-.notes-row { display: grid; width: max-content; min-width: 100%; transition: 0.18s; }
-.notes-row:hover { background: rgba(255,255,255,0.02); }
-.notes-episode {
-    position: sticky; left: 0; z-index: 80;
-    border: 1px solid #232733; border-right: 2px solid #333;
-    padding: 15px; font-weight: bold; min-width: 120px; width: 120px; box-sizing: border-box;
-    font-size: 20px; letter-spacing: 1px; color: white;
-    background: linear-gradient(180deg, #151922, #0f1115);
-}
-.notes-cell {
-    border: 1px solid #232733; min-height: 120px; background: #0f1115;
-    padding: 10px; box-sizing: border-box; overflow: hidden; position: relative;
-    transition: background 0.15s, border-color 0.15s;
-}
-.notes-cell:hover { background: #141922; border-color: #3a4255; }
-.notes-textarea {
-    width: 100%; height: 100%; min-height: 100px; box-sizing: border-box; resize: none;
-    background: transparent; border: none; outline: none; color: white;
-    font-size: 13px; line-height: 1.5; font-family: inherit; overflow: hidden;
-    white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;
-}
-.notes-textarea:focus { background: rgba(0,255,153,0.03); box-shadow: inset 0 0 0 1px #00ff99; border-radius: 6px; }
-.notes-textarea[readonly]:focus { box-shadow: none; background: transparent; }
-.notes-dept {
-    position: relative; display: flex; align-items: center; justify-content: center;
-    gap: 8px; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;
-}
-.notes-dept[data-dep="edit"]  { box-shadow: inset 0 -2px #ff5c5c; }
-.notes-dept[data-dep="cuts"]  { box-shadow: inset 0 -2px #ff9f43; }
-.notes-dept[data-dep="vfx"]   { box-shadow: inset 0 -2px #8c7ae6; }
-.notes-dept[data-dep="color"] { box-shadow: inset 0 -2px #00d2d3; }
-.notes-dept[data-dep="sound"] { box-shadow: inset 0 -2px #54a0ff; }
-.notes-dept[data-dep="music"] { box-shadow: inset 0 -2px #5f27cd; }
-.notes-dept[data-dep="send"]  { box-shadow: inset 0 -2px #10ac84; }
-.resize-handle { position: absolute; top: 0; right: 0; width: 6px; height: 100%; cursor: col-resize; background: transparent; }
-.resize-handle:hover { background: #00ff99; }
-
-</style>
-<style>
-/* =====================================================================
-   workspace.css — Giriş ekranı, Projelerim paneli, çalışma alanı,
-   Senaryo ve Toplantı Notları modülleri. (Takvim stilleri: style.css)
    ===================================================================== */
 
 [hidden] { display: none !important; }
@@ -1367,6 +1201,36 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 .context-menu .menu-label.multi { color: #64b5f6; background: rgba(100,181,246,.08); padding: 6px 15px; letter-spacing: .5px; }
 .episode-v { cursor: context-menu; }
 
+/* ---------- PROJE PANOSU (Bugün / Bu hafta) ---------- */
+.agenda-panel { display: flex; flex-direction: column; gap: 14px; margin-bottom: 26px; }
+.ag-card { background: #111318; border: 1px solid #23262e; border-radius: 12px; padding: 14px 16px 10px; }
+.ag-card.collapsed { padding-bottom: 14px; }
+.ag-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+.ag-head h2 { margin: 0; font-size: 16px; letter-spacing: .5px; }
+.ag-card.collapsed .ag-head { margin: 0; }
+.ag-date { color: #888; font-size: 12.5px; }
+.ag-toggle { margin-left: auto; padding: 4px 10px; font-size: 11.5px; }
+.ag-list { display: flex; flex-direction: column; gap: 2px; }
+.ag-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: transparent; border: 1px solid transparent; border-radius: 8px;
+    padding: 7px 10px; color: #ddd; cursor: pointer; font-family: inherit; font-size: 13px; }
+.ag-row:hover { background: #181b21; border-color: #2a2e37; }
+.ag-row.ms { background: rgba(255,82,82,.06); }
+.ag-row.ms .ag-what { color: #ff8a80; }
+.ag-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.15); }
+.ag-proj { font-weight: 800; color: #fff; white-space: nowrap; }
+.ag-ep { font-size: 11px; font-weight: 800; color: #9cc3ff; background: #16243a; border-radius: 5px; padding: 1px 6px; }
+.ag-what { font-weight: 700; letter-spacing: .3px; }
+.ag-detail { margin-left: auto; color: #888; font-size: 12px; white-space: nowrap; }
+.ag-day { margin: 4px 0 8px; }
+.ag-day-title { font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #8a93a3; margin: 8px 0 3px 10px; }
+.ag-empty { color: #777; font-size: 13px; padding: 8px 10px; }
+.cell.timeline.ag-flash { outline: 3px solid var(--neon-green); outline-offset: -3px; animation: agFlash 2.2s ease-out; }
+@keyframes agFlash { 0%, 40% { box-shadow: 0 0 18px var(--neon-green); } 100% { box-shadow: none; } }
+@media (max-width: 700px) {
+    .ag-row { flex-wrap: wrap; row-gap: 2px; }
+    .ag-detail { margin-left: 20px; width: 100%; white-space: normal; }
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
@@ -1418,6 +1282,7 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
             <button id="newProjectBtn" data-help="help_newProject" class="primary-btn">+ <span data-i18n="newProject">New project</span></button>
         </div>
         <div id="legacyBanner" class="legacy-banner" hidden></div>
+        <section id="agendaPanel" class="agenda-panel" hidden></section>
         <div id="projectGrid" class="project-grid"></div>
     </main>
 </section>
@@ -4006,6 +3871,7 @@ function renderDashboard() {
             <p>${escapeHtml(t('noProjectsHint'))}</p>
             <button class="primary-btn" onclick="openNewProjectModal()">+ ${escapeHtml(t('newProject'))}</button>
         </div>`;
+        renderAgenda();
         return;
     }
 
@@ -4035,6 +3901,7 @@ function renderDashboard() {
             <div class="pc-foot">${escapeHtml(t('updated'))}: ${escapeHtml(formatDate(d.lastUpdated, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) || '—')}${d.lastEditedBy && d.lastEditedBy.name ? ' · ' + escapeHtml(d.lastEditedBy.name) : ''}</div>
         </div>`;
     }).join('');
+    renderAgenda();
 }
 
 $('projectGrid').addEventListener('click', (e) => {
@@ -4122,6 +3989,179 @@ $('newProjectForm').onsubmit = async (e) => {
         btn.disabled = false;
     }
 };
+
+// ---------------------------------------------------------------------
+// 6c) PROJE PANOSU — Projelerim ekranında "Bugün ne var?" ve "Bu hafta ne var?"
+// Her projenin AKTİF takvim versiyonundan derlenir (paylaşılan projeler dahil).
+// Aynı satırda art arda gelen aynı işler tek kayıt olur ("EP03 Color · 14–16 Kas").
+// ---------------------------------------------------------------------
+Object.assign(I18N.en, {
+    agToday: "What's on today?", agWeek: "What's on this week?", agNext7: "Next 7 days",
+    agTodayEmpty: "Nothing on the calendars today.", agWeekEmpty: "Nothing else scheduled this week.",
+    agLoading: "Reading calendars…", agDayN: "day {i}/{n}", agUntil: "until {d}", agOneDay: "single day",
+    agStarts: "starts", agEnds: "ends", agStartsEnds: "{a} – {b}", agMilestones: "Key dates",
+    agTomorrow: "Tomorrow", agCollapse: "Hide", agExpand: "Show", agOpenHint: "Click to open the calendar on that day",
+    agProjects: "{n} projects", help_agenda: "Today's and this week's work from all your projects' calendars. Click a line to open that day in the calendar."
+});
+Object.assign(I18N.tr, {
+    agToday: "Bugün ne var?", agWeek: "Bu hafta ne var?", agNext7: "Önümüzdeki 7 gün",
+    agTodayEmpty: "Bugün takvimlerde iş yok.", agWeekEmpty: "Bu hafta başka planlanmış iş yok.",
+    agLoading: "Takvimler okunuyor…", agDayN: "{i}/{n}. gün", agUntil: "{d}'e kadar", agOneDay: "tek gün",
+    agStarts: "başlıyor", agEnds: "bitiyor", agStartsEnds: "{a} – {b}", agMilestones: "Önemli tarihler",
+    agTomorrow: "Yarın", agCollapse: "Gizle", agExpand: "Göster", agOpenHint: "Tıkla: takvimde o günü aç",
+    agProjects: "{n} proje", help_agenda: "Bütün projelerinin takviminden bugünün ve bu haftanın işleri. Bir satıra tıklayınca takvimde o gün açılır."
+});
+
+const agendaCache = new Map();   // pid → { key, runs }
+let agendaCollapsed = (() => { try { return localStorage.getItem('agendaCollapsed') === '1'; } catch (e) { return false; } })();
+
+// Bir versiyondaki hücreleri "iş blokları"na çevir: aynı bölüm+satır+etiket, araya en fazla 2 gün boşluk
+function calendarRuns(v) {
+    const base = parseLocalDate(v.startDate || toLocalISO(new Date()));
+    const iso = (col) => { const d = new Date(base); d.setDate(d.getDate() + (parseInt(col) || 0)); return toLocalISO(d); };
+    const groups = new Map();
+    versionCells(v).forEach(c => {
+        const ep = parseInt(c.ep) || 0, proc = c.procType;
+        const ct = c.cutType && CUT_TYPES[c.cutType] ? c.cutType : '';
+        const label = ct ? CUT_TYPES[ct].label : String(c.text || proc).trim().toUpperCase();
+        const k = ep + '|' + proc + '|' + label;
+        if (!groups.has(k)) groups.set(k, { ep, proc, label, cutType: ct, bg: ct ? CUT_TYPES[ct].bg : (c.bg || deptColors[proc]), days: [] });
+        groups.get(k).days.push(iso(c.col));
+    });
+    const runs = [];
+    groups.forEach(g => {
+        const days = [...new Set(g.days)].sort();
+        let cur = null;
+        days.forEach(d => {
+            if (cur && isoDiff(d, cur.days[cur.days.length - 1]) <= 2) cur.days.push(d);
+            else { cur = Object.assign({}, g, { days: [d] }); runs.push(cur); }
+        });
+    });
+    runs.forEach(r => { r.start = r.days[0]; r.end = r.days[r.days.length - 1]; r.milestone = !!r.cutType || r.proc === 'send'; });
+    return runs;
+}
+
+// Hafta: yarından pazara kadar; haftanın sonundaysak (cuma–pazar) önümüzdeki 7 gün
+function agendaWindow() {
+    const today = toLocalISO(new Date());
+    const dow = new Date().getDay();                       // 0 pazar … 6 cumartesi
+    const toSunday = dow === 0 ? 0 : 7 - dow;
+    const short = toSunday < 3;
+    return { today, from: addDaysISO(today, 1), to: addDaysISO(today, short ? 7 : toSunday), next7: short };
+}
+
+async function loadAgendaRuns() {
+    const out = [];
+    await Promise.all((App.projects || []).map(async ({ id, data }) => {
+        if (!data.activeVersionId) return;
+        const key = (data.activeVersionId || '') + '|' + (data.lastUpdated || '');
+        let c = agendaCache.get(id);
+        if (!c || c.key !== key) {
+            try {
+                const v = await api().getVersion(id, data.activeVersionId);
+                c = { key, runs: v ? calendarRuns(v) : [] };
+                agendaCache.set(id, c);
+            } catch (e) { console.warn('Pano: takvim okunamadı', id, e); return; }
+        }
+        c.runs.forEach(r => out.push(Object.assign({ pid: id, project: data.projectName || 'Untitled Project' }, r)));
+    }));
+    return out;
+}
+
+const agEp = (ep) => ep === 0 ? '' : 'EP' + String(ep).padStart(2, '0');
+const agDept = (p) => {
+    const n = t('dept_' + p) || p;
+    return /^[A-Za-z ]+$/.test(n) ? n.toUpperCase() : n.toLocaleUpperCase('tr-TR');   // EDIT/COLOR aynen, Çekim/Müzik → ÇEKİM/MÜZİK
+};
+const agD = (iso) => formatDate(iso, { day: 'numeric', month: 'short' });
+const agDayTitle = (iso, w) => (iso === w.from ? t('agTomorrow') + ' · ' : '') + formatDate(iso, { weekday: 'long', day: 'numeric', month: 'long' });
+
+function agRow(r, detail, dateIso) {
+    const what = r.cutType ? r.label : (r.label === r.proc.toUpperCase() || r.label === agDept(r.proc) ? agDept(r.proc) : `${agDept(r.proc)} · ${r.label}`);
+    return `<button class="ag-row ${r.milestone ? 'ms' : ''}" data-pid="${escapeHtml(r.pid)}" data-date="${escapeHtml(dateIso)}" data-ep="${r.ep}" data-proc="${escapeHtml(r.proc)}" title="${escapeHtml(t('agOpenHint'))}">
+        <span class="ag-dot" style="background:${escapeHtml(r.bg || '#888')}"></span>
+        <span class="ag-proj">${escapeHtml(r.project)}</span>
+        ${r.ep ? `<span class="ag-ep">${escapeHtml(agEp(r.ep))}</span>` : ''}
+        <span class="ag-what">${r.milestone && r.cutType ? '★ ' : ''}${escapeHtml(what)}</span>
+        <span class="ag-detail">${escapeHtml(detail)}</span>
+    </button>`;
+}
+
+async function renderAgenda() {
+    const el = $('agendaPanel');
+    if (!el) return;
+    if (!(App.projects || []).length) { el.hidden = true; return; }
+    el.hidden = false;
+    const w = agendaWindow();
+    const head = (key, extra) => `<div class="ag-head"><h2>${escapeHtml(t(key))}</h2>${extra || ''}</div>`;
+    const toggle = `<button class="ghost-btn ag-toggle" data-ag="toggle">${escapeHtml(t(agendaCollapsed ? 'agExpand' : 'agCollapse'))}</button>`;
+    if (agendaCollapsed) {
+        el.innerHTML = `<div class="ag-card collapsed">${head('agToday', `<span class="ag-date">${escapeHtml(formatDate(w.today, { weekday: 'long', day: 'numeric', month: 'long' }))}</span>${toggle}`)}</div>`;
+        return;
+    }
+    if (!el.dataset.loaded) el.innerHTML = `<div class="ag-card"><div class="dash-loading">${escapeHtml(t('agLoading'))}</div></div>`;
+    const runs = await loadAgendaRuns();
+    el.dataset.loaded = '1';
+    if (App.view !== 'dashboard') return;
+    const sortRuns = (a, b) => (b.milestone - a.milestone) || a.project.localeCompare(b.project) || a.ep - b.ep || PROC_ORDER.indexOf(a.proc) - PROC_ORDER.indexOf(b.proc);
+
+    // --- Bugün: bugünü kapsayan her iş bloğu ---
+    const today = runs.filter(r => r.start <= w.today && r.end >= w.today && r.days.includes(w.today)).sort(sortRuns);
+    const todayHtml = today.length ? today.map(r => {
+        const i = r.days.indexOf(w.today) + 1;
+        const detail = r.days.length === 1 ? t('agOneDay') : `${tf('agDayN', { i, n: r.days.length })} · ${tf('agStartsEnds', { a: agD(r.start), b: agD(r.end) })}`;
+        return agRow(r, detail, w.today);
+    }).join('') : `<div class="ag-empty">✅ ${escapeHtml(t('agTodayEmpty'))}</div>`;
+
+    // --- Bu hafta: gün gün — başlayanlar, bitenler ve önemli tarihler (devam edenler bugünde zaten görünüyor) ---
+    const days = [];
+    for (let d = w.from; d <= w.to; d = addDaysISO(d, 1)) days.push(d);
+    const weekHtml = days.map(d => {
+        const items = [];
+        runs.forEach(r => {
+            if (!r.days.includes(d)) return;
+            if (r.milestone) items.push([r, r.days.length > 1 ? tf('agStartsEnds', { a: agD(r.start), b: agD(r.end) }) : t('agOneDay')]);
+            else if (r.start === d && r.end === d) items.push([r, t('agOneDay')]);
+            else if (r.start === d) items.push([r, `${t('agStarts')} · ${tf('agUntil', { d: agD(r.end) })}`]);
+            else if (r.end === d) items.push([r, t('agEnds')]);
+        });
+        if (!items.length) return '';
+        items.sort((a, b) => sortRuns(a[0], b[0]));
+        return `<div class="ag-day"><div class="ag-day-title">${escapeHtml(agDayTitle(d, w))}</div>${items.map(([r, det]) => agRow(r, det, d)).join('')}</div>`;
+    }).join('');
+
+    const nProj = new Set(runs.map(r => r.pid)).size;
+    el.innerHTML = `
+        <div class="ag-card" data-help="help_agenda">
+            ${head('agToday', `<span class="ag-date">${escapeHtml(formatDate(w.today, { weekday: 'long', day: 'numeric', month: 'long' }))}</span>${toggle}`)}
+            <div class="ag-list">${todayHtml}</div>
+        </div>
+        <div class="ag-card">
+            ${head('agWeek', `<span class="ag-date">${escapeHtml(w.next7 ? t('agNext7') : agD(w.from) + ' – ' + agD(w.to))} · ${escapeHtml(tf('agProjects', { n: nProj }))}</span>`)}
+            <div class="ag-list">${weekHtml || `<div class="ag-empty">${escapeHtml(t('agWeekEmpty'))}</div>`}</div>
+        </div>`;
+}
+
+$('agendaPanel').addEventListener('click', async (e) => {
+    if (e.target.closest('[data-ag="toggle"]')) {
+        agendaCollapsed = !agendaCollapsed;
+        try { localStorage.setItem('agendaCollapsed', agendaCollapsed ? '1' : '0'); } catch (err) {}
+        renderAgenda();
+        return;
+    }
+    const row = e.target.closest('.ag-row');
+    if (!row) return;
+    await openProjectById(row.dataset.pid);
+    // Takvimde o güne ve o satıra git
+    setTimeout(() => {
+        if (!App.project || App.project.id !== row.dataset.pid) return;
+        const col = dayDiff(parseLocalDate(row.dataset.date), parseLocalDate(startDateInput.value));
+        const cell = getCell(col, row.dataset.ep, row.dataset.proc);
+        const head = document.querySelector(`.header .cell.date[data-col="${col}"]`);
+        if (head) setScrollInstant(Math.max(0, head.offsetLeft - container.clientWidth / 3), cell ? Math.max(0, cell.offsetTop - container.clientHeight / 3) : container.scrollTop);
+        if (cell) { cell.classList.add('ag-flash'); setTimeout(() => cell.classList.remove('ag-flash'), 2200); }
+    }, 350);
+});
 
 // ---------------------------------------------------------------------
 // 6b) KİŞİLER — projeyi e-postayla paylaş (düzenleyici / görüntüleyici)
