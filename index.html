@@ -2,6 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<meta name="app-version" content="2026.10.15-3">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -1202,7 +1203,7 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 .episode-v { cursor: context-menu; }
 
 /* ---------- PROJE PANOSU (Bugün / Bu hafta) ---------- */
-.agenda-panel { display: flex; flex-direction: column; gap: 14px; margin-bottom: 26px; }
+.agenda-panel { display: flex; flex-direction: column; gap: 14px; margin-top: 28px; }
 .ag-card { background: #111318; border: 1px solid #23262e; border-radius: 12px; padding: 14px 16px 10px; }
 .ag-card.collapsed { padding-bottom: 14px; }
 .ag-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
@@ -1230,6 +1231,10 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
     .ag-row { flex-wrap: wrap; row-gap: 2px; }
     .ag-detail { margin-left: 20px; width: 100%; white-space: normal; }
 }
+
+/* Yeni sürüm uyarısı */
+.update-bar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 30500; display: flex; align-items: center; gap: 12px;
+    background: #1b1f27; border: 1px solid var(--neon-green); color: #fff; border-radius: 10px; padding: 10px 12px 10px 16px; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -1282,8 +1287,8 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
             <button id="newProjectBtn" data-help="help_newProject" class="primary-btn">+ <span data-i18n="newProject">New project</span></button>
         </div>
         <div id="legacyBanner" class="legacy-banner" hidden></div>
-        <section id="agendaPanel" class="agenda-panel" hidden></section>
         <div id="projectGrid" class="project-grid"></div>
+        <section id="agendaPanel" class="agenda-panel" hidden></section>
     </main>
 </section>
 
@@ -4012,6 +4017,7 @@ Object.assign(I18N.tr, {
     agProjects: "{n} proje", help_agenda: "Bütün projelerinin takviminden bugünün ve bu haftanın işleri. Bir satıra tıklayınca takvimde o gün açılır."
 });
 
+const AGENDA_HIDDEN_PROCS = ['edit'];
 const agendaCache = new Map();   // pid → { key, runs }
 let agendaCollapsed = (() => { try { return localStorage.getItem('agendaCollapsed') === '1'; } catch (e) { return false; } })();
 
@@ -4052,6 +4058,7 @@ function agendaWindow() {
 
 async function loadAgendaRuns() {
     const out = [];
+    const safeRuns = (v) => { try { return calendarRuns(v); } catch (e) { console.warn('Pano: takvim çözümlenemedi', e); return []; } };
     await Promise.all((App.projects || []).map(async ({ id, data }) => {
         if (!data.activeVersionId) return;
         const key = (data.activeVersionId || '') + '|' + (data.lastUpdated || '');
@@ -4059,11 +4066,12 @@ async function loadAgendaRuns() {
         if (!c || c.key !== key) {
             try {
                 const v = await api().getVersion(id, data.activeVersionId);
-                c = { key, runs: v ? calendarRuns(v) : [] };
+                c = { key, runs: v ? safeRuns(v) : [] };
                 agendaCache.set(id, c);
             } catch (e) { console.warn('Pano: takvim okunamadı', id, e); return; }
         }
-        c.runs.forEach(r => out.push(Object.assign({ pid: id, project: data.projectName || 'Untitled Project' }, r)));
+        // Edit günleri panoda gösterilmez (sürekli devam eden iş, panoyu kalabalıklaştırır)
+        c.runs.forEach(r => { if (!AGENDA_HIDDEN_PROCS.includes(r.proc)) out.push(Object.assign({ pid: id, project: data.projectName || 'Untitled Project' }, r)); });
     }));
     return out;
 }
@@ -4100,7 +4108,9 @@ async function renderAgenda() {
         return;
     }
     if (!el.dataset.loaded) el.innerHTML = `<div class="ag-card"><div class="dash-loading">${escapeHtml(t('agLoading'))}</div></div>`;
-    const runs = await loadAgendaRuns();
+    let runs = [];
+    try { runs = await loadAgendaRuns(); }
+    catch (err) { console.error('Pano hatası:', err); }
     el.dataset.loaded = '1';
     if (App.view !== 'dashboard') return;
     const sortRuns = (a, b) => (b.milestone - a.milestone) || a.project.localeCompare(b.project) || a.ep - b.ep || PROC_ORDER.indexOf(a.proc) - PROC_ORDER.indexOf(b.proc);
@@ -4162,6 +4172,37 @@ $('agendaPanel').addEventListener('click', async (e) => {
         if (cell) { cell.classList.add('ag-flash'); setTimeout(() => cell.classList.remove('ag-flash'), 2200); }
     }, 350);
 });
+
+// ---------------------------------------------------------------------
+// 6d) SÜRÜM KONTROLÜ — siteye yeni sürüm yüklenince açık sekmede "Yenile" uyarısı
+// ---------------------------------------------------------------------
+Object.assign(I18N.en, { newVersionAvail: "A new version of the site is available.", reloadNow: "Reload", appVersion: "Version" });
+Object.assign(I18N.tr, { newVersionAvail: "Sitenin yeni sürümü yüklendi.", reloadNow: "Yenile", appVersion: "Sürüm" });
+const APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
+let updateShown = false;
+async function checkForUpdate() {
+    if (updateShown || !APP_VERSION || location.protocol === 'file:') return;
+    try {
+        const r = await fetch(location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' });
+        if (!r.ok) return;
+        const m = (await r.text()).match(/name="app-version" content="([^"]+)"/);
+        if (!m || m[1] === APP_VERSION) return;
+        updateShown = true;
+        const bar = document.createElement('div');
+        bar.className = 'update-bar';
+        bar.innerHTML = `🔄 ${escapeHtml(t('newVersionAvail'))} <button class="primary-btn small">${escapeHtml(t('reloadNow'))}</button>`;
+        bar.querySelector('button').onclick = async () => {
+            try { if (typeof hasPendingSave === 'function' && hasPendingSave()) await flushSave(); } catch (e) {}
+            const q = new URLSearchParams(location.search);
+            q.set('v', m[1]);
+            location.replace(location.pathname + '?' + q.toString());
+        };
+        document.body.appendChild(bar);
+    } catch (e) { /* çevrimdışı vb. — sessiz */ }
+}
+setTimeout(checkForUpdate, 4000);
+setInterval(checkForUpdate, 10 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForUpdate(); });
 
 // ---------------------------------------------------------------------
 // 6b) KİŞİLER — projeyi e-postayla paylaş (düzenleyici / görüntüleyici)
@@ -8302,6 +8343,7 @@ const _profileClick = $('profileBtn').onclick;
 $('profileBtn').onclick = (e) => {
     _profileClick(e);
     menu.insertAdjacentHTML('afterbegin', `<div class="item" data-act="help">💡&nbsp; ${escapeHtml(t(helpOn ? 'helpTipsOn' : 'helpTipsOff'))}</div><div class="menu-sep"></div>`);
+    if (APP_VERSION) menu.insertAdjacentHTML('beforeend', `<div class="menu-sep"></div><div class="menu-label">${escapeHtml(t('appVersion'))}: ${escapeHtml(APP_VERSION)}</div>`);
     menu.querySelector('[data-act="help"]').onclick = () => { closeMenu(); setHelpTips(!helpOn); };
     const r = e.currentTarget.getBoundingClientRect();
     positionMenu(r.right - 220, r.bottom + 6);
