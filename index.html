@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.15-3">
+<meta name="app-version" content="2026.10.15-4">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -1235,6 +1235,15 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 /* Yeni sürüm uyarısı */
 .update-bar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 30500; display: flex; align-items: center; gap: 12px;
     background: #1b1f27; border: 1px solid var(--neon-green); color: #fff; border-radius: 10px; padding: 10px 12px 10px 16px; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
+/* Pano: to-do satırları */
+.ag-row.todo { cursor: pointer; }
+.ag-check { width: 16px; height: 16px; accent-color: #4caf50; cursor: pointer; flex-shrink: 0; margin: 0; }
+.ag-tag { font-size: 10.5px; font-weight: 800; color: #8cf58a; background: #17301a; border-radius: 5px; padding: 1px 6px; white-space: nowrap; }
+.ag-row.todo .ag-what { font-weight: 600; color: #eee; }
+.ag-row.todo.late .ag-detail { color: #ff8a80; font-weight: 700; }
+.ag-row.todo.done { opacity: .5; }
+.ag-row.todo.done .ag-what { text-decoration: line-through; }
+.ag-row { box-sizing: border-box; line-height: 1.25; min-height: 34px; }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -4006,6 +4015,7 @@ Object.assign(I18N.en, {
     agLoading: "Reading calendars…", agDayN: "day {i}/{n}", agUntil: "until {d}", agOneDay: "single day",
     agStarts: "starts", agEnds: "ends", agStartsEnds: "{a} – {b}", agMilestones: "Key dates",
     agTomorrow: "Tomorrow", agCollapse: "Hide", agExpand: "Show", agOpenHint: "Click to open the calendar on that day",
+    agTodo: "To-Do", agTodoToday: "today", agOverdue: "overdue · {d}", agTodoDone: "Done ✓",
     agProjects: "{n} projects", help_agenda: "Today's and this week's work from all your projects' calendars. Click a line to open that day in the calendar."
 });
 Object.assign(I18N.tr, {
@@ -4014,10 +4024,11 @@ Object.assign(I18N.tr, {
     agLoading: "Takvimler okunuyor…", agDayN: "{i}/{n}. gün", agUntil: "{d}'e kadar", agOneDay: "tek gün",
     agStarts: "başlıyor", agEnds: "bitiyor", agStartsEnds: "{a} – {b}", agMilestones: "Önemli tarihler",
     agTomorrow: "Yarın", agCollapse: "Gizle", agExpand: "Göster", agOpenHint: "Tıkla: takvimde o günü aç",
+    agTodo: "To-Do", agTodoToday: "bugün", agOverdue: "gecikti · {d}", agTodoDone: "Tamamlandı ✓",
     agProjects: "{n} proje", help_agenda: "Bütün projelerinin takviminden bugünün ve bu haftanın işleri. Bir satıra tıklayınca takvimde o gün açılır."
 });
 
-const AGENDA_HIDDEN_PROCS = ['edit'];
+const AGENDA_HIDDEN_PROCS = ['edit', 'set'];   // panoda gösterilmeyen satırlar
 const agendaCache = new Map();   // pid → { key, runs }
 let agendaCollapsed = (() => { try { return localStorage.getItem('agendaCollapsed') === '1'; } catch (e) { return false; } })();
 
@@ -4095,6 +4106,27 @@ function agRow(r, detail, dateIso) {
     </button>`;
 }
 
+// Projelerdeki açık to-do'lar (proje kayıtlarında zaten var → ek okuma yok)
+function agendaTodos() {
+    const out = [];
+    (App.projects || []).forEach(({ id, data }) => {
+        const role = roleFor(data);
+        Object.values(isPlainObject(data.todos) ? data.todos : {}).forEach(td => {
+            if (td && td.id && !td.done && td.date) out.push({ pid: id, project: data.projectName || 'Untitled Project', td, canEdit: role && role !== 'viewer' });
+        });
+    });
+    return out.sort((a, b) => a.td.date.localeCompare(b.td.date) || a.project.localeCompare(b.project));
+}
+function agTodoRow(x, detail, late) {
+    return `<div class="ag-row todo ${late ? 'late' : ''}" role="button" tabindex="0" data-pid="${escapeHtml(x.pid)}" data-tid="${escapeHtml(x.td.id)}" title="${escapeHtml(t('agOpenHint'))}">
+        <input type="checkbox" class="ag-check" ${x.canEdit ? '' : 'disabled'} title="${escapeHtml(t('agTodoDone'))}">
+        <span class="ag-proj">${escapeHtml(x.project)}</span>
+        <span class="ag-tag">✅ ${escapeHtml(t('agTodo'))}</span>
+        <span class="ag-what">${escapeHtml(x.td.text || '')}</span>
+        <span class="ag-detail">${escapeHtml(detail)}</span>
+    </div>`;
+}
+
 async function renderAgenda() {
     const el = $('agendaPanel');
     if (!el) return;
@@ -4117,11 +4149,14 @@ async function renderAgenda() {
 
     // --- Bugün: bugünü kapsayan her iş bloğu ---
     const today = runs.filter(r => r.start <= w.today && r.end >= w.today && r.days.includes(w.today)).sort(sortRuns);
-    const todayHtml = today.length ? today.map(r => {
+    const todos = agendaTodos();
+    const todoToday = todos.filter(x => x.td.date <= w.today);
+    const todayHtml = (today.length || todoToday.length) ? today.map(r => {
         const i = r.days.indexOf(w.today) + 1;
         const detail = r.days.length === 1 ? t('agOneDay') : `${tf('agDayN', { i, n: r.days.length })} · ${tf('agStartsEnds', { a: agD(r.start), b: agD(r.end) })}`;
         return agRow(r, detail, w.today);
-    }).join('') : `<div class="ag-empty">✅ ${escapeHtml(t('agTodayEmpty'))}</div>`;
+    }).join('') + todoToday.map(x => x.td.date < w.today ? agTodoRow(x, tf('agOverdue', { d: agD(x.td.date) }), true) : agTodoRow(x, t('agTodoToday'))).join('')
+        : `<div class="ag-empty">✅ ${escapeHtml(t('agTodayEmpty'))}</div>`;
 
     // --- Bu hafta: gün gün — başlayanlar, bitenler ve önemli tarihler (devam edenler bugünde zaten görünüyor) ---
     const days = [];
@@ -4135,12 +4170,13 @@ async function renderAgenda() {
             else if (r.start === d) items.push([r, `${t('agStarts')} · ${tf('agUntil', { d: agD(r.end) })}`]);
             else if (r.end === d) items.push([r, t('agEnds')]);
         });
-        if (!items.length) return '';
+        const dayTodos = todos.filter(x => x.td.date === d);
+        if (!items.length && !dayTodos.length) return '';
         items.sort((a, b) => sortRuns(a[0], b[0]));
-        return `<div class="ag-day"><div class="ag-day-title">${escapeHtml(agDayTitle(d, w))}</div>${items.map(([r, det]) => agRow(r, det, d)).join('')}</div>`;
+        return `<div class="ag-day"><div class="ag-day-title">${escapeHtml(agDayTitle(d, w))}</div>${items.map(([r, det]) => agRow(r, det, d)).join('')}${dayTodos.map(x => agTodoRow(x, '')).join('')}</div>`;
     }).join('');
 
-    const nProj = new Set(runs.map(r => r.pid)).size;
+    const nProj = new Set([...runs.map(r => r.pid), ...todos.filter(x => x.td.date <= w.to).map(x => x.pid)]).size;
     el.innerHTML = `
         <div class="ag-card" data-help="help_agenda">
             ${head('agToday', `<span class="ag-date">${escapeHtml(formatDate(w.today, { weekday: 'long', day: 'numeric', month: 'long' }))}</span>${toggle}`)}
@@ -4152,11 +4188,42 @@ async function renderAgenda() {
         </div>`;
 }
 
+// Panodan görevi tamamla (proje açılmadan, sadece o görev alanı yazılır)
+async function completeTodoFromBoard(row, box) {
+    const entry = (App.projects || []).find(p => p.id === row.dataset.pid);
+    const td = entry && entry.data.todos && entry.data.todos[row.dataset.tid];
+    if (!td) return;
+    box.disabled = true;
+    const now = new Date().toISOString();
+    try {
+        await api().updateProject(entry.id, { ['todos.' + td.id + '.done']: true, ['todos.' + td.id + '.doneAt']: now, ['todos.' + td.id + '.reminders']: {}, lastUpdated: now, lastEditedBy: editedBy() });
+        Object.keys(td.reminders || {}).forEach(em => api().deleteReminder(reminderId(entry.id, td.id, em)).catch(() => {}));
+        td.done = true; td.doneAt = now; td.reminders = {};
+        entry.data.lastUpdated = now;
+        row.classList.add('done');
+        row.querySelector('.ag-detail').textContent = t('agTodoDone');
+        setTimeout(renderAgenda, 700);
+        renderDashboard && setTimeout(() => { if (App.view === 'dashboard') renderDashboard(); }, 750);
+    } catch (err) {
+        box.disabled = false; box.checked = false;
+        alert(err.message);
+    }
+}
+$('agendaPanel').addEventListener('keydown', (e) => {
+    const trow = e.target.closest && e.target.closest('.ag-row.todo');
+    if (trow && e.key === 'Enter' && !e.target.classList.contains('ag-check')) openReminderTarget(trow.dataset.pid, trow.dataset.tid);
+});
 $('agendaPanel').addEventListener('click', async (e) => {
     if (e.target.closest('[data-ag="toggle"]')) {
         agendaCollapsed = !agendaCollapsed;
         try { localStorage.setItem('agendaCollapsed', agendaCollapsed ? '1' : '0'); } catch (err) {}
         renderAgenda();
+        return;
+    }
+    const trow = e.target.closest('.ag-row.todo');
+    if (trow) {
+        if (e.target.classList.contains('ag-check')) { await completeTodoFromBoard(trow, e.target); return; }
+        openReminderTarget(trow.dataset.pid, trow.dataset.tid);
         return;
     }
     const row = e.target.closest('.ag-row');
