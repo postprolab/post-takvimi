@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.16-2">
+<meta name="app-version" content="2026.10.16-4">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -1325,6 +1325,29 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 .gs-row { display: flex; gap: 8px; }
 .gs-row input { flex: 1; min-width: 0; background: #111; border: 1px solid #333; color: #fff; border-radius: 6px; padding: 8px 10px; font-family: inherit; font-size: 12.5px; }
 
+.gs-diag{font-size:11.5px;opacity:.7;margin:-4px 0 8px 18px}
+.gs-diag.err{color:#ff7b7b;opacity:1}
+
+/* Sheets: modül sekmeleri, içe/dışa aktarma kartları, modül butonları */
+.gs-tabs { display: flex; gap: 6px; padding: 0 20px 6px; flex-wrap: wrap; }
+.gs-tab { background: #15181e; border: 1px solid #2a2f38; color: #bbb; border-radius: 999px; padding: 6px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; font-family: inherit; }
+.gs-tab.active { background: #233127; border-color: #34d17a; color: #fff; }
+.gs-tdot { width: 7px; height: 7px; border-radius: 50%; background: #444; display: inline-block; }
+.gs-tdot.on { background: #34d17a; } .gs-tdot.err { background: #ffb300; }
+.gs-card { background: #171a20; border: 1px solid #2a2f38; border-radius: 10px; padding: 12px 13px; display: flex; flex-direction: column; gap: 8px; }
+.gs-card h3 { margin: 0; font-size: 14px; color: #fff; }
+.gs-card p { margin: 0; color: #9aa3b2; font-size: 12.5px; line-height: 1.5; }
+.gs-row label { align-self: center; color: #aaa; font-size: 12.5px; }
+.gs-row select { flex: 1; background: #111; border: 1px solid #333; color: #fff; border-radius: 6px; padding: 7px 9px; font-family: inherit; }
+.gs-preview { margin: 0; white-space: pre-wrap; font-family: inherit; font-size: 12.5px; color: #cfe8d6; background: #10161a; border: 1px solid #23342a; border-radius: 7px; padding: 8px 10px; line-height: 1.5; }
+.gs-preview.bad { color: #ffc857; border-color: #4a3b1a; background: #19150c; }
+.gs-status.st-wait .gs-dot { background: #7e8aa0; }
+.gs-modbtn { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+.gs-modbtn .gs-ind { width: 8px; height: 8px; border-radius: 50%; background: #555; display: inline-block; }
+.gs-modbtn[data-state="ok"] .gs-ind { background: #34d17a; box-shadow: 0 0 6px #34d17a; }
+.gs-modbtn[data-state="auth"] .gs-ind, .gs-modbtn[data-state="error"] .gs-ind { background: #ffb300; }
+@media (max-width: 600px) { .gs-row { flex-wrap: wrap; } .gs-row input, .gs-row select { flex-basis: 100%; } }
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
@@ -1425,6 +1448,7 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
                 <button id="openAutoModalBtn" data-help="help_auto" class="nav-btn" style="background:#2a2d35 !important; border-color:var(--neon-green) !important;"><span>🤖</span> <span data-i18n="autoSchedule">AUTO SCHEDULE</span></button>
                 <div class="nav-spacer"></div>
                 <button id="exportVerticalBtn" data-help="help_exportVertical" class="nav-btn"><span>📄</span> <span data-i18n="verticalView">VERTICAL VIEW</span></button>
+                <button id="gsCalBtn" data-gsopen="cal" data-help="help_gsheets" class="nav-btn gs-modbtn" data-state="off" style="border-color:#1D6F42;"><i class="gs-ind"></i> <span>SHEETS</span></button>
                 <button id="exportExcelBtn" data-help="help_excel" class="nav-btn" style="border-color:#1D6F42;"><span>📊</span> <span data-i18n="exportExcel">EXPORT TO EXCEL</span></button>
             </div>
 
@@ -3990,7 +4014,7 @@ function renderDashboard() {
             s.meetings ? `🤝 ${s.meetings}` : '',
             s.vfxTotal ? `✨ VFX ${s.vfxDone}/${s.vfxTotal}` : '',
             s.todosOpen ? `✅ ${s.todosOpen}` : '',
-            d.gsheet && d.gsheet.id ? '🟩 Sheets' : ''
+            gsAnyLink(d.gsheet) ? '🟩 Sheets' : ''
         ].filter(Boolean).map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('');
         return `<div class="project-card ${role !== 'owner' ? 'shared' : ''}" data-id="${escapeHtml(id)}" tabindex="0">
             <div class="pc-top">
@@ -4477,6 +4501,7 @@ function setReadOnlyUI({ readOnly = false, publicShare = false, offline = false 
     $('shareBtn').hidden = readOnly || offline;
     $('peopleBtn').hidden = publicShare || offline;
     $('gsheetBtn').hidden = publicShare || offline;
+    if ($('gsCalBtn')) $('gsCalBtn').hidden = publicShare || offline;
     $('versionGroup').hidden = publicShare;
     $('projectName').readOnly = readOnly;
 }
@@ -6636,6 +6661,7 @@ function renderTodosModule() {
                 <div class="todo-tools">
                     <div class="seg" data-help="help_todoFilter">${['open', 'done', 'all'].map(f =>
                         `<button data-filter="${f}" class="${todoState.filter === f ? 'active' : ''}">${escapeHtml(t('todoFilter_' + f))}</button>`).join('')}</div>
+                    ${window.gsModuleBtn ? gsModuleBtn('todo') : ''}
                     <button class="ghost-btn" data-act="pdf" data-help="help_todoPdf">📄 ${escapeHtml(t('exportPdf'))}</button>
                 </div>
             </div>
@@ -7228,6 +7254,7 @@ function renderVfxModule() {
                 <h2>✨ ${escapeHtml(t('modVfx'))}</h2>
                 <div class="vfx-tools">
                     <input type="search" class="vfx-search" placeholder="${escapeHtml(t('vfxSearch'))}" value="${escapeHtml(vfxState.q)}">
+                    ${window.gsModuleBtn ? gsModuleBtn('vfx') : ''}
                     <button class="ghost-btn" data-vact="excel" data-help="help_vfxExcel">📊 Excel</button>
                     <button class="ghost-btn" data-vact="pdf" data-help="help_vfxPdf">📄 ${escapeHtml(t('exportPdf'))}</button>
                     ${ro ? '' : `<button class="ghost-btn" data-vact="renumber" data-help="help_vfxRenumber">🔢 ${escapeHtml(t('vfxRenumber'))}</button>`}
@@ -9013,67 +9040,159 @@ $('tourBtn').onclick = () => startTour('dashboard', true);
 $('tourBtnWs').onclick = () => startTour('workspace', true);
 
 // ---------------------------------------------------------------------
-// 13) GOOGLE SHEETS — iki yönlü eşitleme (VFX Breakdown, Takvim, To-Do)
-// Her projeye bir Google Sheet bağlanır; 3 sekme: "VFX Breakdown", "Takvim", "To-Do".
-// Eşitleme, projeyi açık tutan bir düzenleyicinin tarayıcısında 8 sn'de bir çalışır:
-//   1) Sheet okunur → son yazdığımızdan farklı hücreler (Sheet'te yapılan değişiklikler) siteye işlenir
-//   2) Sitenin güncel hâli hesaplanır → Sheet'ten farklı satırlar Sheet'e yazılır
+// 13) GOOGLE SHEETS — modül başına iki yönlü eşitleme (VFX Breakdown, Takvim, To-Do)
+// Her modül kendi Sheet dosyasına (ve o dosyadaki bir sekmeye) ayrı bağlanır:
+//   • İÇE AKTAR: daha önce çalışılmış bir Sheet okunur, başlıklar tanınır, veriler siteye alınır.
+//     Sheet'in kendi düzeni korunur (sadece en sağa gizli bir PPL_ID sütunu eklenir).
+//   • DIŞA AKTAR: sitedeki tablo, verilen Sheet'e (ya da yeni bir Sheet'e) sitenin düzeniyle yazılır.
+// Bağlandıktan sonra eşitleme 8 sn'de bir çalışır:
+//   1) Sheet okunur → son görülen hâlden farklı hücreler (Sheet'te yapılan değişiklikler) siteye işlenir
+//   2) Sitenin güncel hâli Sheet'teki hâliyle karşılaştırılır → farklı hücreler Sheet'e yazılır
 // Aynı anda tek tarayıcı eşitler ("lider"); diğerleri bekler, lider kapanırsa devralır.
 // ---------------------------------------------------------------------
 Object.assign(I18N.tr, {
     gsBtn: "Google Sheets", gsTitle: "Google Sheets eşitleme",
-    gsIntro: "Bu projeyi bir Google Sheet ile iki yönlü eşitle: VFX Breakdown, Takvim ve To-Do ayrı sekmelerde. Sitede yaptığın değişiklik Sheet'e, Sheet'te yaptığın değişiklik siteye gelir.",
-    gsCreate: "Yeni Google Sheet oluştur ve bağla", gsExisting: "Mevcut bir Sheet'e bağla", gsUrlPrompt: "Google Sheet bağlantısını yapıştır:",
-    gsOpen: "Sheet'i aç ↗", gsSyncNow: "Şimdi eşitle", gsUnlink: "Bağlantıyı kaldır", gsConfirmUnlink: "Google Sheet bağlantısı kaldırılsın mı? (Sheet silinmez, sadece eşitleme durur.)",
+    gsMod_vfx: "VFX Breakdown", gsMod_cal: "Takvim", gsMod_todo: "To-Do",
+    gsIntro: "Bu bölümü bir Google Sheet ile eşitle. Her bölüm (VFX, Takvim, To-Do) ayrı bir Sheet dosyasına bağlanabilir. Bağlandıktan sonra site ve Sheet birlikte güncellenir.",
+    gsImpTitle: "⬇ Sheet'ten içe aktar", gsImpHint: "Daha önce çalıştığın bir Sheet'i siteye al. Sheet'in düzeni korunur; sonra ikisi birlikte güncellenir.",
+    gsExpTitle: "⬆ Sheet'e dışa aktar", gsExpHint: "Sitedeki tabloyu bir Sheet'e yaz. Link verirsen o dosyaya “{tab}” sekmesi olarak eklenir; boş bırakırsan yeni bir Sheet oluşturulur.",
+    gsUrlPh: "Google Sheet linkini yapıştır", gsUrlPhOpt: "Google Sheet linki (boş bırakırsan yeni Sheet açılır)",
+    gsLoadTabs: "Sekmeleri getir", gsPickTab: "Sekme:", gsDoImport: "İçe aktar ve bağla", gsDoExport: "Dışa aktar ve bağla", gsDoCreate: "Yeni Sheet oluştur ve bağla",
+    gsReading: "Sheet okunuyor…",
+    gsPrevVfx: "{n} satır bulundu · Tanınan sütunlar: {cols}", gsPrevRounds: "Not sütunu olarak eklenecek: {cols}", gsPrevIgnored: "Atlanacak: {cols}",
+    gsPrevTodo: "{n} görev bulundu · Tanınan sütunlar: {cols}",
+    gsPrevCal: "{d} gün ({a} – {b}) · {e} bölüm · {c} dolu hücre",
+    gsPrevNone: "Bu sekmede tanınan bir başlık satırı bulunamadı.",
+    gsNoHeadVfx: "Başlık satırı bulunamadı. Sheet'te TC, No, Açıklama, Durum gibi başlıklar olmalı.",
+    gsNoHeadTodo: "Başlık satırı bulunamadı. Sheet'te Görev / Tarih gibi başlıklar olmalı.",
+    gsNoHeadCal: "Tarih satırı bulunamadı. Takvim sekmesinde bir satırda tarihler (ör. 02.11.2026 ya da 02/11) olmalı, solunda bölüm ve departman adları.",
+    gsConfirmImpVfx: "Sheet'teki {n} satır VFX Breakdown'a alınacak. Sitedeki mevcut {m} shot (görselleriyle birlikte) silinip yerine bunlar gelecek. Devam edilsin mi?",
+    gsConfirmImpTodo: "Sheet'teki {n} görev To-Do listesine alınacak. Sitedeki mevcut {m} görev silinip yerine bunlar gelecek. Devam edilsin mi?",
+    gsConfirmImpCal: "Sheet'teki takvim yeni bir takvim versiyonu olarak eklenecek (“{name}”). Mevcut versiyonlara dokunulmaz. Devam edilsin mi?",
+    gsImpVersionName: "Sheet içe aktarım", gsConfirmOverwrite: "“{tab}” sekmesinde veri var. Sitedeki tablo bu sekmenin üzerine yazılacak. Devam edilsin mi?",
+    gsLinkedImp: "İçe aktarılarak bağlandı · sekme: {tab}", gsLinkedExp: "Dışa aktarılarak bağlandı · sekme: {tab}",
+    gsCalVer: "Takvim versiyonu: {v}", gsCalOtherVer: "Bu bağlantı “{v}” versiyonu için. Eşitleme o versiyon açıkken çalışır.",
+    gsOpen: "Sheet'i aç ↗", gsSyncNow: "Şimdi eşitle", gsUnlink: "Bağlantıyı kaldır", gsConfirmUnlink: "Bu bölümün Google Sheet bağlantısı kaldırılsın mı? (Sheet silinmez, sadece eşitleme durur.)",
     gsReconnect: "Google iznini yenile",
     gs_off: "Bağlı değil", gs_ok: "Eşitlendi · {t}", gs_sync: "Eşitleniyor…", gs_auth: "Google izni gerekiyor — tıkla",
     gs_follower: "Eşitleme {name} tarayıcısında çalışıyor", gs_error: "Hata: {m}", gs_viewer: "Bağlı (görüntüleyici — eşitlemeyi düzenleyiciler yapar)",
-    gs_setup: "Kurulum gerekli",
-    gsRules: "Sheet'te dikkat: 1. satır (başlıklar) ve gizli ID sütunu silinmesin. VFX ve To-Do'da en alta satır ekleyince sitede yeni kayıt açılır, satırı silince kayıt silinir. Takvim sekmesinde hücreye departman adı ya da cut türü (ör. MASTER LOCK) yaz, silince hücre boşalır.",
+    gs_setup: "Kurulum gerekli", gs_wait: "Bekliyor",
+    gsRules_vfx: "Sheet'te en alta satır ekleyince sitede yeni shot açılır; satırı silince shot silinir. En sağdaki gizli PPL_ID sütununu silme. Durum sütununa Bekliyor / Çalışılıyor / Onayda / Revizyon / Yapıldı / İptal yazılabilir.",
+    gsRules_todo: "Sheet'te en alta satır ekleyince yeni görev açılır; satırı silince görev silinir. Gizli PPL_ID sütununu silme.",
+    gsRules_cal: "Takvim hücresine departman adı ya da cut türü (ör. MASTER LOCK) yaz, silince hücre boşalır. Satır ve sütun ekleyip silme.",
     gsClientTitle: "Bir kerelik kurulum", gsClientHint: "Google Cloud'da oluşturduğun OAuth İstemci Kimliğini (Client ID) yapıştır. Kurulum adımları için sohbetteki talimatlara bak.",
-    gsClientSave: "Kaydet", gsLinkedBy: "{name} bağladı · {d}", gsLastSync: "Son eşitleme: {t}", gsWarnStruct: "Takvim sekmesinin satır/sütun düzeni değişmişti; sitedeki hâli yeniden yazıldı.",
+    gsClientSave: "Kaydet", gsLinkedBy: "{name} bağladı · {d}", gsWarnStruct: "Takvim sekmesinin satır/sütun düzeni değişmişti; sitedeki hâli yeniden yazıldı.",
+    gsErrTab: "Bağlı sekme (“{tab}”) Sheet'te bulunamadı. Silinmiş ya da başka bir dosyaya taşınmış olabilir; bağlantıyı kaldırıp yeniden bağla.",
+    gsDiag: "Son kontrol {t} · Sheet'e yazılan hücre: {w} · Sheet'ten gelen değişiklik: {r}", gsDiagErr: "Son hata: {m}",
     gsTask: "Görev", gsDate: "Tarih", gsDone: "Tamamlandı", gsBy: "Ekleyen",
-    gsClientNow: "Client ID: {id}", gsClientChange: "Değiştir",
+    gsClientNow: "Client ID: {id}", gsClientChange: "Değiştir", gsBadUrl: "Bu bir Google Sheet linki gibi görünmüyor.",
     gsErr_popup_failed_to_open: "Tarayıcı Google penceresini engelledi. Adres çubuğundaki engellenen pencere simgesinden izin verip tekrar dene.",
     gsErr_popup_closed: "Google penceresi kapatıldı. Tekrar dene.",
     gsErr_access_denied: "Google izni verilmedi. İzin ekranında Sheets erişimini onaylaman gerekiyor.",
     gsErr_invalid_client: "Client ID geçersiz görünüyor. Google Cloud → Clients'tan tamamını (.apps.googleusercontent.com dahil) kopyalayıp “Değiştir” ile tekrar yapıştır.",
     gsErr_origin: "Google bu site adresini henüz tanımıyor (origin). Google Cloud → Clients → Authorized JavaScript origins'e site adresini eklediğinden emin ol; ayarın devreye girmesi birkaç dakika sürebilir.",
-    gsErr_api: "Google Sheets API bu projede açık değil. Google Cloud'da “Google Sheets API” → Enable yap, birkaç dakika sonra tekrar dene.", help_gsheets: "Projeyi bir Google Sheet ile iki yönlü eşitler (VFX Breakdown, Takvim, To-Do)."
+    gsErr_api: "Google Sheets API bu projede açık değil. Google Cloud'da “Google Sheets API” → Enable yap, birkaç dakika sonra tekrar dene.",
+    gsErr_perm: "Bu Sheet'e erişim iznin yok. Sheet'in sahibinden seni düzenleyici olarak eklemesini iste.",
+    gsErr_notfound: "Sheet bulunamadı. Linki kontrol et.",
+    help_gsheets: "Bu bölümü bir Google Sheet ile iki yönlü eşitler: Sheet'ten içe aktar ya da Sheet'e dışa aktar."
 });
 Object.assign(I18N.en, {
     gsBtn: "Google Sheets", gsTitle: "Google Sheets sync",
-    gsIntro: "Sync this project both ways with a Google Sheet: VFX Breakdown, Calendar and To-Do in separate tabs. Changes on the site go to the Sheet and changes in the Sheet come to the site.",
-    gsCreate: "Create a new Google Sheet and link", gsExisting: "Link an existing Sheet", gsUrlPrompt: "Paste the Google Sheet link:",
-    gsOpen: "Open Sheet ↗", gsSyncNow: "Sync now", gsUnlink: "Unlink", gsConfirmUnlink: "Unlink the Google Sheet? (The Sheet is not deleted; syncing just stops.)",
+    gsMod_vfx: "VFX Breakdown", gsMod_cal: "Calendar", gsMod_todo: "To-Do",
+    gsIntro: "Sync this section with a Google Sheet. Each section (VFX, Calendar, To-Do) can be linked to its own Sheet file. Once linked, the site and the Sheet update together.",
+    gsImpTitle: "⬇ Import from a Sheet", gsImpHint: "Bring a Sheet you already worked on into the site. The Sheet keeps its layout; afterwards both update together.",
+    gsExpTitle: "⬆ Export to a Sheet", gsExpHint: "Write the site's table to a Sheet. With a link it is added to that file as the “{tab}” tab; leave it empty to create a new Sheet.",
+    gsUrlPh: "Paste the Google Sheet link", gsUrlPhOpt: "Google Sheet link (leave empty for a new Sheet)",
+    gsLoadTabs: "Load tabs", gsPickTab: "Tab:", gsDoImport: "Import and link", gsDoExport: "Export and link", gsDoCreate: "Create a new Sheet and link",
+    gsReading: "Reading the Sheet…",
+    gsPrevVfx: "{n} rows found · Recognised columns: {cols}", gsPrevRounds: "Will become note columns: {cols}", gsPrevIgnored: "Skipped: {cols}",
+    gsPrevTodo: "{n} tasks found · Recognised columns: {cols}",
+    gsPrevCal: "{d} days ({a} – {b}) · {e} episodes · {c} filled cells",
+    gsPrevNone: "No recognisable header row in this tab.",
+    gsNoHeadVfx: "No header row found. The Sheet needs headers like TC, No, Description, Status.",
+    gsNoHeadTodo: "No header row found. The Sheet needs headers like Task / Date.",
+    gsNoHeadCal: "No date row found. The calendar tab needs a row of dates (e.g. 02.11.2026 or 02/11) with episode and department names on the left.",
+    gsConfirmImpVfx: "{n} rows from the Sheet will be imported into the VFX Breakdown. The site's current {m} shots (with their images) will be replaced. Continue?",
+    gsConfirmImpTodo: "{n} tasks from the Sheet will be imported. The site's current {m} tasks will be replaced. Continue?",
+    gsConfirmImpCal: "The Sheet's calendar will be added as a new calendar version (“{name}”). Existing versions are not touched. Continue?",
+    gsImpVersionName: "Sheet import", gsConfirmOverwrite: "The “{tab}” tab has data. The site's table will overwrite it. Continue?",
+    gsLinkedImp: "Linked by import · tab: {tab}", gsLinkedExp: "Linked by export · tab: {tab}",
+    gsCalVer: "Calendar version: {v}", gsCalOtherVer: "This link is for version “{v}”. Syncing runs while that version is open.",
+    gsOpen: "Open Sheet ↗", gsSyncNow: "Sync now", gsUnlink: "Unlink", gsConfirmUnlink: "Unlink this section's Google Sheet? (The Sheet is not deleted; syncing just stops.)",
     gsReconnect: "Renew Google permission",
     gs_off: "Not linked", gs_ok: "Synced · {t}", gs_sync: "Syncing…", gs_auth: "Google permission needed — click",
     gs_follower: "Syncing runs in {name}'s browser", gs_error: "Error: {m}", gs_viewer: "Linked (viewer — editors run the sync)",
-    gs_setup: "Setup needed",
-    gsRules: "In the Sheet: don't delete row 1 (headers) or the hidden ID column. In VFX and To-Do, a new row at the bottom becomes a new item; deleting a row deletes it. In the Calendar tab type a department name or a cut type (e.g. MASTER LOCK) into a cell; clearing it empties the cell.",
+    gs_setup: "Setup needed", gs_wait: "Waiting",
+    gsRules_vfx: "A new row at the bottom of the Sheet becomes a new shot; deleting a row deletes the shot. Don't delete the hidden PPL_ID column on the right. Status accepts Waiting / In progress / In review / Revision / Done / Cancelled.",
+    gsRules_todo: "A new row at the bottom becomes a new task; deleting a row deletes it. Don't delete the hidden PPL_ID column.",
+    gsRules_cal: "Type a department name or a cut type (e.g. MASTER LOCK) into a calendar cell; clearing it empties the cell. Don't insert or delete rows/columns.",
     gsClientTitle: "One-time setup", gsClientHint: "Paste the OAuth Client ID you created in Google Cloud. See the setup steps in the chat.",
-    gsClientSave: "Save", gsLinkedBy: "Linked by {name} · {d}", gsLastSync: "Last sync: {t}", gsWarnStruct: "The Calendar tab layout had changed; the site's version was written back.",
+    gsClientSave: "Save", gsLinkedBy: "Linked by {name} · {d}", gsWarnStruct: "The Calendar tab layout had changed; the site's version was written back.",
+    gsErrTab: "The linked tab (“{tab}”) was not found in the Sheet. It may have been deleted; unlink and link again.",
+    gsDiag: "Last check {t} · cells written to Sheet: {w} · changes from Sheet: {r}", gsDiagErr: "Last error: {m}",
     gsTask: "Task", gsDate: "Date", gsDone: "Done", gsBy: "Added by",
-    gsClientNow: "Client ID: {id}", gsClientChange: "Change",
+    gsClientNow: "Client ID: {id}", gsClientChange: "Change", gsBadUrl: "This doesn't look like a Google Sheet link.",
     gsErr_popup_failed_to_open: "The browser blocked the Google window. Allow pop-ups from the address bar icon and try again.",
     gsErr_popup_closed: "The Google window was closed. Try again.",
     gsErr_access_denied: "Google permission was not granted. Approve Sheets access on the consent screen.",
     gsErr_invalid_client: "The Client ID looks invalid. Copy the whole value (ending with .apps.googleusercontent.com) from Google Cloud → Clients and paste it again via “Change”.",
     gsErr_origin: "Google doesn't recognise this site address yet. Add it under Google Cloud → Clients → Authorized JavaScript origins; it can take a few minutes to apply.",
-    gsErr_api: "Google Sheets API is not enabled for this project. Enable “Google Sheets API” in Google Cloud and try again in a few minutes.", help_gsheets: "Two-way sync of this project with a Google Sheet (VFX Breakdown, Calendar, To-Do)."
+    gsErr_api: "Google Sheets API is not enabled for this project. Enable “Google Sheets API” in Google Cloud and try again in a few minutes.",
+    gsErr_perm: "You don't have access to this Sheet. Ask its owner to add you as an editor.",
+    gsErr_notfound: "Sheet not found. Check the link.",
+    help_gsheets: "Two-way sync of this section with a Google Sheet: import from a Sheet or export to a Sheet."
 });
 
 const GS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 const GS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
+const GS_MODS = ['vfx', 'cal', 'todo'];
 const GS_TAB = { vfx: 'VFX Breakdown', cal: 'Takvim', todo: 'To-Do' };
-const GS_TICK_MS = 8000, GS_LEADER_STALE = 90000, GS_BEAT_MS = 30000;
-const GS = { token: null, exp: 0, busy: false, lastSeen: null, pid: null, calVer: null, fmtSig: {}, sheetIds: null, sheetFor: null,
-    lastSync: null, status: 'off', err: '', warn: '', lastBeat: 0, kickT: 0, clientId: '' };
+const GS_TICK_MS = 8000, GS_LEADER_STALE = 90000, GS_BEAT_MS = 30000, GS_META_MS = 60000;
+const GS_ID_HEAD = 'PPL_ID';
+const GS = { token: null, exp: 0, busy: false, status: 'off', lastBeat: 0, kickT: 0, clientId: '', editClient: false, followerName: '',
+    meta: {}, m: {}, ui: { mod: 'vfx', imp: null, expUrl: '', busy: false } };
+GS_MODS.forEach(m => GS.m[m] = { sig: '', seen: null, fmt: null, status: 'off', err: '', warn: '', diag: null, lastErr: null, lastSync: null });
 
-// --- Client ID: projede kayıtlı > kullanıcı tercihi > dosyadaki sabit ---
+// --- Client ID: yeni girilen > projede kayıtlı > kullanıcı tercihi > dosyadaki sabit ---
 function gsClientId() {
     const g = App.project && App.project.gsheet;
     return GS.clientId || (g && g.clientId) || (tourPrefs && tourPrefs.gClientId) || window.GOOGLE_OAUTH_CLIENT_ID || '';
+}
+
+// --- Bağlantılar: gsheet.links = { vfx, cal, todo } (eski tek-Sheet bağlantısı otomatik çevrilir) ---
+function gsLinks() {
+    const g = App.project && App.project.gsheet;
+    if (!g) return {};
+    if (g.links) return g.links;
+    if (g.id) {
+        const o = {};
+        GS_MODS.forEach(m => o[m] = { id: g.id, url: g.url, tab: GS_TAB[m], std: true, mode: 'export', linkedBy: g.linkedBy, linkedAt: g.linkedAt, legacy: true });
+        return o;
+    }
+    return {};
+}
+const gsLinkOf = (m) => gsLinks()[m] || null;
+const gsAnyLink = (g) => !!(g && ((g.links && Object.keys(g.links).length) || g.id));
+window.gsAnyLink = gsAnyLink;
+async function gsSaveLink(m, L) {
+    const pid = App.project.id;
+    const g = App.project.gsheet || null;
+    const clean = L ? JSON.parse(JSON.stringify(L)) : null;
+    if (clean) delete clean.legacy;
+    if (!g || (!g.links && g.id) || !g.links) {
+        // ilk bağlantı ya da eski biçim → tamamını yaz
+        const links = Object.assign({}, gsLinks());
+        Object.keys(links).forEach(k => { if (links[k]) delete links[k].legacy; });
+        if (clean) links[m] = clean; else delete links[m];
+        const ng = { clientId: gsClientId(), links };
+        if (g && g.leader) ng.leader = g.leader;
+        await api().updateProject(pid, { gsheet: ng });
+        App.project.gsheet = ng;
+    } else {
+        await api().updateProject(pid, { ['gsheet.links.' + m]: clean || DEL_FIELD, 'gsheet.clientId': gsClientId() });
+        if (clean) g.links[m] = clean; else delete g.links[m];
+        g.clientId = gsClientId();
+    }
 }
 
 // --- Google izni (Google Identity Services) ---
@@ -9132,14 +9251,31 @@ async function gsFetch(path, opts = {}) {
     if (!r.ok) {
         let m = '';
         try { m = (await r.json()).error.message; } catch (e) {}
-        throw new Error(m || ('HTTP ' + r.status));
+        if (r.status === 403 && !m) m = 'PERMISSION_DENIED';
+        if (r.status === 404 && !m) m = 'NOT_FOUND';
+        throw Object.assign(new Error(m || ('HTTP ' + r.status)), { http: r.status });
     }
     return r.json();
 }
+const gsEnc = (id) => '/' + encodeURIComponent(id);
+const gsBatch = (id, requests) => requests.length ? gsFetch(gsEnc(id) + ':batchUpdate', { method: 'POST', body: { requests } }) : null;
+async function gsValues(id, data, user) {
+    for (let i = 0; i < data.length; i += 2000) {
+        await gsFetch(gsEnc(id) + '/values:batchUpdate', { method: 'POST', body: { valueInputOption: user ? 'USER_ENTERED' : 'RAW', data: data.slice(i, i + 2000) } });
+    }
+}
+function gsIdFromUrl(u) {
+    const s = String(u || '').trim();
+    const m = s.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (m) return m[1];
+    if (/^[a-zA-Z0-9-_]{25,}$/.test(s)) return s;
+    return null;
+}
 
 // --- Yardımcılar ---
-const gsQ = (tab) => "'" + tab.replace(/'/g, "''") + "'";
+const gsQ = (tab) => "'" + String(tab).replace(/'/g, "''") + "'";
 function gsCol(n) { let s = ''; n++; while (n) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; }
+const gsA1 = (tab, r, c) => `${gsQ(tab)}!${gsCol(c)}${r + 1}`;
 const gsStr = (v) => v === true ? 'TRUE' : v === false ? 'FALSE' : (v === null || v === undefined) ? '' : String(v);
 const gsCell = (rows, r, c) => gsStr(rows && rows[r] && rows[r][c]);
 function gsParseDate(v) {
@@ -9149,20 +9285,84 @@ function gsParseDate(v) {
         return d.toISOString().slice(0, 10);
     }
     const s = String(v).trim();
-    let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
     if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
     m = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
     if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
     return '';
 }
-const gsBool = (v) => v === true || /^(true|doğru|dogru|evet|yes|1|x|✓)$/i.test(String(v).trim());
-function gsHexColor(hex) {
-    const h = String(hex || '#ffffff').replace('#', '');
+const gsBool = (v) => v === true || /^(true|doğru|dogru|evet|yes|1|x|✓|✔|ok|tamam|yapıldı)$/i.test(String(v).trim());
+function gsHexColor(c) {
+    const s = String(c || '#ffffff').trim();
+    const rgb = s.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if (rgb) return { red: +rgb[1] / 255, green: +rgb[2] / 255, blue: +rgb[3] / 255 };
+    const h = s.replace('#', '');
     const n = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h, 16);
+    if (!isFinite(n)) return { red: 1, green: 1, blue: 1 };
     return { red: ((n >> 16) & 255) / 255, green: ((n >> 8) & 255) / 255, blue: (n & 255) / 255 };
 }
+const gsLow = (v) => gsStr(v).toLocaleLowerCase('tr-TR').replace(/[_\-\/\\.:()\[\]]+/g, ' ').replace(/\s+/g, ' ').trim();
+const gsUp = (v) => gsStr(v).toLocaleUpperCase('tr-TR').trim();
+function gsCellFmt(sheetId, r1, r2, c1, c2, fmt, fields) {
+    return { repeatCell: { range: { sheetId, startRowIndex: r1, endRowIndex: r2, startColumnIndex: c1, endColumnIndex: c2 }, cell: { userEnteredFormat: fmt }, fields: 'userEnteredFormat(' + fields + ')' } };
+}
 
-// --- Sitenin hâli → tablolar ---
+// --- Seen (son görülen hâl): tarayıcıda saklanır ki site kapalıyken Sheet'te yapılanlar kaybolmasın ---
+const gsSig = (m, L) => [App.project.id, m, L.id, L.gid !== undefined ? L.gid : L.tab, L.linkedAt || '', L.std ? 's' : 'f', L.versionId || ''].join('|');
+function gsState(m, L) {
+    const st = GS.m[m];
+    const sig = gsSig(m, L);
+    if (st.sig !== sig) {
+        st.sig = sig; st.fmt = null; st.warn = '';
+        try { st.seen = JSON.parse(localStorage.getItem('gsSeen:' + sig) || 'null'); } catch (e) { st.seen = null; }
+    }
+    return st;
+}
+function gsStoreSeen(st) {
+    try { localStorage.setItem('gsSeen:' + st.sig, JSON.stringify(st.seen)); } catch (e) {}
+}
+
+// --- Sheet bilgisi (sekmeler, boyutlar) ---
+async function gsLoadMeta(id, force) {
+    const c = GS.meta[id];
+    if (c && !force && Date.now() - c.at < GS_META_MS) return c;
+    const ss = await gsFetch(gsEnc(id) + '?fields=spreadsheetId,spreadsheetUrl,properties(title,locale),sheets.properties');
+    const meta = { at: Date.now(), url: ss.spreadsheetUrl || `https://docs.google.com/spreadsheets/d/${id}/edit`, title: (ss.properties || {}).title || '',
+        tabs: (ss.sheets || []).map(s => ({ gid: s.properties.sheetId, title: s.properties.title,
+            rows: (s.properties.gridProperties || {}).rowCount || 1000, cols: (s.properties.gridProperties || {}).columnCount || 26 })) };
+    GS.meta[id] = meta;
+    return meta;
+}
+async function gsAddTab(id, title) {
+    const r = await gsBatch(id, [{ addSheet: { properties: { title, gridProperties: { frozenRowCount: 1 } } } }]);
+    const p = r.replies[0].addSheet.properties;
+    const tab = { gid: p.sheetId, title: p.title, rows: (p.gridProperties || {}).rowCount || 1000, cols: (p.gridProperties || {}).columnCount || 26 };
+    if (GS.meta[id]) GS.meta[id].tabs.push(tab);
+    return tab;
+}
+async function gsResolveTab(m, L) {
+    const meta = await gsLoadMeta(L.id);
+    let tab = meta.tabs.find(x => L.gid !== undefined && x.gid === L.gid) || meta.tabs.find(x => x.title === L.tab);
+    if (!tab) {
+        const fresh = await gsLoadMeta(L.id, true);
+        tab = fresh.tabs.find(x => L.gid !== undefined && x.gid === L.gid) || fresh.tabs.find(x => x.title === L.tab);
+    }
+    if (!tab && L.std) tab = await gsAddTab(L.id, L.tab || GS_TAB[m]);
+    if (!tab) throw new Error(tf('gsErrTab', { tab: L.tab }));
+    L.gid = tab.gid; L.tab = tab.title;
+    return tab;
+}
+// Google yeni sekmeyi 1000 satır × 26 sütunla açar; daha büyük tabloya yazmadan önce sekmeyi büyüt
+async function gsGrow(id, tab, needRows, needCols) {
+    const req = [];
+    if (needRows > tab.rows) { req.push({ appendDimension: { sheetId: tab.gid, dimension: 'ROWS', length: needRows - tab.rows + 100 } }); tab.rows = needRows + 100; }
+    if (needCols > tab.cols) { req.push({ appendDimension: { sheetId: tab.gid, dimension: 'COLUMNS', length: needCols - tab.cols + 10 } }); tab.cols = needCols + 10; }
+    await gsBatch(id, req);
+}
+
+// =====================================================================
+// A) SİTE DÜZENİYLE (dışa aktarılmış) SEKMELER
+// =====================================================================
 function gsVfxTable() {
     const rounds = vfxRoundsList();
     const multi = (parseInt(App.project.totalEpisodes) || 1) > 1;
@@ -9182,55 +9382,98 @@ function gsVfxTable() {
 function gsTodoTable() {
     const keys = ['id', 'text', 'date', 'done', 'by'];
     const head = ['ID', t('gsTask'), t('gsDate'), t('gsDone'), t('gsBy')];
-    const list = todoList().sort((a, b) => String(a.date || '9999').localeCompare(String(b.date || '9999')) || String(a.createdAt || '').localeCompare(String(b.createdAt || '')));
-    return { keys, rows: [head, ...list.map(td => [td.id, td.text || '', td.date || '', td.done ? 'TRUE' : 'FALSE', (td.createdBy && (td.createdBy.name || td.createdBy.email)) || ''])] };
+    return { keys, rows: [head, ...gsTodoOrder().map(td => [td.id, td.text || '', td.date || '', td.done ? 'TRUE' : 'FALSE', (td.createdBy && (td.createdBy.name || td.createdBy.email)) || ''])] };
 }
+function gsTodoOrder() {
+    return todoList().sort((a, b) => String(a.date || '9999').localeCompare(String(b.date || '9999')) || String(a.createdAt || '').localeCompare(String(b.createdAt || '')));
+}
+// Takvim: Excel çıktısıyla aynı düzen — 1. satır aylar, 2. satır gün/ay, solda EPISODE ve PIPELINE
+const GS_CAL_HEAD = 2;
 function gsCalTable() {
     if (!App.version || !dates || !dates.length) return null;
     const cells = new Map(serializeCells().map(c => [c.ep + '|' + c.procType + '|' + c.col, c]));
-    const iso = dates.map(d => toLocalISO(d));
-    const head = [t('wrEp'), t('wrDept'), ...dates.map(d => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`)];
+    const n = dates.length;
+    const monthRow = ['EPISODE', 'PIPELINE', ...dates.map(() => '')];
+    const merges = [];
+    for (let i = 0; i < n;) {
+        const mo = dates[i].getMonth(), y = dates[i].getFullYear();
+        let s = 0;
+        while (i + s < n && dates[i + s].getMonth() === mo && dates[i + s].getFullYear() === y) s++;
+        monthRow[2 + i] = dates[i].toLocaleDateString(localeStr(), { month: 'long', year: 'numeric' }).toLocaleUpperCase(localeStr());
+        if (s > 1) merges.push([0, 1, 2 + i, 2 + i + s]);
+        i += s;
+    }
+    const dayRow = ['', '', ...dates.map(d => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`)];
     const rowsMeta = [{ ep: 0, proc: 'set' }];
     for (let e = 1; e <= TOTAL_EPISODES; e++) PROC_ORDER.forEach(p => rowsMeta.push({ ep: e, proc: p }));
     const colors = [];
-    const rows = [head, ...rowsMeta.map((m, ri) => [m.ep ? 'EP' + String(m.ep).padStart(2, '0') : 'SET', m.proc === 'set' ? 'SET' : m.proc.toUpperCase(),
-        ...iso.map((_, ci) => {
-            const c = cells.get(m.ep + '|' + m.proc + '|' + ci);
-            if (!c) return '';
-            colors.push([ri + 1, ci + 2, c.bg || deptColors[m.proc], c.cutType ? cutFg(c.cutType) : '#000000']);
-            return String(c.text || '').trim() || m.proc.toUpperCase();
-        })])];
-    return { rows, rowsMeta, iso, colors, version: App.version.id };
-}
-function gsBuildAll() {
-    return { vfx: gsVfxTable(), todo: gsTodoTable(), cal: gsCalTable() };
+    const rows = [monthRow, dayRow];
+    rowsMeta.forEach((m, i) => {
+        const r = GS_CAL_HEAD + i;
+        const first = m.ep && m.proc === PROC_ORDER[0];
+        if (first) merges.push([r, r + PROC_ORDER.length, 0, 1]);
+        rows.push([m.ep ? (first ? 'EPISODE ' + String(m.ep).padStart(2, '0') : '') : 'SET', m.ep ? m.proc.toUpperCase() : 'SET DAYS',
+            ...dates.map((_, ci) => {
+                const c = cells.get(m.ep + '|' + m.proc + '|' + ci);
+                if (!c) return '';
+                colors.push([r, ci + 2, '#' + (rgbStringToHex(c.bg) || hexNoHash(deptColors[m.proc]) || 'FFFFFF'), c.cutType ? cutFg(c.cutType) : '#000000']);
+                return String(c.text || '').trim() || m.proc.toUpperCase();
+            })]);
+    });
+    return { head: GS_CAL_HEAD, rows, rowsMeta, colors, merges, weekend: dates.map(isWeekend), version: App.version.id };
 }
 
-// --- Sheet'te yapılan değişiklikleri siteye işle ---
+// --- Sheet'te yapılan değişiklikleri siteye işle (site düzeni) ---
+const GS_STATUS_ALIAS = {
+    todo: ['bekliyor', 'beklemede', 'todo', 'to do', 'waiting', 'başlanmadı', 'baslanmadi', 'yeni'],
+    wip: ['çalışılıyor', 'calisiliyor', 'yapılıyor', 'yapiliyor', 'devam', 'devam ediyor', 'wip', 'in progress', 'progress'],
+    review: ['onayda', 'onay', 'review', 'in review', 'kontrol', 'kontrolde'],
+    revision: ['revizyon', 'revize', 'revision', 'rev'],
+    done: ['yapıldı', 'yapildi', 'tamam', 'tamamlandı', 'tamamlandi', 'bitti', 'done', 'ok', 'onaylandı', 'onaylandi', 'approved', 'final', 'teslim edildi'],
+    cancel: ['iptal', 'cancel', 'cancelled', 'canceled', 'yok']
+};
 function gsStatusFrom(v) {
     const s = String(v || '').trim().toLocaleLowerCase('tr-TR');
-    return VFX_STATUS.find(x => [I18N.tr['vfx_' + x], I18N.en['vfx_' + x], x].some(l => String(l).toLocaleLowerCase('tr-TR') === s)) || null;
+    if (!s) return null;
+    const direct = VFX_STATUS.find(x => [I18N.tr['vfx_' + x], I18N.en['vfx_' + x], x].some(l => String(l).toLocaleLowerCase('tr-TR') === s));
+    return direct || VFX_STATUS.find(x => (GS_STATUS_ALIAS[x] || []).includes(s)) || null;
+}
+function gsTcFrom(raw) {
+    if (typeof raw === 'number' && raw > 0 && raw < 1) {                  // Sheets "01:02:03"ü saat olarak saklamış
+        const sec = Math.round(raw * 86400);
+        return [Math.floor(sec / 3600), Math.floor(sec / 60) % 60, sec % 60].map(x => String(x).padStart(2, '0')).join(':');
+    }
+    const d = gsStr(raw).replace(/\D/g, '').slice(0, 8);
+    return (d.match(/.{1,2}/g) || []).join(':');
 }
 function gsSetVfx(s, k, raw) {
     const v = gsStr(raw);
     if (k === 'ep') { const m = v.match(/(\d+)/); s.ep = m ? parseInt(m[1]) : 0; }
-    else if (k === 'status') { const st = gsStatusFrom(v); if (st) s.status = st; }
+    else if (k === 'status') { const st = gsStatusFrom(v); if (st) s.status = st; else if (!v.trim()) s.status = 'todo'; }
     else if (k.startsWith('r:')) {
         const rid = k.slice(2);
         if (!App.project.vfxRounds[rid]) return;
-        const done = /^\s*✓/.test(v);
-        s.notes = Object.assign({}, s.notes, { [rid]: { text: v.replace(/^\s*✓\s*/, ''), done } });
+        const done = /^\s*[✓✔]/.test(v);
+        s.notes = Object.assign({}, s.notes, { [rid]: { text: v.replace(/^\s*[✓✔]\s*/, '').trim(), done } });
     }
-    else if (k === 'tc') { const d = v.replace(/\D/g, '').slice(0, 8); s.tc = (d.match(/.{1,2}/g) || []).join(':'); }
+    else if (k === 'tc') s.tc = gsTcFrom(raw);
     else if (k === 'code') s.code = v.trim().toUpperCase();
     else if (k === 'due') s.due = gsParseDate(raw);
     else if (k === 'hours') s.hours = v.replace(',', '.').trim();
     else s[k] = v;
 }
+function gsNewShot() {
+    return { id: uid(), ep: 0, code: '', tc: '', desc: '', notes: {}, extras: '', vendor: '', hours: '', due: '', status: 'todo', createdAt: new Date().toISOString() };
+}
+function gsAddShot(s) {
+    if (!s.code) s.code = nextVfxCode(s.ep, null);
+    const grp = vfxSorted(vfxShotsList().filter(x => (parseInt(x.ep) || 0) === (parseInt(s.ep) || 0) && hasOrd(x)));
+    s.order = orderBetween(grp[grp.length - 1], null);
+    App.project.vfxShots[s.id] = s;
+}
 function gsPullVfx(prev, rows) {
     let changed = false;
     const keys = prev.keys;
-    // Not türü başlığı Sheet'te değiştiyse sütunun adı da değişsin
     keys.forEach((k, ci) => {
         if (!k.startsWith('r:')) return;
         const nv = gsCell(rows, 0, ci).trim(), r = App.project.vfxRounds[k.slice(2)];
@@ -9252,18 +9495,12 @@ function gsPullVfx(prev, rows) {
                 if (gsCell(rows, ri, ci) !== gsStr(old[ci])) { gsSetVfx(s, k, row[ci]); changed = true; }
             });
         } else if (!id && row.some((v, ci) => ci > 0 && gsStr(v).trim())) {
-            // Sheet'te en alta eklenmiş yeni satır → yeni shot
-            const nid = uid();
-            const s = { id: nid, ep: 0, code: '', tc: '', desc: '', notes: {}, extras: '', vendor: '', hours: '', due: '', status: 'todo', createdAt: new Date().toISOString() };
+            const s = gsNewShot();
             keys.forEach((k, ci) => { if (k !== 'id' && gsStr(row[ci]).trim()) gsSetVfx(s, k, row[ci]); });
-            if (!s.code) s.code = nextVfxCode(s.ep, null);
-            const grp = vfxSorted(vfxShotsList().filter(x => (parseInt(x.ep) || 0) === (parseInt(s.ep) || 0) && hasOrd(x)));
-            s.order = orderBetween(grp[grp.length - 1], null);
-            App.project.vfxShots[nid] = s;
+            gsAddShot(s);
             changed = true;
         }
     }
-    // Sheet'te silinen satırlar
     prevById.forEach((_, id) => {
         if (!seen.has(id) && App.project.vfxShots[id]) {
             delete App.project.vfxShots[id];
@@ -9273,19 +9510,24 @@ function gsPullVfx(prev, rows) {
     });
     return changed;
 }
+function gsSetTodo(td, k, raw) {
+    if (k === 'text') td.text = gsStr(raw).trim();
+    else if (k === 'date') td.date = gsParseDate(raw);
+    else if (k === 'done') {
+        const d = gsBool(raw);
+        if (d !== !!td.done) { td.done = d; if (d) { td.doneAt = new Date().toISOString(); clearTodoReminders(td); } else delete td.doneAt; }
+    }
+}
+function gsNewTodo() {
+    const u = App.user || {};
+    return { id: uid(), text: '', date: '', done: false, createdAt: new Date().toISOString(), createdBy: { name: u.displayName || u.email || '', email: myEmail() } };
+}
 function gsPullTodo(prev, rows) {
     let changed = false;
     const prevById = new Map();
     prev.rows.slice(1).forEach(r => prevById.set(gsStr(r[0]), r));
     const seen = new Set();
-    const set = (td, ci, raw) => {
-        if (ci === 1) td.text = gsStr(raw);
-        else if (ci === 2) td.date = gsParseDate(raw);
-        else if (ci === 3) {
-            const d = gsBool(raw);
-            if (d !== !!td.done) { td.done = d; if (d) { td.doneAt = new Date().toISOString(); clearTodoReminders(td); } else delete td.doneAt; }
-        }
-    };
+    const K = { 1: 'text', 2: 'date', 3: 'done' };
     for (let ri = 1; ri < rows.length; ri++) {
         const row = rows[ri] || [];
         const id = gsCell(rows, ri, 0).trim();
@@ -9294,12 +9536,11 @@ function gsPullTodo(prev, rows) {
             const td = App.project.todos[id];
             if (!td) continue;
             const old = prevById.get(id);
-            [1, 2, 3].forEach(ci => { if (gsCell(rows, ri, ci) !== gsStr(old[ci])) { set(td, ci, row[ci]); changed = true; } });
+            [1, 2, 3].forEach(ci => { if (gsCell(rows, ri, ci) !== gsStr(old[ci])) { gsSetTodo(td, K[ci], row[ci]); changed = true; } });
         } else if (!id && gsStr(row[1]).trim()) {
-            const nid = uid(), u = App.user || {};
-            const td = { id: nid, text: '', date: '', done: false, createdAt: new Date().toISOString(), createdBy: { name: u.displayName || u.email || '', email: myEmail() } };
-            [1, 2, 3].forEach(ci => set(td, ci, row[ci]));
-            App.project.todos[nid] = td;
+            const td = gsNewTodo();
+            [1, 2, 3].forEach(ci => gsSetTodo(td, K[ci], row[ci]));
+            App.project.todos[td.id] = td;
             changed = true;
         }
     }
@@ -9308,30 +9549,32 @@ function gsPullTodo(prev, rows) {
     });
     return changed;
 }
-function gsPullCal(prev, rows) {
-    if (!prev || !App.version || prev.version !== App.version.id) return false;
-    // Düzen bozulduysa (satır/sütun eklenmiş/silinmiş) Sheet'ten okumayı atla, sitenin hâlini yeniden yaz
-    const sameHead = prev.rows[0].every((v, ci) => ci < 2 || gsCell(rows, 0, ci) === gsStr(v));
-    const sameRows = prev.rows.every((r, ri) => ri === 0 || (gsCell(rows, ri, 0) === gsStr(r[0]) && gsCell(rows, ri, 1) === gsStr(r[1])));
-    if (!sameHead || !sameRows) { GS.warn = t('gsWarnStruct'); return false; }
+// Takvim hücresine Sheet'ten gelen metni uygula (cut türü / departman)
+function gsApplyCalText(cell, proc, nv) {
+    if (!nv) { clearCell(cell); return; }
+    const up = gsUp(nv);
+    const ct = Object.keys(CUT_TYPES).find(k => typeRow(k) === proc && [CUT_TYPES[k].label, k].some(l => gsUp(l) === up || String(l).toUpperCase() === up.replace(/İ/g, 'I')));
+    if (ct) fillCell(cell, { text: CUT_TYPES[ct].label, bg: CUT_TYPES[ct].bg, cutType: ct });
+    else {
+        const cur = cell.classList.contains('filled') ? readCell(cell) : null;
+        fillCell(cell, { text: /^\d+([.,]\d+)?$/.test(up) ? proc.toUpperCase() : up, bg: cur && !cur.cutType ? cur.bg : deptColors[proc], cutType: '' });
+    }
+}
+function gsPullCal(prev, rows, st) {
+    if (!prev || !App.version || prev.version !== App.version.id || !prev.head) return false;
+    const H = prev.head;
+    const sameHead = prev.rows[H - 1].every((v, ci) => ci < 2 || gsCell(rows, H - 1, ci) === gsStr(v));
+    const sameRows = prev.rows.every((r, ri) => ri < H || (gsCell(rows, ri, 0) === gsStr(r[0]) && gsCell(rows, ri, 1) === gsStr(r[1])));
+    if (!sameHead || !sameRows) { st.warn = t('gsWarnStruct'); return false; }
     let changed = false;
-    for (let ri = 1; ri < prev.rows.length; ri++) {
-        const m = prev.rowsMeta[ri - 1];
-        for (let ci = 2; ci < prev.rows[0].length; ci++) {
+    for (let ri = H; ri < prev.rows.length; ri++) {
+        const m = prev.rowsMeta[ri - H];
+        for (let ci = 2; ci < prev.rows[H - 1].length; ci++) {
             const nv = gsCell(rows, ri, ci).trim(), ov = gsStr(prev.rows[ri][ci]).trim();
             if (nv === ov) continue;
             const cell = getCell(ci - 2, m.ep, m.proc);
             if (!cell) continue;
-            if (!nv) clearCell(cell);
-            else {
-                const up = nv.toLocaleUpperCase('tr-TR');
-                const ct = Object.keys(CUT_TYPES).find(k => typeRow(k) === m.proc && CUT_TYPES[k].label.toUpperCase() === up.replace('İ', 'I'));
-                if (ct) fillCell(cell, { text: CUT_TYPES[ct].label, bg: CUT_TYPES[ct].bg, cutType: ct });
-                else {
-                    const cur = cell.classList.contains('filled') ? readCell(cell) : null;
-                    fillCell(cell, { text: nv.toUpperCase(), bg: cur && !cur.cutType ? cur.bg : deptColors[m.proc], cutType: '' });
-                }
-            }
+            gsApplyCalText(cell, m.proc, nv);
             changed = true;
         }
     }
@@ -9342,10 +9585,11 @@ function gsPullCal(prev, rows) {
 // --- Siteyi Sheet'e yaz (sadece farklı satırlar) ---
 function gsDiffWrites(tab, desired, fetched, data, clears, boolCol) {
     const width = Math.max(...desired.map(r => r.length), ...fetched.map(r => (r || []).length), 1);
+    let cells = 0;
     for (let ri = 0; ri < desired.length; ri++) {
         const want = desired[ri], have = fetched[ri] || [];
         let same = true;
-        for (let ci = 0; ci < width; ci++) if (gsStr(want[ci]) !== gsStr(have[ci])) { same = false; break; }
+        for (let ci = 0; ci < width; ci++) if (gsStr(want[ci]) !== gsStr(have[ci])) { same = false; cells++; }
         if (same) continue;
         const vals = Array.from({ length: width }, (_, ci) => {
             const v = want[ci] === undefined ? '' : want[ci];
@@ -9353,75 +9597,513 @@ function gsDiffWrites(tab, desired, fetched, data, clears, boolCol) {
         });
         data.push({ range: `${gsQ(tab)}!A${ri + 1}:${gsCol(width - 1)}${ri + 1}`, values: [vals] });
     }
-    if (fetched.length > desired.length) clears.push(`${gsQ(tab)}!A${desired.length + 1}:${gsCol(Math.max(width, 26) - 1)}${fetched.length + 50}`);
+    if (fetched.length > desired.length) { clears.push(`${gsQ(tab)}!A${desired.length + 1}:${gsCol(Math.max(width, 26) - 1)}${fetched.length + 50}`); cells++; }
+    return cells;
 }
 
-async function gsEnsureTabs(id) {
-    const ss = await gsFetch('/' + encodeURIComponent(id) + '?fields=spreadsheetId,spreadsheetUrl,sheets.properties');
-    const have = new Map((ss.sheets || []).map(s => [s.properties.title, s.properties.sheetId]));
-    const missing = Object.values(GS_TAB).filter(t0 => !have.has(t0));
-    if (missing.length) {
-        const r = await gsFetch('/' + encodeURIComponent(id) + ':batchUpdate', { method: 'POST', body: { requests: missing.map(title => ({ addSheet: { properties: { title, gridProperties: { frozenRowCount: 1 } } } })) } });
-        (r.replies || []).forEach(rep => { if (rep.addSheet) have.set(rep.addSheet.properties.title, rep.addSheet.properties.sheetId); });
-    }
-    GS.sheetIds = Object.fromEntries(Object.entries(GS_TAB).map(([k, title]) => [k, have.get(title)]));
-    GS.sheetFor = id;
-    return ss;
-}
-
-// Biçim: başlık, gizli ID, durum renkleri, açılır listeler, takvim renkleri (sadece değişince)
-async function gsFormat(id, desired) {
-    const req = [];
-    const sid = GS.sheetIds;
-    const fullRow = (sheetId, r, cols, bg, fg, bold) => ({ repeatCell: { range: { sheetId, startRowIndex: r, endRowIndex: r + 1, startColumnIndex: 0, endColumnIndex: cols },
-        cell: { userEnteredFormat: { backgroundColor: gsHexColor(bg), textFormat: { bold: !!bold, foregroundColor: gsHexColor(fg || '#000000') } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } });
-    const header = (sheetId, cols, frozenCols) => [
-        { updateSheetProperties: { properties: { sheetId, gridProperties: { frozenRowCount: 1, frozenColumnCount: frozenCols || 0 } }, fields: 'gridProperties(frozenRowCount,frozenColumnCount)' } },
-        fullRow(sheetId, 0, cols, '#C27BA0', '#FFFFFF', true)];
-    // VFX
-    const v = desired.vfx, vCols = v.rows[0].length;
-    const vSig = JSON.stringify([v.statuses, vCols, v.rows.length, currentLang]);
-    if (sid.vfx !== undefined && GS.fmtSig.vfx !== vSig) {
-        req.push(...header(sid.vfx, vCols));
-        req.push({ updateDimensionProperties: { range: { sheetId: sid.vfx, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { hiddenByUser: true }, fields: 'hiddenByUser' } });
-        req.push({ repeatCell: { range: { sheetId: sid.vfx, startRowIndex: v.rows.length, endRowIndex: v.rows.length + 200, startColumnIndex: 0, endColumnIndex: vCols + 5 },
-            cell: { userEnteredFormat: { backgroundColor: gsHexColor('#FFFFFF'), textFormat: { bold: false, foregroundColor: gsHexColor('#000000') } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } });
-        v.statuses.forEach((st, i) => req.push(fullRow(sid.vfx, i + 1, vCols, '#' + VFX_COLORS[st].bg, '#' + VFX_COLORS[st].fg)));
-        req.push({ setDataValidation: { range: { sheetId: sid.vfx, startRowIndex: 1, endRowIndex: Math.max(v.rows.length + 200, 300), startColumnIndex: vCols - 1, endColumnIndex: vCols },
+// Biçim (site düzeni): başlık, gizli ID, durum renkleri, açılır listeler; takvim Excel çıktısı gibi
+function gsFormatStd(m, tab, desired, st) {
+    const sid = tab.gid, req = [];
+    const pinkHead = (cols, frozenCols) => [
+        { updateSheetProperties: { properties: { sheetId: sid, gridProperties: { frozenRowCount: 1, frozenColumnCount: frozenCols || 0 } }, fields: 'gridProperties(frozenRowCount,frozenColumnCount)' } },
+        gsCellFmt(sid, 0, 1, 0, cols, { backgroundColor: gsHexColor('#C27BA0'), textFormat: { bold: true, foregroundColor: gsHexColor('#FFFFFF') } }, 'backgroundColor,textFormat')];
+    if (m === 'vfx') {
+        const cols = desired.rows[0].length;
+        const sig = JSON.stringify([desired.statuses, cols, desired.rows.length, currentLang]);
+        if (st.fmt === sig) return req;
+        req.push(...pinkHead(cols));
+        req.push({ updateDimensionProperties: { range: { sheetId: sid, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { hiddenByUser: true }, fields: 'hiddenByUser' } });
+        req.push(gsCellFmt(sid, desired.rows.length, desired.rows.length + 200, 0, cols + 5, { backgroundColor: gsHexColor('#FFFFFF'), textFormat: { bold: false, foregroundColor: gsHexColor('#000000') } }, 'backgroundColor,textFormat'));
+        desired.statuses.forEach((s, i) => req.push(gsCellFmt(sid, i + 1, i + 2, 0, cols, { backgroundColor: gsHexColor('#' + VFX_COLORS[s].bg), textFormat: { bold: false, foregroundColor: gsHexColor('#' + VFX_COLORS[s].fg) } }, 'backgroundColor,textFormat')));
+        req.push({ setDataValidation: { range: { sheetId: sid, startRowIndex: 1, endRowIndex: Math.max(desired.rows.length + 200, 300), startColumnIndex: cols - 1, endColumnIndex: cols },
             rule: { condition: { type: 'ONE_OF_LIST', values: VFX_STATUS.map(x => ({ userEnteredValue: t('vfx_' + x) })) }, showCustomUi: true, strict: false } } });
-        GS.fmtSig.vfx = vSig;
+        st.fmt = sig;
+        return req;
     }
-    // To-Do
-    const td = desired.todo, tSig = JSON.stringify([td.rows.length, currentLang]);
-    if (sid.todo !== undefined && GS.fmtSig.todo !== tSig) {
-        req.push(...header(sid.todo, 5));
-        req.push({ updateDimensionProperties: { range: { sheetId: sid.todo, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { hiddenByUser: true }, fields: 'hiddenByUser' } });
-        req.push({ setDataValidation: { range: { sheetId: sid.todo, startRowIndex: 1, endRowIndex: Math.max(td.rows.length + 200, 300), startColumnIndex: 3, endColumnIndex: 4 }, rule: { condition: { type: 'BOOLEAN' } } } });
-        GS.fmtSig.todo = tSig;
+    if (m === 'todo') {
+        const sig = JSON.stringify([desired.rows.length, currentLang]);
+        if (st.fmt === sig) return req;
+        req.push(...pinkHead(5));
+        req.push({ updateDimensionProperties: { range: { sheetId: sid, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { hiddenByUser: true }, fields: 'hiddenByUser' } });
+        req.push({ setDataValidation: { range: { sheetId: sid, startRowIndex: 1, endRowIndex: Math.max(desired.rows.length + 200, 300), startColumnIndex: 3, endColumnIndex: 4 }, rule: { condition: { type: 'BOOLEAN' } } } });
+        st.fmt = sig;
+        return req;
     }
-    // Takvim
-    const c = desired.cal;
-    if (c && sid.cal !== undefined) {
-        const cSig = JSON.stringify([c.colors, c.rows.length, c.rows[0].length]);
-        if (GS.fmtSig.cal !== cSig) {
-            const cols = c.rows[0].length;
-            req.push(...header(sid.cal, cols, 2));
-            req.push({ repeatCell: { range: { sheetId: sid.cal, startRowIndex: 1, endRowIndex: c.rows.length + 20, startColumnIndex: 2, endColumnIndex: cols + 10 },
-                cell: { userEnteredFormat: { backgroundColor: gsHexColor('#FFFFFF'), textFormat: { bold: false, foregroundColor: gsHexColor('#000000') }, horizontalAlignment: 'CENTER' } },
-                fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)' } });
-            c.rowsMeta.forEach((m, i) => req.push({ repeatCell: { range: { sheetId: sid.cal, startRowIndex: i + 1, endRowIndex: i + 2, startColumnIndex: 0, endColumnIndex: 2 },
-                cell: { userEnteredFormat: { backgroundColor: gsHexColor(m.ep ? deptColors[m.proc] : deptColors.set), textFormat: { bold: true } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } }));
-            c.colors.forEach(([r, col, bg, fg]) => req.push({ repeatCell: { range: { sheetId: sid.cal, startRowIndex: r, endRowIndex: r + 1, startColumnIndex: col, endColumnIndex: col + 1 },
-                cell: { userEnteredFormat: { backgroundColor: gsHexColor(bg), textFormat: { bold: true, foregroundColor: gsHexColor(fg) } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } }));
-            GS.fmtSig.cal = cSig;
+    // --- Takvim ---
+    const R = desired.rows.length, C = desired.rows[0].length, H = desired.head;
+    const dimSig = JSON.stringify([R, C, desired.merges, desired.weekend, desired.rowsMeta.length]);
+    const colorMap = {};
+    desired.colors.forEach(([r, c, bg, fg]) => colorMap[r + '|' + c] = bg + '|' + fg);
+    const WHITE = gsHexColor('#FFFFFF'), GREY = gsHexColor('#D1D1D1'), DARK = gsHexColor('#1C1F26'), BLACK = gsHexColor('#000000');
+    const cellBase = (c) => desired.weekend[c - 2] ? GREY : WHITE;
+    const full = !st.fmt || st.fmt.dim !== dimSig;
+    if (full) {
+        req.push({ unmergeCells: { range: { sheetId: sid, startRowIndex: 0, endRowIndex: R + 20, startColumnIndex: 0, endColumnIndex: C + 10 } } });
+        req.push({ updateSheetProperties: { properties: { sheetId: sid, gridProperties: { frozenRowCount: H, frozenColumnCount: 2 } }, fields: 'gridProperties(frozenRowCount,frozenColumnCount)' } });
+        req.push({ updateDimensionProperties: { range: { sheetId: sid, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 110 }, fields: 'pixelSize' } });
+        req.push({ updateDimensionProperties: { range: { sheetId: sid, dimension: 'COLUMNS', startIndex: 1, endIndex: 2 }, properties: { pixelSize: 80 }, fields: 'pixelSize' } });
+        req.push({ updateDimensionProperties: { range: { sheetId: sid, dimension: 'COLUMNS', startIndex: 2, endIndex: C }, properties: { pixelSize: 46 }, fields: 'pixelSize' } });
+        const center = { horizontalAlignment: 'CENTER', verticalAlignment: 'MIDDLE', wrapStrategy: 'WRAP' };
+        // Gövde: beyaz, küçük kalın yazı, ortalı
+        req.push(gsCellFmt(sid, H, R + 20, 2, C + 10, Object.assign({ backgroundColor: WHITE, textFormat: { bold: true, fontSize: 8, foregroundColor: BLACK } }, center), 'backgroundColor,textFormat,horizontalAlignment,verticalAlignment,wrapStrategy'));
+        // Başlık satırları: koyu zemin, beyaz yazı
+        req.push(gsCellFmt(sid, 0, H, 0, C, Object.assign({ backgroundColor: DARK, textFormat: { bold: true, fontSize: 9, foregroundColor: WHITE } }, center), 'backgroundColor,textFormat,horizontalAlignment,verticalAlignment,wrapStrategy'));
+        // Hafta sonu sütunları gri
+        desired.weekend.forEach((w, i) => {
+            if (!w) return;
+            req.push(gsCellFmt(sid, 0, H, i + 2, i + 3, { backgroundColor: GREY, textFormat: { bold: true, fontSize: 9, foregroundColor: BLACK } }, 'backgroundColor,textFormat'));
+            req.push(gsCellFmt(sid, H, R, i + 2, i + 3, { backgroundColor: GREY }, 'backgroundColor'));
+        });
+        // EPISODE sütunu yeşil, PIPELINE sütunu departman renginde
+        req.push(gsCellFmt(sid, H, R, 0, 1, Object.assign({ backgroundColor: gsHexColor('#6FBF73'), textFormat: { bold: true, fontSize: 10, foregroundColor: BLACK } }, center), 'backgroundColor,textFormat,horizontalAlignment,verticalAlignment,wrapStrategy'));
+        desired.rowsMeta.forEach((mm, i) => req.push(gsCellFmt(sid, H + i, H + i + 1, 1, 2,
+            { backgroundColor: gsHexColor(deptColors[mm.proc] || '#FFFFFF'), textFormat: { bold: true, fontSize: 9, foregroundColor: BLACK }, horizontalAlignment: 'LEFT', verticalAlignment: 'MIDDLE' },
+            'backgroundColor,textFormat,horizontalAlignment,verticalAlignment')));
+        desired.merges.forEach(([r1, r2, c1, c2]) => req.push({ mergeCells: { range: { sheetId: sid, startRowIndex: r1, endRowIndex: r2, startColumnIndex: c1, endColumnIndex: c2 }, mergeType: 'MERGE_ALL' } }));
+        Object.entries(colorMap).forEach(([k, v]) => {
+            const [r, c] = k.split('|').map(Number), [bg, fg] = v.split('|');
+            req.push(gsCellFmt(sid, r, r + 1, c, c + 1, { backgroundColor: gsHexColor(bg), textFormat: { bold: true, fontSize: 8, foregroundColor: gsHexColor(fg) } }, 'backgroundColor,textFormat'));
+        });
+    } else {
+        // Sadece rengi değişen hücreler
+        const old = st.fmt.colors || {};
+        new Set([...Object.keys(old), ...Object.keys(colorMap)]).forEach(k => {
+            if (old[k] === colorMap[k]) return;
+            const [r, c] = k.split('|').map(Number);
+            if (colorMap[k]) {
+                const [bg, fg] = colorMap[k].split('|');
+                req.push(gsCellFmt(sid, r, r + 1, c, c + 1, { backgroundColor: gsHexColor(bg), textFormat: { bold: true, fontSize: 8, foregroundColor: gsHexColor(fg) } }, 'backgroundColor,textFormat'));
+            } else {
+                req.push(gsCellFmt(sid, r, r + 1, c, c + 1, { backgroundColor: cellBase(c), textFormat: { bold: true, fontSize: 8, foregroundColor: BLACK } }, 'backgroundColor,textFormat'));
+            }
+        });
+    }
+    st.fmt = { dim: dimSig, colors: colorMap };
+    return req;
+}
+
+async function gsStdMod(m, L, tab, rows, st) {
+    const prev = st.seen;
+    let ch = false;
+    if (prev) {
+        if (m === 'vfx') ch = gsPullVfx(prev, rows);
+        else if (m === 'todo') ch = gsPullTodo(prev, rows);
+        else ch = gsPullCal(prev, rows, st);
+        if (ch && m !== 'cal') gsChanged(m);
+    }
+    const desired = m === 'vfx' ? gsVfxTable() : m === 'todo' ? gsTodoTable() : gsCalTable();
+    if (!desired) return { w: 0, r: ch ? 1 : 0 };
+    const data = [], clears = [];
+    const w = gsDiffWrites(L.tab, desired.rows, rows, data, clears, m === 'todo' ? 3 : undefined);
+    await gsGrow(L.id, tab, desired.rows.length + 250, Math.max(...desired.rows.map(r => r.length)) + 12);
+    if (clears.length) await gsFetch(gsEnc(L.id) + '/values:batchClear', { method: 'POST', body: { ranges: clears } });
+    await gsValues(L.id, data, false);
+    const freq = gsFormatStd(m, tab, desired, st);
+    for (let i = 0; i < freq.length; i += 400) await gsBatch(L.id, freq.slice(i, i + 400));
+    st.seen = desired;
+    return { w, r: ch ? 1 : 0 };
+}
+
+// =====================================================================
+// B) İÇE AKTARILMIŞ (kendi düzeni olan) SEKMELER — sütun eşlemesiyle
+// =====================================================================
+const GS_HEAD_VFX = {
+    ep: ['ep', 'bölüm', 'bolum', 'episode', 'bölüm no', 'ep no', 'blm'],
+    code: ['no', 'shot no', 'shot kodu', 'shot kod', 'shot code', 'shot id', 'kod', 'code', 'plan no', 'sahne no', 'shot name', 'shot adı'],
+    tc: ['tc', 'timecode', 'time code', 'zaman kodu', 'tc in', 'giriş tc', 'src tc'],
+    desc: ['vfx', 'vfx cgi', 'vfx cgi notu', 'vfx notu', 'vfx açıklaması', 'açıklama', 'aciklama', 'description', 'desc', 'efekt', 'iş tanımı', 'vfx description'],
+    extras: ['ekstra', 'ekstralar', 'extras', 'extra', 'ekler'],
+    vendor: ['vendor', 'firma', 'sorumlu', 'artist', 'yapan', 'atanan', 'stüdyo', 'studio', 'şirket'],
+    hours: ['saat', 'hours', 'hour', 'süre', 'sure', 'mesai', 'adam saat', 'man hours', 'çalışma saati', 'toplam saat'],
+    due: ['teslim', 'teslim tarihi', 'due', 'due date', 'deadline', 'son tarih'],
+    status: ['durum', 'status', 'state', 'statü']
+};
+const GS_HEAD_VFX_IGNORE = ['shot', 'görsel', 'gorsel', 'image', 'frame', 'thumbnail', 'thumb', 'resim', 'foto', 'fotoğraf', 'referans', 'ref', 'adet', 'sıra', 'sira', '#', 'ppl id'];
+const GS_HEAD_TODO = {
+    text: ['görev', 'gorev', 'görevler', 'task', 'tasks', 'iş', 'işler', 'not', 'notlar', 'yapılacak', 'yapılacaklar', 'to do', 'todo', 'açıklama', 'konu', 'madde', 'başlık', 'item'],
+    date: ['tarih', 'date', 'gün', 'deadline', 'son tarih', 'teslim', 'due'],
+    done: ['tamamlandı', 'tamam', 'done', 'yapıldı', 'durum', '✓', 'bitti', 'ok', 'check', 'status', 'completed'],
+    by: ['ekleyen', 'added by', 'kim', 'sorumlu', 'by', 'kişi', 'owner']
+};
+function gsHeadKey(h, dict, used) {
+    if (!h) return null;
+    for (const k of Object.keys(dict)) if (!used.has(k) && dict[k].includes(h)) return k;
+    if (dict.desc && !used.has('desc') && /^vfx\b/.test(h)) return 'desc';
+    if (dict.tc && !used.has('tc') && /timecode|\btc\b/.test(h)) return 'tc';
+    if (dict.due && !used.has('due') && /teslim|deadline/.test(h)) return 'due';
+    if (dict.status && !used.has('status') && /durum|status/.test(h)) return 'status';
+    if (dict.hours && !used.has('hours') && /\bsaat\b|hours/.test(h)) return 'hours';
+    if (dict.extras && !used.has('extras') && /ekstra|extra/.test(h)) return 'extras';
+    if (dict.text && !used.has('text') && /görev|task|yapılacak/.test(h)) return 'text';
+    if (dict.date && !used.has('date') && /tarih|date/.test(h)) return 'date';
+    return null;
+}
+// Başlık satırını bul ve sütunları eşle
+function gsDetectTable(m, rows) {
+    const dict = m === 'vfx' ? GS_HEAD_VFX : GS_HEAD_TODO;
+    const ign = m === 'vfx' ? GS_HEAD_VFX_IGNORE : ['ppl id', '#', 'sıra', 'no'];
+    let best = null;
+    for (let r = 0; r < Math.min(rows.length, 25); r++) {
+        const used = new Set();
+        let score = 0;
+        (rows[r] || []).forEach(v => { const h = gsLow(v); const k = gsHeadKey(h, dict, used); if (k) { used.add(k); score++; } else if (ign.includes(h)) score += 0.5; });
+        if (score > (best ? best.score : 0)) best = { r, score };
+    }
+    if (!best || best.score < (m === 'vfx' ? 2 : 1)) return null;
+    const hr = best.r, head = rows[hr] || [];
+    const width = Math.max(head.length, ...rows.slice(hr + 1).map(x => (x || []).length), 0);
+    const cols = {}, used = new Set(), rounds = [], ignored = [];
+    let idCol = -1, shotCol = -1;
+    for (let c = 0; c < head.length; c++) {
+        const raw = gsStr(head[c]).trim(), h = gsLow(raw);
+        if (!h) continue;
+        if (h === 'ppl id') { idCol = c; continue; }
+        const k = gsHeadKey(h, dict, used);
+        if (k) { cols[k] = c; used.add(k); continue; }
+        if (m === 'vfx' && h === 'shot' && shotCol < 0) shotCol = c;
+        if (ign.includes(h)) { ignored.push(raw); continue; }
+        if (m === 'vfx') rounds.push({ col: c, label: raw });
+        else ignored.push(raw);
+    }
+    // "Shot" sütununda yazı varsa (görsel değil) shot kodu olarak kullan
+    if (m === 'vfx' && cols.code === undefined && shotCol >= 0) {
+        const filled = rows.slice(hr + 1).filter(x => gsStr((x || [])[shotCol]).trim()).length;
+        if (filled) { cols.code = shotCol; ignored.splice(ignored.indexOf(gsStr(head[shotCol]).trim()), 1); }
+    }
+    if (m === 'todo' && cols.text === undefined) return null;
+    const allCols = [...Object.values(cols), ...rounds.map(r => r.col)];
+    const data = [];
+    for (let r = hr + 1; r < rows.length; r++) if (allCols.some(c => gsCell(rows, r, c).trim())) data.push(r);
+    return { headerRow: hr, cols, rounds, ignored, idCol: idCol >= 0 ? idCol : width, hasId: idCol >= 0, data };
+}
+
+// Modül tanımları: eşleme ile çalışan genel motor bunları kullanır
+const GSD = {
+    vfx: {
+        items: () => App.project.vfxShots || (App.project.vfxShots = {}),
+        norm(k, raw) {
+            const v = gsStr(raw).trim();
+            if (k === 'ep') { const m = v.match(/(\d+)/); return String(m ? parseInt(m[1]) : 0); }
+            if (k === 'code') return v.toUpperCase();
+            if (k === 'tc') return gsTcFrom(raw);
+            if (k === 'due') return gsParseDate(raw);
+            if (k === 'hours') return v.replace(',', '.');
+            if (k === 'status') return v ? (gsStatusFrom(v) || '?' + v) : 'todo';
+            if (k.startsWith('r:')) return v.replace(/^[✓✔]\s*/, '✓ ');
+            return v;
+        },
+        out(s, k) {
+            if (k === 'ep') return { v: parseInt(s.ep) ? 'EP' + String(parseInt(s.ep)).padStart(2, '0') : '' };
+            if (k === 'status') return { v: t('vfx_' + vfxStatusOf(s)) };
+            if (k === 'due') return s.due ? { v: s.due, user: true } : { v: '' };
+            if (k.startsWith('r:')) { const n = (s.notes || {})[k.slice(2)] || {}; return { v: n.text ? (n.done ? '✓ ' : '') + n.text : '' }; }
+            return { v: gsStr(s[k]) };
+        },
+        apply: (s, k, raw) => gsSetVfx(s, k, raw),
+        create: gsNewShot, add: gsAddShot,
+        remove(id) { delete App.project.vfxShots[id]; if (App.vfxThumbs[id]) removeVfxImage(id); },
+        order: () => vfxSorted(vfxShotsList()).map(s => s.id)
+    },
+    todo: {
+        items: () => App.project.todos || (App.project.todos = {}),
+        norm(k, raw) {
+            if (k === 'date') return gsParseDate(raw);
+            if (k === 'done') return gsBool(raw) ? 'TRUE' : 'FALSE';
+            return gsStr(raw).trim();
+        },
+        out(td, k) {
+            if (k === 'date') return td.date ? { v: td.date, user: true } : { v: '' };
+            if (k === 'done') return { v: !!td.done };
+            if (k === 'by') return { v: (td.createdBy && (td.createdBy.name || td.createdBy.email)) || '' };
+            return { v: td.text || '' };
+        },
+        apply: (td, k, raw) => gsSetTodo(td, k, raw),
+        create: gsNewTodo, add(td) { App.project.todos[td.id] = td; },
+        remove(id) { const td = App.project.todos[id]; if (td) clearTodoReminders(td); delete App.project.todos[id]; },
+        order: () => gsTodoOrder().map(td => td.id)
+    }
+};
+function gsChanged(m) {
+    triggerAutoSave();
+    if (m === 'vfx' && App.module === 'vfx') refreshVfxSafely();
+    if (m === 'todo') { if (App.module === 'todos') refreshTodosSafely(); renderModuleNav(); }
+}
+const gsMapKeys = (m, L) => Object.keys(L.cols).filter(k => !k.startsWith('r:') || (App.project.vfxRounds || {})[k.slice(2)]);
+const gsVal = (m, it, k) => GSD[m].norm(k, GSD[m].out(it, k).v);
+
+async function gsMapMod(m, L, tab, rows, st) {
+    const D = GSD[m];
+    // Sitede yeni not türü eklendiyse Sheet'te ID sütununun soluna sütun aç
+    if (m === 'vfx') {
+        const missing = vfxRoundsList().filter(r => L.cols['r:' + r.id] === undefined);
+        if (missing.length) {
+            const req = [], heads = [];
+            missing.forEach(r => {
+                req.push({ insertDimension: { range: { sheetId: tab.gid, dimension: 'COLUMNS', startIndex: L.idCol, endIndex: L.idCol + 1 }, inheritFromBefore: L.idCol > 0 } });
+                L.cols['r:' + r.id] = L.idCol;
+                heads.push({ range: gsA1(L.tab, L.headerRow, L.idCol), values: [[r.label]] });
+                L.idCol++;
+            });
+            await gsBatch(L.id, req);
+            await gsValues(L.id, heads, false);
+            tab.cols += missing.length;
+            await gsSaveLink(m, L);
+            return { w: missing.length, r: 0, again: true };
         }
     }
-    for (let i = 0; i < req.length; i += 400) {
-        await gsFetch('/' + encodeURIComponent(id) + ':batchUpdate', { method: 'POST', body: { requests: req.slice(i, i + 400) } });
+    const keys = gsMapKeys(m, L);
+    const hr = L.headerRow, idC = L.idCol;
+    const cell = (r, c) => (rows[r] || [])[c];
+    const byId = new Map(), newRows = [];
+    let lastRow = hr;
+    for (let r = hr + 1; r < rows.length; r++) {
+        const row = rows[r] || [];
+        if (row.some(v => gsStr(v).trim())) lastRow = r;
+        const id = gsStr(cell(r, idC)).trim();
+        if (id) { if (!byId.has(id)) byId.set(id, r); }
+        else if (keys.some(k => gsStr(cell(r, L.cols[k])).trim())) newRows.push(r);
     }
+    const seen = st.seen && st.seen.rows ? st.seen : null;
+    const items = D.items();
+    const raw = [], user = [], fmt = [];
+    let ch = false, pulled = 0;
+    // 1) Sheet → site
+    if (seen) {
+        if (m === 'vfx') keys.forEach(k => {
+            if (!k.startsWith('r:')) return;
+            const nv = gsStr(cell(hr, L.cols[k])).trim(), r = App.project.vfxRounds[k.slice(2)];
+            if (r && nv && seen.heads && nv !== seen.heads[k] && nv !== r.label) { r.label = nv; ch = true; pulled++; }
+        });
+        byId.forEach((r, id) => {
+            const it = items[id], old = seen.rows[id];
+            if (!it || !old) return;
+            keys.forEach(k => {
+                if (!(k in old)) return;
+                const v = cell(r, L.cols[k]);
+                if (D.norm(k, v) !== old[k]) { D.apply(it, k, v); ch = true; pulled++; }
+            });
+        });
+        Object.keys(seen.rows).forEach(id => { if (!byId.has(id) && items[id]) { D.remove(id); ch = true; pulled++; } });
+    }
+    newRows.forEach(r => {
+        const it = D.create();
+        keys.forEach(k => { const v = cell(r, L.cols[k]); if (gsStr(v).trim()) D.apply(it, k, v); });
+        D.add(it);
+        byId.set(it.id, r);
+        raw.push({ range: gsA1(L.tab, r, idC), values: [[it.id]] });
+        ch = true; pulled++;
+    });
+    if (ch) gsChanged(m);
+    // 2) Site → Sheet
+    const desired = {};
+    Object.values(D.items()).forEach(it => { if (!it || !it.id) return; const o = {}; keys.forEach(k => o[k] = gsVal(m, it, k)); desired[it.id] = o; });
+    const put = (r, c, o) => (o.user ? user : raw).push({ range: gsA1(L.tab, r, c), values: [[o.v]] });
+    const delRows = [];
+    byId.forEach((r, id) => {
+        const want = desired[id];
+        if (!want) { if (seen && seen.rows[id]) delRows.push(r); return; }
+        keys.forEach(k => { if (D.norm(k, cell(r, L.cols[k])) !== want[k]) put(r, L.cols[k], D.out(D.items()[id], k)); });
+    });
+    let next = lastRow + 1;
+    D.order().forEach(id => {
+        if (byId.has(id)) return;
+        const r = next++;
+        keys.forEach(k => { const o = D.out(D.items()[id], k); if (o.v !== '' && o.v !== false) put(r, L.cols[k], o); });
+        raw.push({ range: gsA1(L.tab, r, idC), values: [[id]] });
+        byId.set(id, r);
+    });
+    // Not türü adı sitede değiştiyse başlığa yaz
+    const heads = {};
+    if (m === 'vfx') keys.forEach(k => {
+        if (!k.startsWith('r:')) return;
+        const lab = (App.project.vfxRounds[k.slice(2)] || {}).label || '';
+        heads[k] = lab;
+        if (gsStr(cell(hr, L.cols[k])).trim() !== lab) raw.push({ range: gsA1(L.tab, hr, L.cols[k]), values: [[lab]] });
+    });
+    // Durum hücresi rengi
+    const colors = Object.assign({}, (seen && seen.colors) || {});
+    if (m === 'vfx' && L.cols.status !== undefined) {
+        byId.forEach((r, id) => {
+            const s = D.items()[id];
+            if (!s) return;
+            const code = vfxStatusOf(s);
+            if (colors[id] === code + '@' + r) return;
+            colors[id] = code + '@' + r;
+            fmt.push(gsCellFmt(tab.gid, r, r + 1, L.cols.status, L.cols.status + 1,
+                { backgroundColor: gsHexColor('#' + VFX_COLORS[code].bg), textFormat: { foregroundColor: gsHexColor('#' + VFX_COLORS[code].fg) } }, 'backgroundColor,textFormat.foregroundColor'));
+        });
+    }
+    await gsGrow(L.id, tab, next + 50, idC + 2);
+    await gsValues(L.id, raw, false);
+    await gsValues(L.id, user, true);
+    delRows.sort((a, b) => b - a).forEach(r => {
+        fmt.push({ deleteDimension: { range: { sheetId: tab.gid, dimension: 'ROWS', startIndex: r, endIndex: r + 1 } } });
+        Object.keys(colors).forEach(id => { const at = parseInt(String(colors[id]).split('@')[1]); if (at >= r) delete colors[id]; });
+    });
+    for (let i = 0; i < fmt.length; i += 400) await gsBatch(L.id, fmt.slice(i, i + 400));
+    st.seen = { rows: desired, heads, colors };
+    return { w: raw.length + user.length + delRows.length, r: pulled };
 }
 
-// --- Lider seçimi: aynı anda tek tarayıcı eşitlesin ---
+// --- İçe aktarılmış takvim: tarih sütunları ve (bölüm, departman) satırları eşlenir ---
+const GS_PROC_ALIAS = {
+    set: ['SET', 'ÇEKİM', 'CEKIM', 'ÇEKİMLER', 'SHOOT', 'SHOOTING'],
+    edit: ['EDIT', 'EDİT', 'KURGU', 'MONTAJ', 'OFFLINE', 'EDITING'],
+    cuts: ['CUTS', 'CUT', 'CUTLAR', 'KESİM', 'KESIM'],
+    vfx: ['VFX', 'CGI', 'EFEKT'],
+    color: ['COLOR', 'COLOUR', 'RENK', 'GRADING', 'GRADE', 'RENKLENDİRME'],
+    sound: ['SOUND', 'SES', 'SES TASARIMI', 'SOUND DESIGN', 'DUBLAJ', 'ADR'],
+    music: ['MUSIC', 'MÜZİK', 'MUZIK', 'MÜZIK'],
+    send: ['SEND', 'TESLİM', 'TESLIM', 'GÖNDERİM', 'GONDERIM', 'DELIVERY', 'QC']
+};
+function gsProcFrom(U) {
+    const words = U.split(/[\s\-_/.,:]+/).filter(Boolean);
+    for (const p of ['set', ...PROC_ORDER]) {
+        const al = [...(GS_PROC_ALIAS[p] || []), gsUp(I18N.tr['dept_' + p] || ''), gsUp(I18N.en['dept_' + p] || '')].filter(Boolean);
+        if (al.some(a => U === a || (a.includes(' ') ? U.includes(a) : words.includes(a)))) return p;
+    }
+    return null;
+}
+function gsEpFrom(U) {
+    let m = U.match(/\bEP\s*0*(\d{1,3})\b/) || U.match(/(?:BÖLÜM|BOLUM|EPISODE|EPİSODE)\s*0*(\d{1,3})/) || U.match(/\b0*(\d{1,3})\s*\.?\s*(?:BÖLÜM|BOLUM|BLM)/);
+    return m ? parseInt(m[1]) : null;
+}
+const GS_MONTHS = [['oca', 'jan'], ['şub', 'sub', 'feb'], ['mar'], ['nis', 'apr'], ['may'], ['haz', 'jun'], ['tem', 'jul'], ['ağu', 'agu', 'aug'], ['eyl', 'sep'], ['eki', 'oct'], ['kas', 'nov'], ['ara', 'dec']];
+function gsHeadDate(v, yearHint) {
+    if (typeof v === 'number') return v > 20000 && v < 80000 ? gsParseDate(v) : null;
+    const s = gsStr(v).trim();
+    if (!s) return null;
+    const ok = (y, mo, d) => (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) ? `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}` : null;
+    let m = s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) return ok(+m[1], +m[2], +m[3]);
+    m = s.match(/(\d{1,2})[./](\d{1,2})[./](\d{2,4})/);
+    if (m) return ok(m[3].length === 2 ? 2000 + +m[3] : +m[3], +m[2], +m[1]);
+    m = s.match(/^(?:[A-Za-zÇĞİÖŞÜçğıöşü]{2,4}\.?\s+)?(\d{1,2})[./](\d{1,2})$/);
+    if (m) return ok(yearHint || new Date().getFullYear(), +m[2], +m[1]);
+    m = s.toLocaleLowerCase('tr-TR').match(/^(\d{1,2})\s*([a-zçğıöşü]{3,})/);
+    if (m) { const mi = GS_MONTHS.findIndex(a => a.some(p => m[2].startsWith(p))); if (mi >= 0) return ok(yearHint || new Date().getFullYear(), mi + 1, +m[1]); }
+    return null;
+}
+// grid: rows[r][c] değerleri; bg: (r,c) → 'rrggbb' (sadece içe aktarırken, renkle işaretlenmiş hücreler için)
+function gsDetectCal(rows, bg) {
+    let best = null;
+    for (let r = 0; r < Math.min(rows.length, 30); r++) {
+        // Yıl ipucu: üstteki satırlarda "EKİM 2026" gibi yazılar
+        const hints = [];
+        let y = null;
+        const above = rows[r - 1] || [];
+        for (let c = 0; c < Math.max((rows[r] || []).length, above.length); c++) { const mm = gsStr(above[c]).match(/\b(20\d\d)\b/); if (mm) y = +mm[1]; hints[c] = y; }
+        const dc = {};
+        let prev = null, off = 0;
+        (rows[r] || []).forEach((v, c) => {
+            let iso = gsHeadDate(v, hints[c]);
+            if (!iso) return;
+            const explicit = typeof v === 'number' || /\d{4}|[./]\d{2}$/.test(gsStr(v).trim()) || hints[c];
+            if (!explicit) {
+                if (off) iso = (parseInt(iso) + off) + iso.slice(4);
+                if (prev && iso < prev) { off++; iso = (parseInt(iso) + 1) + iso.slice(4); }
+            }
+            dc[c] = iso; prev = iso;
+        });
+        const n = Object.keys(dc).length;
+        if (n >= 3 && (!best || n > best.n)) best = { r, dc, n };
+    }
+    if (!best) return null;
+    const hr = best.r;
+    const dateCols = {};
+    Object.entries(best.dc).forEach(([c, iso]) => { if (dateCols[iso] === undefined) dateCols[iso] = +c; });
+    const first = Math.min(...Object.values(dateCols));
+    if (first < 1) return null;
+    const rowMap = {};
+    let ep = null;
+    for (let r = hr + 1; r < rows.length; r++) {
+        const U = gsUp((rows[r] || []).slice(0, first).map(gsStr).join(' '));
+        if (!U) continue;
+        const e = gsEpFrom(U);
+        if (e !== null) ep = e;
+        const p = gsProcFrom(U);
+        if (!p) continue;
+        const key = (p === 'set' ? 0 : ep) + '|' + p;
+        if (p !== 'set' && !ep) continue;
+        if (rowMap[key] === undefined) rowMap[key] = r;
+    }
+    // Renkle işaretli hücreler: sütunun/satırın çoğunluk rengi zemin sayılır (hafta sonu grisi, satır tonu vb.)
+    const mapped = Object.values(rowMap), dcs = Object.values(dateCols);
+    const colBase = {}, rowBase = {};
+    if (bg) {
+        const major = (list) => { const cnt = {}; list.forEach(x => { if (x) cnt[x] = (cnt[x] || 0) + 1; }); const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0]; return top && top[1] >= list.length * 0.7 ? top[0] : null; };
+        dcs.forEach(c => colBase[c] = major(mapped.map(r => bg(r, c))));
+        mapped.forEach(r => rowBase[r] = major(dcs.map(c => bg(r, c))));
+    }
+    const cells = [];
+    Object.entries(rowMap).forEach(([key, r]) => {
+        const [e, p] = key.split('|');
+        Object.entries(dateCols).forEach(([iso, c]) => {
+            const txt = gsStr((rows[r] || [])[c]).trim();
+            const col = bg ? bg(r, c) : null;
+            const colored = col && col !== colBase[c] && col !== rowBase[r];
+            if (txt || colored) cells.push({ ep: +e, proc: p, iso, text: txt });
+        });
+    });
+    const isos = Object.keys(dateCols).sort();
+    return { headerRow: hr, dateCols, rowMap, cells, from: isos[0], to: isos[isos.length - 1],
+        eps: Math.max(0, ...Object.keys(rowMap).map(k => +k.split('|')[0])) };
+}
+
+async function gsCalMapMod(L, tab, rows, st) {
+    const start = parseLocalDate(startDateInput.value);
+    const colOf = (iso) => dayDiff(parseLocalDate(iso), start);
+    const siteVal = (ep, proc, iso) => {
+        const cell = getCell(colOf(iso), ep, proc);
+        if (!cell || !cell.classList.contains('filled')) return '';
+        return gsUp(cell.textContent) || proc.toUpperCase();
+    };
+    const seen = st.seen && st.seen.cells ? st.seen : null;
+    const raw = [], fmt = [];
+    let pulled = 0;
+    const pos = [];
+    Object.entries(L.rowMap).forEach(([key, r]) => { const [e, p] = key.split('|'); Object.entries(L.dateCols).forEach(([iso, c]) => pos.push([+e, p, iso, r, c])); });
+    // 1) Sheet → site
+    if (seen) {
+        pos.forEach(([e, p, iso, r, c]) => {
+            const k = r + '|' + c;
+            if (!(k in seen.cells)) return;
+            const sv = gsUp(gsCell(rows, r, c));
+            if (sv === seen.cells[k]) return;
+            const col = colOf(iso);
+            if (col < 0) return;
+            if (col >= TOTAL_DAYS) ensureDays(col);
+            const cell = getCell(col, e, p);
+            if (!cell) return;
+            gsApplyCalText(cell, p, sv);
+            pulled++;
+        });
+        if (pulled) commitChange();
+    }
+    // 2) Site → Sheet
+    const cells = {};
+    pos.forEach(([e, p, iso, r, c]) => {
+        const want = siteVal(e, p, iso);
+        cells[r + '|' + c] = want;
+        const sv = gsUp(gsCell(rows, r, c));
+        if (sv === want) return;
+        raw.push({ range: gsA1(L.tab, r, c), values: [[want]] });
+        if (want) {
+            const cell = getCell(colOf(iso), e, p), ct = cell && cell.dataset.cut_type;
+            fmt.push(gsCellFmt(tab.gid, r, r + 1, c, c + 1, { backgroundColor: gsHexColor(cell ? cell.style.backgroundColor : deptColors[p]), textFormat: { bold: true, foregroundColor: gsHexColor(ct ? cutFg(ct) : '#000000') } }, 'backgroundColor,textFormat(bold,foregroundColor)'));
+        } else if (sv) {
+            fmt.push(gsCellFmt(tab.gid, r, r + 1, c, c + 1, { backgroundColor: gsHexColor('#FFFFFF') }, 'backgroundColor'));
+        }
+    });
+    await gsValues(L.id, raw, false);
+    for (let i = 0; i < fmt.length; i += 400) await gsBatch(L.id, fmt.slice(i, i + 400));
+    st.seen = { cells };
+    return { w: raw.length, r: pulled };
+}
+
+// =====================================================================
+// C) ANA DÖNGÜ
+// =====================================================================
 function gsLeaderInfo() {
     const l = App.project && App.project.gsheet && App.project.gsheet.leader;
     if (!l || !l.email || l.email === myEmail()) return null;
@@ -9431,14 +10113,21 @@ async function gsHeartbeat(force) {
     if (!force && Date.now() - GS.lastBeat < GS_BEAT_MS) return;
     GS.lastBeat = Date.now();
     const leader = { email: myEmail(), name: (App.user && (App.user.displayName || App.user.email)) || '', at: new Date().toISOString() };
-    App.project.gsheet.leader = leader;
+    if (App.project.gsheet) App.project.gsheet.leader = leader;
     try { await api().updateProject(App.project.id, { 'gsheet.leader': leader }); } catch (e) { console.warn('Sheets lider bilgisi yazılamadı', e); }
 }
-
-// --- Ana döngü ---
+// Takvim bağlantısı belirli bir versiyon için: sadece o versiyon açıkken eşitlenir
+function gsActive(m, L) {
+    if (!L) return false;
+    if (m !== 'cal') return true;
+    if (!App.version || !dates || !dates.length) return false;
+    return !L.versionId || L.versionId === App.version.id;
+}
 async function gsTick() {
     const g = App.project && App.project.gsheet;
-    if (!App.project || !App.user || window.isOfflineMode || App.publicShare || !g || !g.id) { gsSetStatus(g && g.id ? 'viewer' : 'off'); return; }
+    const links = gsLinks();
+    const mods = GS_MODS.filter(m => links[m]);
+    if (!App.project || !App.user || window.isOfflineMode || App.publicShare || !mods.length) { gsSetStatus(mods.length ? 'viewer' : 'off'); return; }
     if (App.readOnly) { gsSetStatus('viewer'); return; }
     if (GS.busy) return;
     if (!gsCachedToken()) { gsSetStatus('auth'); return; }
@@ -9447,43 +10136,60 @@ async function gsTick() {
     GS.busy = true;
     const pid = App.project.id;
     gsSetStatus('sync');
+    let anyErr = false;
     try {
         await gsHeartbeat();
-        if (GS.sheetFor !== g.id || !GS.sheetIds) await gsEnsureTabs(g.id);
-        if (GS.pid !== pid) { GS.lastSeen = null; GS.fmtSig = {}; GS.pid = pid; }
-        const ranges = Object.values(GS_TAB).map(tb => `ranges=${encodeURIComponent(gsQ(tb) + '!A1:ZZZ')}`).join('&');
-        const got = await gsFetch('/' + encodeURIComponent(g.id) + '/values:batchGet?' + ranges + '&valueRenderOption=UNFORMATTED_VALUE&majorDimension=ROWS');
-        if (!App.project || App.project.id !== pid) return;
-        const vr = got.valueRanges || [];
-        const fetched = { vfx: (vr[0] && vr[0].values) || [], cal: (vr[1] && vr[1].values) || [], todo: (vr[2] && vr[2].values) || [] };
-        // 1) Sheet → site
-        GS.warn = '';
-        if (GS.lastSeen) {
-            let ch = false;
-            if (gsPullVfx(GS.lastSeen.vfx, fetched.vfx)) { ch = true; if (App.module === 'vfx') refreshVfxSafely(); }
-            if (gsPullTodo(GS.lastSeen.todo, fetched.todo)) { ch = true; if (App.module === 'todos') refreshTodosSafely(); renderModuleNav(); }
-            gsPullCal(GS.lastSeen.cal, fetched.cal);   // takvim kendi kaydını yapar (commitChange)
-            if (ch) triggerAutoSave();
+        const active = mods.filter(m => gsActive(m, links[m]));
+        mods.filter(m => !active.includes(m)).forEach(m => GS.m[m].status = 'wait');
+        // Aynı dosyadaki sekmeleri tek istekte oku
+        const tabs = {};
+        for (const m of active) {
+            try { tabs[m] = await gsResolveTab(m, links[m]); }
+            catch (e) { if (e.auth) throw e; gsModErr(m, e); anyErr = true; }
         }
-        // 2) Site → Sheet
-        const desired = gsBuildAll();
-        const data = [], clears = [];
-        gsDiffWrites(GS_TAB.vfx, desired.vfx.rows, fetched.vfx, data, clears);
-        gsDiffWrites(GS_TAB.todo, desired.todo.rows, fetched.todo, data, clears, 3);
-        if (desired.cal) gsDiffWrites(GS_TAB.cal, desired.cal.rows, fetched.cal, data, clears);
-        if (clears.length) await gsFetch('/' + encodeURIComponent(g.id) + '/values:batchClear', { method: 'POST', body: { ranges: clears } });
-        if (data.length) await gsFetch('/' + encodeURIComponent(g.id) + '/values:batchUpdate', { method: 'POST', body: { valueInputOption: 'RAW', data } });
-        await gsFormat(g.id, desired);
-        GS.lastSeen = desired;
-        GS.lastSync = new Date();
-        GS.err = '';
-        gsSetStatus('ok');
+        const ready = active.filter(m => tabs[m]);
+        const byFile = {};
+        ready.forEach(m => (byFile[links[m].id] = byFile[links[m].id] || []).push(m));
+        const values = {};
+        for (const id of Object.keys(byFile)) {
+            const ms = byFile[id];
+            const q = ms.map(m => 'ranges=' + encodeURIComponent(gsQ(links[m].tab))).join('&');
+            const got = await gsFetch(gsEnc(id) + '/values:batchGet?' + q + '&valueRenderOption=UNFORMATTED_VALUE&majorDimension=ROWS');
+            ms.forEach((m, i) => values[m] = ((got.valueRanges || [])[i] || {}).values || []);
+        }
+        if (!App.project || App.project.id !== pid) return;
+        for (const m of ready) {
+            const L = links[m], st = gsState(m, L);
+            try {
+                st.warn = '';
+                let res;
+                if (L.std) res = await gsStdMod(m, L, tabs[m], values[m], st);
+                else if (m === 'cal') res = await gsCalMapMod(L, tabs[m], values[m], st);
+                else res = await gsMapMod(m, L, tabs[m], values[m], st);
+                if (!App.project || App.project.id !== pid) return;
+                gsStoreSeen(st);
+                st.lastSync = new Date(); st.err = ''; st.status = 'ok';
+                st.diag = { at: new Date(), w: res.w, r: res.r };
+                if (res.w || res.r) console.info('[Sheets]', m, 'yazılan:', res.w, 'gelen:', res.r);
+                if (res.again) gsKick(300);
+            } catch (e) {
+                if (e.auth) throw e;
+                gsModErr(m, e); anyErr = true;
+            }
+        }
+        gsSetStatus(anyErr ? 'error' : 'ok');
     } catch (e) {
         if (e.auth) gsSetStatus('auth');
-        else { GS.err = e.message || String(e); gsSetStatus('error'); console.warn('Sheets eşitleme hatası:', e); }
+        else { GS_MODS.forEach(m => { if (links[m]) gsModErr(m, e); }); gsSetStatus('error'); }
     } finally {
         GS.busy = false;
     }
+}
+function gsModErr(m, e) {
+    const st = GS.m[m];
+    st.err = e.message || String(e); st.status = 'error';
+    st.lastErr = { at: new Date(), m: st.err };
+    console.warn('Sheets eşitleme hatası (' + m + '):', e);
 }
 function gsKick(delay = 1500) {
     clearTimeout(GS.kickT);
@@ -9492,41 +10198,200 @@ function gsKick(delay = 1500) {
 window.gsKick = gsKick;
 setInterval(() => { if (App.view === 'workspace') gsTick(); }, GS_TICK_MS);
 
-// --- Bağla / kaldır ---
-async function gsLink(existingUrl) {
-    if (!App.project || App.readOnly) return;
+// =====================================================================
+// D) İÇE / DIŞA AKTARMA
+// =====================================================================
+const gsWho = () => ({ email: myEmail(), name: (App.user && (App.user.displayName || App.user.email)) || '' });
+
+// Sekmeyi oku (takvimde hücre renkleriyle birlikte)
+async function gsReadTab(id, title, withColors) {
+    if (!withColors) {
+        const got = await gsFetch(gsEnc(id) + '/values/' + encodeURIComponent(gsQ(title)) + '?valueRenderOption=UNFORMATTED_VALUE&majorDimension=ROWS');
+        return { rows: got.values || [], bg: null };
+    }
+    const got = await gsFetch(gsEnc(id) + '?ranges=' + encodeURIComponent(gsQ(title)) +
+        '&fields=' + encodeURIComponent('sheets(data(startRow,startColumn,rowData(values(effectiveValue,formattedValue,effectiveFormat(backgroundColor)))))'));
+    const data = (((got.sheets || [])[0] || {}).data || [])[0] || {};
+    const r0 = data.startRow || 0, c0 = data.startColumn || 0;
+    const rows = [], colors = {};
+    (data.rowData || []).forEach((rd, ri) => {
+        const row = [];
+        (rd.values || []).forEach((v, ci) => {
+            const ev = v.effectiveValue || {};
+            row[c0 + ci] = ev.numberValue !== undefined ? ev.numberValue : ev.boolValue !== undefined ? ev.boolValue : ev.stringValue !== undefined ? ev.stringValue : (v.formattedValue || '');
+            const b = v.effectiveFormat && v.effectiveFormat.backgroundColor;
+            if (b) {
+                const hx = [b.red || 0, b.green || 0, b.blue || 0].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('');
+                if (hx !== 'ffffff') colors[(r0 + ri) + '|' + (c0 + ci)] = hx;
+            }
+        });
+        rows[r0 + ri] = row;
+    });
+    for (let i = 0; i < rows.length; i++) if (!rows[i]) rows[i] = [];
+    return { rows, bg: (r, c) => colors[r + '|' + c] || null };
+}
+
+async function gsImportPreview() {
+    const u = GS.ui, imp = u.imp, m = u.mod;
+    imp.preview = null; imp.det = null;
+    if (!imp.tab) return;
+    const { rows, bg } = await gsReadTab(imp.id, imp.tab, m === 'cal');
+    imp.rows = rows; imp.bg = bg;
+    if (m === 'cal') {
+        const d = gsDetectCal(rows, bg);
+        imp.det = d;
+        imp.preview = d ? tf('gsPrevCal', { d: Object.keys(d.dateCols).length, a: formatDate(d.from), b: formatDate(d.to), e: d.eps, c: d.cells.length }) : t('gsNoHeadCal');
+        return;
+    }
+    const d = gsDetectTable(m, rows);
+    imp.det = d;
+    if (!d) { imp.preview = t(m === 'vfx' ? 'gsNoHeadVfx' : 'gsNoHeadTodo'); return; }
+    const head = rows[d.headerRow] || [];
+    const names = Object.values(d.cols).sort((a, b) => a - b).map(c => gsStr(head[c]).trim());
+    const lines = [tf(m === 'vfx' ? 'gsPrevVfx' : 'gsPrevTodo', { n: d.data.length, cols: names.join(', ') || '—' })];
+    if (d.rounds.length) lines.push(tf('gsPrevRounds', { cols: d.rounds.map(r => r.label).join(', ') }));
+    if (d.ignored.length) lines.push(tf('gsPrevIgnored', { cols: d.ignored.join(', ') }));
+    imp.preview = lines.join('\n');
+}
+async function gsImportLoad(url) {
+    const id = gsIdFromUrl(url);
+    if (!id) throw new Error(t('gsBadUrl'));
     await gsAuth(true);
-    let id;
-    if (existingUrl) {
-        const m = String(existingUrl).match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-        id = m ? m[1] : String(existingUrl).trim();
+    const meta = await gsLoadMeta(id, true);
+    const imp = { id, url: meta.url, tabs: meta.tabs.map(x => ({ gid: x.gid, title: x.title })), tab: null };
+    GS.ui.imp = imp;
+    // En uygun sekmeyi seç: modülün adına benzeyen, yoksa ilk sekme
+    const want = GS.ui.mod === 'vfx' ? /vfx|breakdown|shot/i : GS.ui.mod === 'cal' ? /takvim|calendar|plan|schedule|program/i : /to.?do|görev|gorev|task|yapılacak/i;
+    imp.tab = (imp.tabs.find(x => want.test(x.title)) || imp.tabs[0] || {}).title || null;
+    await gsImportPreview();
+}
+
+async function gsDoImport() {
+    const u = GS.ui, imp = u.imp, m = u.mod;
+    if (!imp || !imp.det) return;
+    const d = imp.det, who = gsWho(), now = new Date().toISOString();
+    const tab = GS.meta[imp.id].tabs.find(x => x.title === imp.tab);
+    if (m === 'cal') {
+        const name = t('gsImpVersionName') + ' ' + formatDate(todayISO(), { day: 'numeric', month: 'short' });
+        if (!confirm(tf('gsConfirmImpCal', { name }))) return false;
+        const startIso = d.from;
+        const cells = d.cells.map(c => {
+            const col = dayDiff(parseLocalDate(c.iso), parseLocalDate(startIso));
+            const up = gsUp(c.text);
+            const ct = up && Object.keys(CUT_TYPES).find(k => typeRow(k) === c.proc && [CUT_TYPES[k].label, k].some(l => gsUp(l) === up));
+            if (ct) return { col, ep: c.ep, procType: c.proc, text: CUT_TYPES[ct].label, bg: CUT_TYPES[ct].bg, cutType: ct };
+            return { col, ep: c.ep, procType: c.proc, text: (!up || /^\d+([.,]\d+)?$/.test(up)) ? c.proc.toUpperCase() : up, bg: deptColors[c.proc], cutType: '' };
+        });
+        await flushSave();
+        const data = { name, startDate: startIso, totalEpisodes: Math.max(d.eps, 1), milestones: [], cells };
+        const vid = await api().createVersion(App.project.id, data);
+        App.versions.push({ id: vid, name, lastUpdated: now });
+        applyVersion(vid, normalizeVersionData(data));
+        watchVersion();
+        triggerAutoSave();
+        const L = { id: imp.id, url: imp.url, tab: imp.tab, gid: tab.gid, std: false, mode: 'import', versionId: vid,
+            headerRow: d.headerRow, dateCols: d.dateCols, rowMap: d.rowMap, linkedBy: who, linkedAt: now };
+        await gsSaveLink('cal', L);
+        // İlk "görülen" hâl = Sheet'in şimdiki metni → eşitleme sadece farkları yazar
+        const st = gsState('cal', L), seenCells = {};
+        Object.values(d.rowMap).forEach(r => Object.values(d.dateCols).forEach(c => seenCells[r + '|' + c] = gsUp(gsCell(imp.rows, r, c))));
+        st.seen = { cells: seenCells }; gsStoreSeen(st);
+        if (App.module !== 'calendar') showModule('calendar');
+        return true;
+    }
+    const D = GSD[m];
+    const cur = Object.values(D.items()).filter(x => x && x.id).length;
+    if (!confirm(tf(m === 'vfx' ? 'gsConfirmImpVfx' : 'gsConfirmImpTodo', { n: d.data.length, m: cur }))) return false;
+    const cols = Object.assign({}, d.cols);
+    if (m === 'vfx') {
+        // Eski shot'ları (görselleriyle) temizle, not türlerini Sheet'in başlıklarından kur
+        Object.keys(App.project.vfxShots || {}).forEach(id => D.remove(id));
+        const oldRounds = App.project.vfxRounds || {};
+        const rounds = {};
+        d.rounds.forEach(r => {
+            const same = Object.values(oldRounds).find(x => x && x.label === r.label);
+            const id = same ? same.id : uid();
+            const di = gsHeadDate(r.label);
+            rounds[id] = { id, label: r.label, date: di || todayISO(), createdAt: new Date().toISOString() };
+            cols['r:' + id] = r.col;
+        });
+        App.project.vfxRounds = rounds;
+    } else {
+        Object.keys(App.project.todos || {}).forEach(id => D.remove(id));
+    }
+    const keys = Object.keys(cols);
+    const ids = [];
+    let order = 0;
+    d.data.forEach(r => {
+        const it = D.create();
+        keys.forEach(k => { const v = (imp.rows[r] || [])[cols[k]]; if (gsStr(v).trim()) D.apply(it, k, v); });
+        if (m === 'vfx') { if (!it.code) it.code = nextVfxCode(it.ep, null); it.order = ++order; App.project.vfxShots[it.id] = it; }
+        else D.add(it);
+        ids.push([r, it.id]);
+    });
+    // Sheet'e gizli PPL_ID sütunu: satırları tanımak için
+    await gsGrow(imp.id, tab, (imp.rows.length || 1) + 50, d.idCol + 2);
+    await gsValues(imp.id, [{ range: gsA1(imp.tab, d.headerRow, d.idCol), values: [[GS_ID_HEAD]] },
+        ...ids.map(([r, id]) => ({ range: gsA1(imp.tab, r, d.idCol), values: [[id]] }))], false);
+    await gsBatch(imp.id, [{ updateDimensionProperties: { range: { sheetId: tab.gid, dimension: 'COLUMNS', startIndex: d.idCol, endIndex: d.idCol + 1 }, properties: { hiddenByUser: true }, fields: 'hiddenByUser' } }]);
+    triggerAutoSave();
+    const L = { id: imp.id, url: imp.url, tab: imp.tab, gid: tab.gid, std: false, mode: 'import', headerRow: d.headerRow, cols, idCol: d.idCol, linkedBy: who, linkedAt: now };
+    await gsSaveLink(m, L);
+    const st = gsState(m, L);
+    st.seen = null; gsStoreSeen(st);
+    gsChanged(m);
+    if (m === 'vfx') renderVfxModule();
+    return true;
+}
+
+async function gsDoExport(url) {
+    const m = GS.ui.mod, who = gsWho(), now = new Date().toISOString();
+    await gsAuth(true);
+    const title = GS_TAB[m];
+    let id, tab, fileUrl;
+    if (url && url.trim()) {
+        id = gsIdFromUrl(url);
+        if (!id) throw new Error(t('gsBadUrl'));
+        const meta = await gsLoadMeta(id, true);
+        fileUrl = meta.url;
+        tab = meta.tabs.find(x => x.title === title);
+        if (tab) {
+            const got = await gsFetch(gsEnc(id) + '/values/' + encodeURIComponent(gsQ(title)) + '?majorDimension=ROWS');
+            if ((got.values || []).some(r => (r || []).some(v => gsStr(v).trim()))) {
+                if (!confirm(tf('gsConfirmOverwrite', { tab: title }))) return false;
+                await gsFetch(gsEnc(id) + '/values:batchClear', { method: 'POST', body: { ranges: [gsQ(title)] } });
+            }
+        } else tab = await gsAddTab(id, title);
     } else {
         const ss = await gsFetch('', { method: 'POST', body: {
-            properties: { title: `${$('projectName').value || App.project.projectName || 'Proje'} — PostPro Lab`, locale: currentLang === 'tr' ? 'tr_TR' : 'en_US' },
-            sheets: Object.values(GS_TAB).map(title => ({ properties: { title, gridProperties: { frozenRowCount: 1 } } }))
+            properties: { title: `${$('projectName').value || App.project.projectName || 'Proje'} — ${t('gsMod_' + m)} — PostPro Lab`, locale: currentLang === 'tr' ? 'tr_TR' : 'en_US' },
+            sheets: [{ properties: { title, gridProperties: { frozenRowCount: 1 } } }]
         } });
         id = ss.spreadsheetId;
+        fileUrl = ss.spreadsheetUrl || `https://docs.google.com/spreadsheets/d/${id}/edit`;
+        const meta = await gsLoadMeta(id, true);
+        tab = meta.tabs.find(x => x.title === title) || meta.tabs[0];
     }
-    const ss = await gsEnsureTabs(id);
-    const g = { id, url: ss.spreadsheetUrl || `https://docs.google.com/spreadsheets/d/${id}/edit`, clientId: gsClientId(),
-        linkedBy: { email: myEmail(), name: (App.user && (App.user.displayName || App.user.email)) || '' }, linkedAt: new Date().toISOString(),
-        leader: { email: myEmail(), name: (App.user && (App.user.displayName || App.user.email)) || '', at: new Date().toISOString() } };
-    await api().updateProject(App.project.id, { gsheet: g });
-    App.project.gsheet = g;
-    GS.lastSeen = null; GS.fmtSig = {}; GS.pid = App.project.id; GS.lastBeat = Date.now();
-    await gsTick();
-    renderGsModal();
+    const L = { id, url: fileUrl, tab: tab.title, gid: tab.gid, std: true, mode: 'export', linkedBy: who, linkedAt: now };
+    if (m === 'cal' && App.version) L.versionId = App.version.id;
+    await gsSaveLink(m, L);
+    const st = gsState(m, L);
+    st.seen = null; st.fmt = null; gsStoreSeen(st);
+    return true;
 }
-async function gsUnlink() {
+
+async function gsUnlink(m) {
     if (!confirm(t('gsConfirmUnlink'))) return;
-    await api().updateProject(App.project.id, { gsheet: DEL_FIELD });
-    App.project.gsheet = null;
-    GS.lastSeen = null; GS.sheetIds = null; GS.sheetFor = null;
-    gsSetStatus('off');
+    const L = gsLinkOf(m);
+    await gsSaveLink(m, null);
+    if (L) { const st = GS.m[m]; try { localStorage.removeItem('gsSeen:' + st.sig); } catch (e) {} st.sig = ''; st.seen = null; st.status = 'off'; st.diag = null; st.lastErr = null; }
+    gsSetStatus(GS_MODS.some(x => gsLinkOf(x)) ? GS.status : 'off');
     renderGsModal();
 }
 
-// --- Arayüz: kenar çubuğu butonu + pencere ---
+// =====================================================================
+// E) ARAYÜZ: kenar çubuğu butonu, modül butonları, pencere
+// =====================================================================
 function gsSetStatus(st) {
     GS.status = st;
     const btn = $('gsheetBtn');
@@ -9534,13 +10399,17 @@ function gsSetStatus(st) {
         btn.dataset.state = st;
         btn.title = gsStatusText();
     }
+    document.querySelectorAll('[data-gsopen]').forEach(b => {
+        const L = gsLinkOf(b.dataset.gsopen);
+        b.dataset.state = L ? (GS.m[b.dataset.gsopen].status === 'error' ? 'error' : st === 'auth' ? 'auth' : 'ok') : 'off';
+    });
     if (gsModal && !gsModal.hidden) renderGsModal();
 }
-function gsStatusText() {
-    const st = GS.status;
-    if (st === 'ok') return tf('gs_ok', { t: GS.lastSync ? formatTime(GS.lastSync) : '' });
+function gsStatusText(m) {
+    const st = m && GS.m[m].status !== 'off' && !['auth', 'follower', 'viewer', 'sync'].includes(GS.status) ? GS.m[m].status : GS.status;
+    if (st === 'ok') { const ls = m ? GS.m[m].lastSync : GS_MODS.map(x => GS.m[x].lastSync).filter(Boolean).sort((a, b) => b - a)[0]; return tf('gs_ok', { t: ls ? formatTime(ls) : '' }); }
     if (st === 'follower') return tf('gs_follower', { name: GS.followerName || '' });
-    if (st === 'error') return tf('gs_error', { m: gsExplain(GS.err) });
+    if (st === 'error') return tf('gs_error', { m: gsExplain(m ? GS.m[m].err : (GS_MODS.map(x => GS.m[x].err).find(Boolean) || '')) });
     return t('gs_' + st);
 }
 function gsExplain(err) {
@@ -9551,43 +10420,63 @@ function gsExplain(err) {
     if (/invalid_client|unauthorized_client|client.?id/i.test(m)) return t('gsErr_invalid_client');
     if (/origin|redirect_uri/i.test(m)) return t('gsErr_origin');
     if (/has not been used|is disabled|SERVICE_DISABLED|API.*not.*enabled/i.test(m)) return t('gsErr_api');
+    if (/PERMISSION_DENIED|does not have permission|caller does not have/i.test(m)) return t('gsErr_perm');
+    if (/NOT_FOUND|Requested entity was not found/i.test(m)) return t('gsErr_notfound');
     return m;
 }
+const gsModFor = (k) => k === 'vfx' ? 'vfx' : k === 'todos' ? 'todo' : 'cal';
 let gsModal = null;
-function openGsModal() {
+function openGsModal(mod) {
+    if (mod) { if (GS.ui.mod !== mod) GS.ui.imp = null; GS.ui.mod = mod; }
     if (!gsModal) {
         gsModal = document.createElement('div');
         gsModal.className = 'rep-modal gs-modal';
-        gsModal.innerHTML = `<div class="rep-box gs-box"><div class="rep-head"><h2>🟩 ${escapeHtml(t('gsTitle'))}</h2><button class="icon-btn" data-gs="close">✕</button></div><div class="gs-body"></div></div>`;
+        gsModal.innerHTML = `<div class="rep-box gs-box"><div class="rep-head"><h2>🟩 ${escapeHtml(t('gsTitle'))}</h2><button class="icon-btn" data-gs="close">✕</button></div><div class="gs-tabs"></div><div class="gs-body"></div></div>`;
         document.body.appendChild(gsModal);
+        gsModal.addEventListener('change', async (e) => {
+            if (!e.target.classList.contains('gs-tabsel') || !GS.ui.imp) return;
+            GS.ui.imp.tab = e.target.value;
+            GS.ui.busy = true; renderGsModal();
+            try { await gsImportPreview(); } catch (err) { alert(gsExplain(err)); }
+            GS.ui.busy = false; renderGsModal();
+        });
         gsModal.addEventListener('click', async (e) => {
             if (e.target === gsModal) { gsModal.hidden = true; return; }
             const b = e.target.closest('[data-gs]');
             if (!b) return;
-            const a = b.dataset.gs;
+            const a = b.dataset.gs, m = GS.ui.mod;
+            const val = (sel) => { const el = gsModal.querySelector(sel); return el ? el.value.trim() : ''; };
+            if (GS.ui.busy && a !== 'close') return;
+            const inputs = { imp: val('.gs-imp-url'), exp: val('.gs-exp-url'), client: val('.gs-client') };
             try {
-                if (a === 'close') gsModal.hidden = true;
-                else if (a === 'create') { b.disabled = true; await gsLink(null); }
-                else if (a === 'existing') { const u = prompt(t('gsUrlPrompt')); if (u) { b.disabled = true; await gsLink(u); } }
-                else if (a === 'sync') { if (!gsCachedToken()) await gsAuth(true); GS.lastBeat = 0; await gsTick(); }
+                if (a === 'close') { gsModal.hidden = true; return; }
+                if (a === 'mod') { GS.ui.mod = b.dataset.mod; GS.ui.imp = null; renderGsModal(); return; }
+                GS.ui.busy = true; renderGsModal();
+                if (a === 'impLoad') { const u = inputs.imp; if (!u) throw new Error(t('gsBadUrl')); GS.ui.impUrl = u; await gsImportLoad(u); }
+                else if (a === 'impDo') { if (await gsDoImport()) { GS.ui.imp = null; await gsTick(); } }
+                else if (a === 'impCancel') GS.ui.imp = null;
+                else if (a === 'expDo') { const u = inputs.exp; if (await gsDoExport(u)) await gsTick(); }
+                else if (a === 'sync') { if (!gsCachedToken()) await gsAuth(true); GS.lastBeat = 0; GS.meta = {}; await gsTick(); }
                 else if (a === 'auth') { await gsAuth(true); await gsTick(); }
-                else if (a === 'unlink') await gsUnlink();
-                else if (a === 'changeClient') { GS.editClient = true; renderGsModal(); }
+                else if (a === 'unlink') { GS.ui.busy = false; await gsUnlink(m); }
+                else if (a === 'changeClient') GS.editClient = true;
                 else if (a === 'saveClient') {
-                    GS.editClient = false;
-                    const v = gsModal.querySelector('.gs-client').value.trim();
-                    if (!v) return;
-                    GS.clientId = v;
-                    GS.token = null; try { sessionStorage.removeItem('gsTok'); } catch (e) {}
-                    if (App.project && App.project.gsheet && App.project.gsheet.id) { App.project.gsheet.clientId = v; api().updateProject(App.project.id, { 'gsheet.clientId': v }).catch(() => {}); }
-                    if (tourPrefs) tourPrefs.gClientId = v;
-                    if (window.FB && FB.setUserPrefs) FB.setUserPrefs({ gClientId: v }).catch(() => {});
-                    renderGsModal();
+                    const v = inputs.client;
+                    if (v) {
+                        GS.editClient = false;
+                        GS.clientId = v;
+                        GS.token = null; try { sessionStorage.removeItem('gsTok'); } catch (err) {}
+                        if (App.project && App.project.gsheet) { App.project.gsheet.clientId = v; api().updateProject(App.project.id, { 'gsheet.clientId': v }).catch(() => {}); }
+                        if (tourPrefs) tourPrefs.gClientId = v;
+                        if (window.FB && FB.setUserPrefs) FB.setUserPrefs({ gClientId: v }).catch(() => {});
+                    }
                 }
             } catch (err) {
+                GS.ui.busy = false;
                 alert(gsExplain(err));
-                renderGsModal();
             }
+            GS.ui.busy = false;
+            renderGsModal();
         });
     }
     gsModal.hidden = false;
@@ -9595,40 +10484,67 @@ function openGsModal() {
 }
 function renderGsModal() {
     if (!gsModal || gsModal.hidden || !App.project) return;
-    const g = App.project.gsheet;
-    const body = gsModal.querySelector('.gs-body');
-    const ro = App.readOnly;
+    const m = GS.ui.mod, L = gsLinkOf(m), st = GS.m[m];
+    const ro = App.readOnly, busy = GS.ui.busy;
     const cid = gsClientId();
+    const dis = busy ? 'disabled' : '';
+    gsModal.querySelector('.gs-tabs').innerHTML = GS_MODS.map(x => `<button class="gs-tab ${x === m ? 'active' : ''}" data-gs="mod" data-mod="${x}">
+        <i class="gs-tdot ${gsLinkOf(x) ? (GS.m[x].status === 'error' ? 'err' : 'on') : ''}"></i>${escapeHtml(t('gsMod_' + x))}</button>`).join('');
     const clientLine = cid && !GS.editClient ? `<p class="gs-meta">${escapeHtml(tf('gsClientNow', { id: cid.length > 34 ? cid.slice(0, 22) + '…' + cid.slice(-12) : cid }))}
         ${ro ? '' : ` · <button class="link-btn" data-gs="changeClient">${escapeHtml(t('gsClientChange'))}</button>`}</p>` : '';
     const clientEdit = `<div class="gs-setup"><b>${escapeHtml(t('gsClientTitle'))}</b><p>${escapeHtml(t('gsClientHint'))}</p>
         <div class="gs-row"><input class="gs-client" placeholder="xxxxxxxx.apps.googleusercontent.com" value="${escapeHtml(GS.editClient ? cid : '')}"><button class="primary-btn small" data-gs="saveClient">${escapeHtml(t('gsClientSave'))}</button></div></div>`;
-    if (!g || !g.id) {
+    const body = gsModal.querySelector('.gs-body');
+    const rules = `<p class="gs-rules">${escapeHtml(t('gsRules_' + m))}</p>`;
+    if (!L) {
+        const needClient = !cid || GS.editClient;
+        const imp = GS.ui.imp;
+        const impBox = imp ? `
+            <div class="gs-row"><label>${escapeHtml(t('gsPickTab'))}</label>
+                <select class="gs-tabsel" ${dis}>${imp.tabs.map(x => `<option ${x.title === imp.tab ? 'selected' : ''}>${escapeHtml(x.title)}</option>`).join('')}</select></div>
+            <pre class="gs-preview ${imp.det ? '' : 'bad'}">${escapeHtml(busy ? t('gsReading') : (imp.preview || ''))}</pre>
+            <div class="gs-actions"><button class="primary-btn" data-gs="impDo" ${imp.det && !busy ? '' : 'disabled'}>${escapeHtml(t('gsDoImport'))}</button>
+                <button class="ghost-btn" data-gs="impCancel" ${dis}>✕</button></div>`
+            : `<div class="gs-row"><input class="gs-imp-url" placeholder="${escapeHtml(t('gsUrlPh'))}" value="${escapeHtml(GS.ui.impUrl || '')}"><button class="ghost-btn" data-gs="impLoad" ${dis}>${escapeHtml(busy ? t('gsReading') : t('gsLoadTabs'))}</button></div>`;
         body.innerHTML = `<p class="gs-intro">${escapeHtml(t('gsIntro'))}</p>
-            ${(!cid || GS.editClient) ? clientEdit : ''}${clientLine}
-            ${!cid || GS.editClient ? '' : ro ? '' : `<div class="gs-actions"><button class="primary-btn" data-gs="create">🟩 ${escapeHtml(t('gsCreate'))}</button>
-                <button class="ghost-btn" data-gs="existing">🔗 ${escapeHtml(t('gsExisting'))}</button></div>`}
-            <p class="gs-rules">${escapeHtml(t('gsRules'))}</p>`;
+            ${needClient ? clientEdit : ''}${clientLine}
+            ${needClient || ro ? '' : `
+            <div class="gs-card"><h3>${escapeHtml(t('gsImpTitle'))}</h3><p>${escapeHtml(t('gsImpHint'))}</p>${impBox}</div>
+            <div class="gs-card"><h3>${escapeHtml(t('gsExpTitle'))}</h3><p>${escapeHtml(tf('gsExpHint', { tab: GS_TAB[m] }))}</p>
+                <div class="gs-row"><input class="gs-exp-url" placeholder="${escapeHtml(t('gsUrlPhOpt'))}"><button class="primary-btn" data-gs="expDo" ${dis}>${escapeHtml(t('gsDoExport'))}</button></div></div>`}
+            ${rules}`;
         return;
     }
+    const verName = L.versionId ? ((App.versions || []).find(v => v.id === L.versionId) || {}).name || '?' : '';
+    const otherVer = m === 'cal' && L.versionId && App.version && App.version.id !== L.versionId;
     body.innerHTML = `
-        <div class="gs-status st-${GS.status}"><span class="gs-dot"></span><span>${escapeHtml(gsStatusText())}</span></div>
-        ${GS.warn ? `<p class="gs-warn">⚠ ${escapeHtml(GS.warn)}</p>` : ''}
+        <div class="gs-status st-${otherVer ? 'wait' : (st.status !== 'off' && !['auth', 'follower', 'viewer', 'sync'].includes(GS.status) ? st.status : GS.status)}"><span class="gs-dot"></span><span>${escapeHtml(otherVer ? t('gs_wait') : gsStatusText(m))}</span></div>
+        ${st.diag ? `<div class="gs-diag">${escapeHtml(tf('gsDiag', { t: st.diag.at.toLocaleTimeString(), w: st.diag.w, r: st.diag.r }))}</div>` : ''}
+        ${st.lastErr ? `<div class="gs-diag err">${escapeHtml(tf('gsDiagErr', { m: st.lastErr.at.toLocaleTimeString() + ' — ' + gsExplain(st.lastErr.m) }))}</div>` : ''}
+        ${st.warn ? `<p class="gs-warn">⚠ ${escapeHtml(st.warn)}</p>` : ''}
+        ${otherVer ? `<p class="gs-warn">⚠ ${escapeHtml(tf('gsCalOtherVer', { v: verName }))}</p>` : ''}
         ${GS.editClient ? clientEdit : clientLine}
-        <p class="gs-meta">${escapeHtml(tf('gsLinkedBy', { name: (g.linkedBy && (g.linkedBy.name || g.linkedBy.email)) || '', d: formatDate(g.linkedAt) }))}</p>
+        <p class="gs-meta">${escapeHtml(tf(L.mode === 'import' ? 'gsLinkedImp' : 'gsLinkedExp', { tab: L.tab }))}${verName ? ' · ' + escapeHtml(tf('gsCalVer', { v: verName })) : ''}</p>
+        <p class="gs-meta">${escapeHtml(tf('gsLinkedBy', { name: (L.linkedBy && (L.linkedBy.name || L.linkedBy.email)) || '', d: formatDate(L.linkedAt) }))}</p>
         <div class="gs-actions">
-            <a class="primary-btn" href="${escapeHtml(g.url)}" target="_blank" rel="noopener">${escapeHtml(t('gsOpen'))}</a>
-            ${ro ? '' : GS.status === 'auth' ? `<button class="ghost-btn" data-gs="auth">🔑 ${escapeHtml(t('gsReconnect'))}</button>` : `<button class="ghost-btn" data-gs="sync">🔄 ${escapeHtml(t('gsSyncNow'))}</button>`}
-            ${ro ? '' : `<button class="ghost-btn danger" data-gs="unlink">${escapeHtml(t('gsUnlink'))}</button>`}
+            <a class="primary-btn" href="${escapeHtml(L.url + (L.gid !== undefined && !/#gid=/.test(L.url) ? '#gid=' + L.gid : ''))}" target="_blank" rel="noopener">${escapeHtml(t('gsOpen'))}</a>
+            ${ro ? '' : GS.status === 'auth' ? `<button class="ghost-btn" data-gs="auth">🔑 ${escapeHtml(t('gsReconnect'))}</button>` : `<button class="ghost-btn" data-gs="sync" ${dis}>🔄 ${escapeHtml(t('gsSyncNow'))}</button>`}
+            ${ro ? '' : `<button class="ghost-btn danger" data-gs="unlink" ${dis}>${escapeHtml(t('gsUnlink'))}</button>`}
         </div>
-        <p class="gs-rules">${escapeHtml(t('gsRules'))}</p>`;
+        ${rules}`;
 }
-$('gsheetBtn').onclick = async () => {
+async function gsOpenFor(mod) {
     // Bağlıysa ve izin yoksa: tıklama aynı zamanda Google iznini yeniler
-    const g = App.project && App.project.gsheet;
-    if (g && g.id && !App.readOnly && !gsCachedToken() && gsClientId()) { try { await gsAuth(true); gsTick(); } catch (e) {} }
-    openGsModal();
-};
+    if (GS_MODS.some(x => gsLinkOf(x)) && !App.readOnly && !gsCachedToken() && gsClientId()) { try { await gsAuth(true); gsTick(); } catch (e) {} }
+    openGsModal(mod);
+}
+$('gsheetBtn').onclick = () => gsOpenFor(gsModFor(App.module));
+document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-gsopen]');
+    if (b) { e.preventDefault(); gsOpenFor(b.dataset.gsopen); }
+});
+window.gsModuleBtn = (m) => App.publicShare || window.isOfflineMode ? '' :
+    `<button class="ghost-btn gs-modbtn" data-gsopen="${m}" data-state="${gsLinkOf(m) ? 'ok' : 'off'}" data-help="help_gsheets"><i class="gs-ind"></i>Sheets</button>`;
 
 // ---------------------------------------------------------------------
 // 12) BAŞLANGIÇ — bu dosyadaki çeviriler eklendikten sonra dili yeniden uygula
