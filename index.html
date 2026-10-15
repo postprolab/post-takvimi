@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.15-4">
+<meta name="app-version" content="2026.10.15-5">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -1245,6 +1246,28 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 .ag-row.todo.done .ag-what { text-decoration: line-through; }
 .ag-row { box-sizing: border-box; line-height: 1.25; min-height: 34px; }
 
+/* ---------- SANAL TUR ---------- */
+.tour-layer { position: fixed; inset: 0; z-index: 40000; }
+.tour-spot { position: fixed; border-radius: 10px; box-shadow: 0 0 0 9999px rgba(4,5,8,.72), 0 0 0 3px var(--neon-green); transition: all .3s ease; pointer-events: none; }
+.tour-pop { position: fixed; width: min(360px, calc(100vw - 24px)); box-sizing: border-box; background: #161a21; border: 1px solid #2f3540; border-radius: 12px; padding: 16px 18px 14px; color: #eee;
+    box-shadow: 0 18px 50px rgba(0,0,0,.6); transition: left .3s ease, top .3s ease; }
+.tour-pop.center { width: min(440px, calc(100vw - 24px)); text-align: center; }
+.tour-pop h3 { margin: 6px 0 6px; font-size: 16px; }
+.tour-pop p { margin: 0 0 14px; font-size: 13.5px; line-height: 1.55; color: #cfd3da; }
+.tour-progress { height: 3px; background: #262b33; border-radius: 2px; overflow: hidden; }
+.tour-progress i { display: block; height: 100%; background: var(--neon-green); transition: width .3s; }
+.tour-foot { display: flex; align-items: center; gap: 8px; }
+.tour-pop.center .tour-foot { justify-content: center; }
+.tour-count { font-size: 11.5px; color: #777; margin-right: auto; }
+.tour-pop.center .tour-count { margin-right: 6px; }
+.tour-foot .link-btn { background: none; border: none; color: #888; font-family: inherit; font-size: 12px; cursor: pointer; text-decoration: underline; }
+.tour-btn { margin-left: 14px; background: #15171c; border: 1px solid #2c3039; color: #cfd3da; border-radius: 16px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.tour-btn:hover { border-color: var(--neon-green); color: #fff; }
+.tour-btn.mini { margin-left: 0; padding: 4px 8px; font-size: 13px; border-radius: 8px; }
+.sb-top-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.sb-top-row .sb-back { flex: 1; }
+@media (max-width: 600px) { .tour-btn:not(.mini) span { display: none; } .tour-btn { margin-left: 8px; } }
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
@@ -1279,6 +1302,7 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 <section id="dashboardView" class="view dashboard-view" hidden>
     <header class="app-header">
         <div class="brand-mark">POSTPRO<span>LAB</span></div>
+        <button id="tourBtn" class="tour-btn" data-help="help_tour">🎓 <span data-i18n="tourBtn">Öğretici tur</span></button>
         <div class="nav-spacer"></div>
         <div class="lang-switch" data-help="help_lang"><span data-lang="en">EN</span><span data-lang="tr">TR</span></div>
         <button id="profileBtn" data-help="help_profile" class="profile-btn">
@@ -1304,7 +1328,10 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 <!-- ============ ÇALIŞMA ALANI ============ -->
 <section id="workspaceView" class="view workspace-view" hidden>
     <aside class="app-sidebar">
-        <button id="backToProjects" data-help="help_back" class="sb-back">← <span data-i18n="backToProjects">Projects</span></button>
+        <div class="sb-top-row">
+            <button id="backToProjects" data-help="help_back" class="sb-back">← <span data-i18n="backToProjects">Projects</span></button>
+            <button id="tourBtnWs" class="tour-btn mini" data-help="help_tour" title="🎓">🎓</button>
+        </div>
         <div class="sb-project">
             <label for="projectName" class="sb-label" data-i18n="projectLabel">PROJECT</label>
             <input type="text" id="projectName" data-help="help_projectName" class="sb-project-input" placeholder="PROJECT NAME..." data-i18n-placeholder="projectNamePlaceholder" autocomplete="off">
@@ -3886,6 +3913,7 @@ function renderDashboard() {
             <button class="primary-btn" onclick="openNewProjectModal()">+ ${escapeHtml(t('newProject'))}</button>
         </div>`;
         renderAgenda();
+        maybeStartTour('dashboard', 1200);
         return;
     }
 
@@ -3916,6 +3944,7 @@ function renderDashboard() {
         </div>`;
     }).join('');
     renderAgenda();
+    maybeStartTour('dashboard', 1500);
 }
 
 $('projectGrid').addEventListener('click', (e) => {
@@ -4496,6 +4525,7 @@ async function openProject(id, data) {
         const active = versions.find(v => v.id === data.activeVersionId) || versions[0];
         if (active) applyVersion(active.id, active.data, data.notes || {});
         setSaveStatus(window.isOfflineMode ? 'offline' : 'saved');
+        maybeStartTour('workspace', 900);
 
         // Canlı senkron: proje ve açık versiyondaki değişiklikleri dinle
         App.sync.unP = api().watchProject(id, (d, reason) => {
@@ -8365,7 +8395,7 @@ function hideHelp() {
 }
 
 function showHelp(el) {
-    if (!helpOn || !document.body.contains(el)) return;
+    if (!helpOn || !document.body.contains(el) || document.querySelector('.tour-layer')) return;
     const key = el.dataset.help;
     const text = t(key);
     if (!text || text === key) return;
@@ -8412,9 +8442,251 @@ $('profileBtn').onclick = (e) => {
     menu.insertAdjacentHTML('afterbegin', `<div class="item" data-act="help">💡&nbsp; ${escapeHtml(t(helpOn ? 'helpTipsOn' : 'helpTipsOff'))}</div><div class="menu-sep"></div>`);
     if (APP_VERSION) menu.insertAdjacentHTML('beforeend', `<div class="menu-sep"></div><div class="menu-label">${escapeHtml(t('appVersion'))}: ${escapeHtml(APP_VERSION)}</div>`);
     menu.querySelector('[data-act="help"]').onclick = () => { closeMenu(); setHelpTips(!helpOn); };
+    menu.querySelector('[data-act="help"]').insertAdjacentHTML('afterend', `<div class="item" data-act="tour">🎓&nbsp; ${escapeHtml(t('tourMenu'))}</div>`);
+    menu.querySelector('[data-act="tour"]').onclick = () => { closeMenu(); startTour(App.view === 'workspace' ? 'workspace' : 'dashboard', true); };
     const r = e.currentTarget.getBoundingClientRect();
     positionMenu(r.right - 220, r.bottom + 6);
 };
+
+// ---------------------------------------------------------------------
+// 11b) SANAL TUR — yeni kullanıcıya siteyi adım adım gösterir
+// Projelerim turu ilk girişte, çalışma alanı turu ilk proje açılışında bir kez çalışır.
+// Profil menüsünden "Sanal tur" ile tekrar başlatılabilir.
+// ---------------------------------------------------------------------
+Object.assign(I18N.tr, {
+    tourBtn: "Öğretici tur", help_tour: "Siteyi adım adım tanıtan öğretici turu başlatır.",
+    tourMenu: "Sanal tur", tourNext: "İleri →", tourBack: "← Geri", tourDone: "Bitir ✓", tourSkip: "Turu kapat", tourStep: "{i} / {n}",
+    tD1t: "PostPro Lab'e hoş geldin 👋", tD1: "Post prodüksiyon takvimin, notların, VFX breakdown'ın ve yapılacakların tek yerde. Bir dakikada etrafı gezelim.",
+    tD2t: "Yeni proje", tD2: "Her dizi ya da film bir proje. Ad, bölüm sayısı ve başlangıç tarihiyle oluşturursun.",
+    tD3t: "Proje kartı", tD3: "Karta tıklayınca proje açılır. Üzerindeki rozetler: versiyon sayısı, dolu takvim hücresi, master lock, notlar, VFX ilerlemesi ve açık to-do'lar.",
+    tD4t: "Proje menüsü", tD4: "⋯ menüsünden projeyi kişilerle paylaşırsın (düzenleyebilir / görüntüleyebilir), yeniden adlandırır, çoğaltır ya da silersin. Değişiklikler herkeste canlı güncellenir.",
+    tD5t: "Pano: Bugün ve bu hafta", tD5: "Bütün projelerin takviminden bugünün ve bu haftanın işleri: cut günleri, Master Lock, QC, teslimler ve to-do'lar. Satıra tıklayınca takvimde o gün açılır.",
+    tD6t: "Profil ve ayarlar", tD6: "Hesap değiştirme, çıkış, yardım balonlarını açıp kapatma ve bu turu tekrar başlatma burada.",
+    tD7t: "Dil", tD7: "Arayüzü Türkçe ya da İngilizce kullanabilirsin.",
+    tD8t: "Hazırsın 🎬", tD8: "Bir projeye girdiğinde çalışma alanı turu başlayacak. İpucu: herhangi bir aracın üzerinde 3 saniye durursan ne işe yaradığını anlatan bir balon çıkar.",
+    tW1t: "Çalışma alanı", tW1: "Projenin içindesin. Solda modüller, ortada seçili modül var. Kısaca gezelim.",
+    tW2t: "Modüller", tW2: "Takvim, Bölüm Notları, Senaryo, VFX Breakdown, Toplantı Notları ve To-Do List. Hepsi bu projeye ait ve ekiple ortak.",
+    tW3t: "Takvim versiyonları", tW3: "Takvimin farklı hâllerini versiyon olarak saklarsın (V1, V2…). Yeni versiyon mevcut takvimin kopyasıyla açılır, eskisi bozulmaz.",
+    tW4t: "Değişiklik raporu", tW4: "İki versiyonu kıyaslar ve teslimlerin neden kaydığını bölüm bölüm açıklar. Not ekleyip PDF alabilirsin — yapımcıya hazır.",
+    tW5t: "Otomatik takvim", tW5: "Bölüm sayısı ve departman sürelerini gir, bütün post akışı otomatik kurulsun. Pazar ve resmi tatilleri boş bırakabilirsin.",
+    tW6t: "Odak modu", tW6: "Bir departmana tıkla, sadece o departman öne çıksın.",
+    tW7t: "Takvim hücreleri", tW7: "Çift tık: hücreyi doldur · Sağ tık: yeniden adlandır, renk, cut türleri (Director, Master Lock, Netflix/Amazon/HBO/Disney, Altyazı), SEND'de QC · Sürükle: taşı · Ctrl+tık / sürükleyerek çoklu seçim · Ctrl+Z: geri al.",
+    tW8t: "Bölüm şablonu", tW8: "EPISODE etiketine sağ tıkla: bölümün bütün planını alt bölüme ya da sonraki birkaç bölüme klonla, sonra toplu kaydır.",
+    tW9t: "Kişiler", tW9: "Projeyi e-postayla ekip arkadaşlarınla paylaş. Aynı anda çalışabilirsiniz; değişiklikler saniyeler içinde herkeste.",
+    tW10t: "Salt-okunur link", tW10: "Giriş gerektirmeyen bir görüntüleme linki verir. Takvim ekranında takvimin, VFX ekranında breakdown'ın linkini oluşturur.",
+    tW11t: "Otomatik kayıt", tW11: "Her şey otomatik kaydedilir. Burada kayıt durumu ve başkasının yaptığı son değişiklik görünür.",
+    tW12t: "İyi çalışmalar 🎬", tW12: "Turu istediğin zaman profil menüsündeki “Sanal tur”dan tekrar başlatabilirsin."
+});
+Object.assign(I18N.en, {
+    tourBtn: "Guided tour", help_tour: "Starts the step-by-step guided tour of the site.",
+    tourMenu: "Guided tour", tourNext: "Next →", tourBack: "← Back", tourDone: "Finish ✓", tourSkip: "Close tour", tourStep: "{i} / {n}",
+    tD1t: "Welcome to PostPro Lab 👋", tD1: "Your post-production calendar, notes, VFX breakdown and to-dos in one place. Let's take a one-minute look around.",
+    tD2t: "New project", tD2: "Each series or film is a project. Create it with a name, number of episodes and a start date.",
+    tD3t: "Project card", tD3: "Click a card to open the project. Badges show versions, calendar cells, master locks, notes, VFX progress and open to-dos.",
+    tD4t: "Project menu", tD4: "Use ⋯ to share with people (can edit / can view), rename, duplicate or delete. Changes sync live for everyone.",
+    tD5t: "Board: today and this week", tD5: "Today's and this week's work from all project calendars: cut days, Master Lock, QC, deliveries and to-dos. Click a line to open that day.",
+    tD6t: "Profile and settings", tD6: "Switch account, log out, turn help tips on/off and restart this tour.",
+    tD7t: "Language", tD7: "Use the interface in English or Turkish.",
+    tD8t: "You're ready 🎬", tD8: "Open a project to start the workspace tour. Tip: hover over any tool for 3 seconds to see what it does.",
+    tW1t: "Workspace", tW1: "You're inside the project: modules on the left, the selected module in the middle. A quick look around.",
+    tW2t: "Modules", tW2: "Calendar, Episode Notes, Script, VFX Breakdown, Meeting Notes and To-Do List — all part of this project, shared with the team.",
+    tW3t: "Calendar versions", tW3: "Keep different states of the calendar as versions (V1, V2…). A new version starts as a copy; the old one stays untouched.",
+    tW4t: "Change report", tW4: "Compares two versions and explains episode by episode why deliveries moved. Add notes and export a PDF for producers.",
+    tW5t: "Auto schedule", tW5: "Enter episodes and department durations and the whole post flow is built for you. Sundays and public holidays can be left empty.",
+    tW6t: "Focus mode", tW6: "Click a department to highlight only that one.",
+    tW7t: "Calendar cells", tW7: "Double-click: fill · Right-click: rename, colour, cut types (Director, Master Lock, Netflix/Amazon/HBO/Disney, Subtitles), QC on SEND · Drag: move · Ctrl+click / drag to multi-select · Ctrl+Z: undo.",
+    tW8t: "Episode template", tW8: "Right-click an EPISODE label to clone the whole episode plan to the next one (or several), then move it in one go.",
+    tW9t: "People", tW9: "Share the project by email. Work at the same time — changes reach everyone within seconds.",
+    tW10t: "Read-only link", tW10: "Creates a view link that needs no sign-in: the calendar on the calendar screen, the breakdown on the VFX screen.",
+    tW11t: "Auto-save", tW11: "Everything saves automatically. Save status and others' latest changes show here.",
+    tW12t: "Enjoy 🎬", tW12: "Restart the tour any time from “Guided tour” in the profile menu."
+});
+
+const TOURS = {
+    dashboard: [
+        { t: 'tD1' },
+        { sel: '#newProjectBtn', t: 'tD2' },
+        { sel: '.project-card', t: 'tD3' },
+        { sel: '.project-card .pc-menu', t: 'tD4' },
+        { sel: '#agendaPanel .ag-card', t: 'tD5' },
+        { sel: '#profileBtn', t: 'tD6' },
+        { sel: '#dashboardView .lang-switch', t: 'tD7' },
+        { t: 'tD8' }
+    ],
+    workspace: [
+        { t: 'tW1', before: () => showModule('calendar') },
+        { sel: '#moduleNav', t: 'tW2' },
+        { sel: '#versionGroup', t: 'tW3' },
+        { sel: '#reportBtn', t: 'tW4' },
+        { sel: '#openAutoModalBtn', t: 'tW5' },
+        { sel: '#deptFilters', t: 'tW6' },
+        { sel: '.grid-days', t: 'tW7', pad: -2 },
+        { sel: '.episode-v', t: 'tW8' },
+        { sel: '#peopleBtn', t: 'tW9' },
+        { sel: '#shareBtn', t: 'tW10' },
+        { sel: '#saveStatus', t: 'tW11' },
+        { t: 'tW12' }
+    ]
+};
+
+const tour = { name: null, steps: [], i: 0, el: null };
+
+// "Tur görüldü" bilgisi hesaba kaydedilir (başka cihazda tekrar çıkmaz).
+// Siteyi zaten kullanan hesaplara (kendi projesi olan) tur kendiliğinden hiç açılmaz.
+let tourPrefs = null, tourPrefsUid = null, tourPrefsLoading = null;
+const tourLocalKey = (name) => 'tourDone_' + name + (App.user ? '_' + App.user.uid : '');
+function tourSeen(name) {
+    try { if (localStorage.getItem(tourLocalKey(name))) return true; } catch (e) {}
+    return !!(tourPrefs && tourPrefs.tourDone && tourPrefs.tourDone[name]);
+}
+async function loadTourPrefs() {
+    if (!App.user || window.isOfflineMode || !window.FB || !FB.getUserPrefs) return;
+    if (tourPrefsUid === App.user.uid && tourPrefs) return;
+    if (tourPrefsLoading) return tourPrefsLoading;
+    tourPrefsLoading = (async () => {
+        try {
+            let p = await FB.getUserPrefs();
+            if (!p) {
+                // İlk kez görülen hesap: kendi projesi varsa eski kullanıcıdır → tur gösterme
+                const ownsProject = (App.projects || []).some(x => x.data && x.data.ownerUid === App.user.uid);
+                p = { firstSeen: new Date().toISOString(), tourDone: ownsProject ? { dashboard: true, workspace: true } : {} };
+                FB.setUserPrefs(p).catch(() => {});
+            }
+            tourPrefs = p;
+            tourPrefsUid = App.user.uid;
+        } catch (e) { console.warn('Tercihler okunamadı', e); tourPrefs = { tourDone: { dashboard: true, workspace: true } }; tourPrefsUid = App.user.uid; }
+        finally { tourPrefsLoading = null; }
+    })();
+    return tourPrefsLoading;
+}
+function markTourSeen(name) {
+    try { localStorage.setItem(tourLocalKey(name), '1'); } catch (e) {}
+    if (tourPrefs) { tourPrefs.tourDone = Object.assign({}, tourPrefs.tourDone, { [name]: true }); }
+    if (App.user && !window.isOfflineMode && window.FB && FB.setUserPrefs) FB.setUserPrefs({ tourDone: { [name]: true } }).catch(() => {});
+}
+const tourVisible = (el) => { if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden'; };
+
+function startTour(name, force) {
+    if (!TOURS[name] || App.publicShare) return;
+    if (!force && tourSeen(name)) return;
+    if (tour.el) endTour(false);
+    hideHelp && hideHelp();
+    closeMenu();
+    // Görünmeyen adımları (ör. görüntüleyicide kişiler butonu, projesi olmayan kullanıcıda kart) atla
+    tour.steps = TOURS[name].filter(s => !s.sel || tourVisible(document.querySelector(s.sel)));
+    tour.name = name;
+    tour.i = 0;
+    const el = document.createElement('div');
+    el.className = 'tour-layer';
+    el.innerHTML = `<div class="tour-spot"></div><div class="tour-pop" role="dialog" aria-live="polite"></div>`;
+    document.body.appendChild(el);
+    tour.el = el;
+    el.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-tour]');
+        if (!b) return;
+        const a = b.dataset.tour;
+        if (a === 'next') tourGo(1);
+        else if (a === 'back') tourGo(-1);
+        else if (a === 'skip') endTour(true);
+    });
+    showTourStep();
+}
+
+function tourGo(d) {
+    const ni = tour.i + d;
+    if (ni >= tour.steps.length) { endTour(true); return; }
+    if (ni < 0) return;
+    tour.i = ni;
+    showTourStep();
+}
+
+function endTour(markDone) {
+    if (markDone && tour.name) markTourSeen(tour.name);
+    if (tour.el) tour.el.remove();
+    tour.el = null;
+    tour.name = null;
+    window.removeEventListener('resize', placeTour);
+}
+
+function showTourStep() {
+    const s = tour.steps[tour.i];
+    if (!s) return;
+    if (s.before) { try { s.before(); } catch (e) {} }
+    const n = tour.steps.length, last = tour.i === n - 1;
+    const pop = tour.el.querySelector('.tour-pop');
+    pop.innerHTML = `
+        <div class="tour-progress"><i style="width:${Math.round((tour.i + 1) / n * 100)}%"></i></div>
+        <h3>${escapeHtml(t(s.t + 't'))}</h3>
+        <p>${escapeHtml(t(s.t))}</p>
+        <div class="tour-foot">
+            <span class="tour-count">${escapeHtml(tf('tourStep', { i: tour.i + 1, n }))}</span>
+            ${last ? '' : `<button class="link-btn" data-tour="skip">${escapeHtml(t('tourSkip'))}</button>`}
+            ${tour.i > 0 ? `<button class="ghost-btn" data-tour="back">${escapeHtml(t('tourBack'))}</button>` : ''}
+            <button class="primary-btn small" data-tour="next">${escapeHtml(t(last ? 'tourDone' : 'tourNext'))}</button>
+        </div>`;
+    const target = s.sel && document.querySelector(s.sel);
+    if (target && target.scrollIntoView) target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    requestAnimationFrame(placeTour);
+    window.removeEventListener('resize', placeTour);
+    window.addEventListener('resize', placeTour);
+    setTimeout(() => { const nb = pop.querySelector('[data-tour="next"]'); nb && nb.focus({ preventScroll: true }); }, 50);
+}
+
+function placeTour() {
+    if (!tour.el) return;
+    const s = tour.steps[tour.i];
+    const spot = tour.el.querySelector('.tour-spot'), pop = tour.el.querySelector('.tour-pop');
+    const target = s && s.sel && document.querySelector(s.sel);
+    const W = window.innerWidth, H = window.innerHeight, M = 12;
+    if (!target || !tourVisible(target)) {
+        // Hedefsiz adım: ekranın ortasında
+        spot.style.cssText = `left:${W / 2}px;top:${H / 2}px;width:0;height:0;`;
+        pop.classList.add('center');
+        pop.style.left = Math.max(M, (W - pop.offsetWidth) / 2) + 'px';
+        pop.style.top = Math.max(M, (H - pop.offsetHeight) / 2) + 'px';
+        return;
+    }
+    pop.classList.remove('center');
+    const pad = s.pad !== undefined ? s.pad : 6;
+    let r = target.getBoundingClientRect();
+    // Çok büyük alanları (takvim) ekrana sığacak kadar kırp
+    const x = Math.max(4, r.left - pad), y = Math.max(4, r.top - pad);
+    const w = Math.min(W - 8, r.right + pad) - x, h = Math.min(H - 8, r.bottom + pad) - y;
+    spot.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px;`;
+    const pw = pop.offsetWidth, ph = pop.offsetHeight;
+    let px, py;
+    if (W < 640) { px = M; py = (y + h + ph + M < H) ? y + h + M : Math.max(M, y - ph - M); if (y < H / 2 && y + h > H * 0.6) py = H - ph - M; }
+    else if (y + h + ph + M < H) { px = x; py = y + h + M; }                 // altına
+    else if (y - ph - M > 0) { px = x; py = y - ph - M; }                  // üstüne
+    else if (x + w + pw + M < W) { px = x + w + M; py = y; }               // sağına
+    else { px = Math.max(M, x - pw - M); py = Math.max(M, Math.min(y, H - ph - M)); }
+    pop.style.left = Math.max(M, Math.min(px, W - pw - M)) + 'px';
+    pop.style.top = Math.max(M, Math.min(py, H - ph - M)) + 'px';
+}
+
+document.addEventListener('keydown', (e) => {
+    if (!tour.el) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); endTour(true); }
+    else if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); tourGo(1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); tourGo(-1); }
+}, true);
+
+// İlk açılışlarda kendiliğinden başlat
+async function maybeStartTour(name, delay = 700) {
+    await loadTourPrefs();
+    if (tourSeen(name)) return;
+    setTimeout(() => {
+        if (tourSeen(name)) return;
+        if (tour.el || App.publicShare) return;
+        if (name === 'dashboard' && App.view !== 'dashboard') return;
+        if (name === 'workspace' && App.view !== 'workspace') return;
+        if (document.querySelector('.modal[style*="flex"], .modal[style*="block"]')) return;
+        startTour(name);
+    }, delay);
+}
+window.startTour = startTour;
+$('tourBtn').onclick = () => startTour('dashboard', true);
+$('tourBtnWs').onclick = () => startTour('workspace', true);
 
 // ---------------------------------------------------------------------
 // 12) BAŞLANGIÇ — bu dosyadaki çeviriler eklendikten sonra dili yeniden uygula
@@ -8662,6 +8934,15 @@ const FB = {
     async getSharedVfxFrame(shareId, sid) {
         const s = await getDoc(doc(db, "sharedProjects", shareId, "vfxFrames", sid));
         return s.exists() ? s.data() : null;
+    },
+
+    // ---------- Kullanıcı tercihleri (users/{uid}/prefs/main) — ör. öğretici tur görüldü mü ----------
+    async getUserPrefs() {
+        const s = await getDoc(doc(db, "users", me().uid, "prefs", "main"));
+        return s.exists() ? s.data() : null;
+    },
+    async setUserPrefs(data) {
+        await setDoc(doc(db, "users", me().uid, "prefs", "main"), data, { merge: true });
     },
 
     // ---------- Hatırlatmalar (reminders/{id}) ----------
