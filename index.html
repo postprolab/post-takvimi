@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.15-6">
+<meta name="app-version" content="2026.10.16-1">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -1301,6 +1300,31 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 /* Takvim hücresi tarih balonu */
 .help-tip .ht-icon { flex-shrink: 0; }
 
+/* ---------- Google Sheets ---------- */
+.sb-btn-gs { border-color: #2e7d4f; color: #b9efcf; position: relative; }
+.sb-btn-gs:hover { background: #12241a; }
+.sb-btn-gs .gs-ind { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; border-radius: 50%; background: #555; }
+.sb-btn-gs[data-state="ok"] .gs-ind { background: #34d17a; box-shadow: 0 0 6px #34d17a; }
+.sb-btn-gs[data-state="sync"] .gs-ind { background: #64b5f6; }
+.sb-btn-gs[data-state="auth"] .gs-ind, .sb-btn-gs[data-state="error"] .gs-ind { background: #ffb300; }
+.sb-btn-gs[data-state="follower"] .gs-ind, .sb-btn-gs[data-state="viewer"] .gs-ind { background: #7e8aa0; }
+.gs-box { width: min(560px, 100%); }
+.gs-body { padding: 4px 20px 20px; display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #ddd; }
+.gs-intro { margin: 0; line-height: 1.55; color: #cfd3da; }
+.gs-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.gs-actions a.primary-btn { text-decoration: none; display: inline-flex; align-items: center; }
+.gs-rules { margin: 0; font-size: 12px; color: #8a93a3; line-height: 1.5; background: #13161b; border: 1px solid #23272f; border-radius: 8px; padding: 9px 11px; }
+.gs-status { display: flex; align-items: center; gap: 9px; font-weight: 700; }
+.gs-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; }
+.gs-status.st-ok .gs-dot { background: #34d17a; } .gs-status.st-sync .gs-dot { background: #64b5f6; }
+.gs-status.st-auth .gs-dot, .gs-status.st-error .gs-dot { background: #ffb300; } .gs-status.st-follower .gs-dot { background: #7e8aa0; }
+.gs-meta { margin: 0; color: #888; font-size: 12px; }
+.gs-warn { margin: 0; color: #ffc857; font-size: 12.5px; }
+.gs-setup { background: #1a1e25; border: 1px solid #2f3540; border-radius: 8px; padding: 11px 12px; }
+.gs-setup p { margin: 4px 0 8px; color: #9aa; font-size: 12.5px; }
+.gs-row { display: flex; gap: 8px; }
+.gs-row input { flex: 1; min-width: 0; background: #111; border: 1px solid #333; color: #fff; border-radius: 6px; padding: 8px 10px; font-family: inherit; font-size: 12.5px; }
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
@@ -1373,6 +1397,7 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
         <div class="nav-spacer"></div>
         <div class="sb-footer">
             <button id="peopleBtn" data-help="help_people" class="sb-btn sb-btn-people">👥 <span data-i18n="people">People</span></button>
+            <button id="gsheetBtn" data-help="help_gsheets" class="sb-btn sb-btn-gs" data-state="off">🟩 <span data-i18n="gsBtn">Google Sheets</span><i class="gs-ind"></i></button>
             <button id="shareBtn" data-help="help_linkShare" class="sb-btn">🔗 <span data-i18n="linkShare">Read-only link</span></button>
             <div id="saveStatus" data-help="help_saveStatus" class="save-status"></div>
             <div class="lang-switch" data-help="help_lang"><span data-lang="en">EN</span><span data-lang="tr">TR</span></div>
@@ -3964,7 +3989,8 @@ function renderDashboard() {
             s.scriptNotes ? `🎬 ${s.scriptNotes}` : '',
             s.meetings ? `🤝 ${s.meetings}` : '',
             s.vfxTotal ? `✨ VFX ${s.vfxDone}/${s.vfxTotal}` : '',
-            s.todosOpen ? `✅ ${s.todosOpen}` : ''
+            s.todosOpen ? `✅ ${s.todosOpen}` : '',
+            d.gsheet && d.gsheet.id ? '🟩 Sheets' : ''
         ].filter(Boolean).map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('');
         return `<div class="project-card ${role !== 'owner' ? 'shared' : ''}" data-id="${escapeHtml(id)}" tabindex="0">
             <div class="pc-top">
@@ -4450,6 +4476,7 @@ function setReadOnlyUI({ readOnly = false, publicShare = false, offline = false 
     $('backToProjects').hidden = publicShare;
     $('shareBtn').hidden = readOnly || offline;
     $('peopleBtn').hidden = publicShare || offline;
+    $('gsheetBtn').hidden = publicShare || offline;
     $('versionGroup').hidden = publicShare;
     $('projectName').readOnly = readOnly;
 }
@@ -4535,7 +4562,8 @@ async function openProject(id, data) {
         vfxLayout: isPlainObject(data.vfxLayout) ? data.vfxLayout : {},
         createdAt: data.createdAt || new Date().toISOString(),
         ownerUid: data.ownerUid, ownerEmail: data.ownerEmail, ownerName: data.ownerName,
-        members: clone(data.members || {})
+        members: clone(data.members || {}),
+        gsheet: data.gsheet ? clone(data.gsheet) : null
     });
     currentProjectId = id;
     App.versions = [];
@@ -4713,6 +4741,7 @@ window.handleSaveAction = async function () {
         App.project.projectName = name;
         App.lastSavedAt = new Date();
         setSaveStatus(offline ? 'offline' : 'saved');
+        if (App.project.gsheet && typeof gsKick === 'function') gsKick();
     } catch (e) {
         console.error('Save error:', e);
         setSaveStatus('error');
@@ -4816,6 +4845,7 @@ function onRemoteProject(d, reason) {
     const role = roleFor(d);
     if (!role) { onRemoteProject(null, 'denied'); return; }
     App.project.members = clone(d.members || {});
+    App.project.gsheet = d.gsheet ? clone(d.gsheet) : null;      // Sheets bağlantısı (lider bilgisi dahil) — durum mesajı göstermeden
     if (role !== App.role) {
         App.role = role;
         setReadOnlyUI({ readOnly: role === 'viewer', offline: window.isOfflineMode });
@@ -8983,6 +9013,591 @@ $('tourBtn').onclick = () => startTour('dashboard', true);
 $('tourBtnWs').onclick = () => startTour('workspace', true);
 
 // ---------------------------------------------------------------------
+// 13) GOOGLE SHEETS — iki yönlü eşitleme (VFX Breakdown, Takvim, To-Do)
+// Her projeye bir Google Sheet bağlanır; 3 sekme: "VFX Breakdown", "Takvim", "To-Do".
+// Eşitleme, projeyi açık tutan bir düzenleyicinin tarayıcısında 8 sn'de bir çalışır:
+//   1) Sheet okunur → son yazdığımızdan farklı hücreler (Sheet'te yapılan değişiklikler) siteye işlenir
+//   2) Sitenin güncel hâli hesaplanır → Sheet'ten farklı satırlar Sheet'e yazılır
+// Aynı anda tek tarayıcı eşitler ("lider"); diğerleri bekler, lider kapanırsa devralır.
+// ---------------------------------------------------------------------
+Object.assign(I18N.tr, {
+    gsBtn: "Google Sheets", gsTitle: "Google Sheets eşitleme",
+    gsIntro: "Bu projeyi bir Google Sheet ile iki yönlü eşitle: VFX Breakdown, Takvim ve To-Do ayrı sekmelerde. Sitede yaptığın değişiklik Sheet'e, Sheet'te yaptığın değişiklik siteye gelir.",
+    gsCreate: "Yeni Google Sheet oluştur ve bağla", gsExisting: "Mevcut bir Sheet'e bağla", gsUrlPrompt: "Google Sheet bağlantısını yapıştır:",
+    gsOpen: "Sheet'i aç ↗", gsSyncNow: "Şimdi eşitle", gsUnlink: "Bağlantıyı kaldır", gsConfirmUnlink: "Google Sheet bağlantısı kaldırılsın mı? (Sheet silinmez, sadece eşitleme durur.)",
+    gsReconnect: "Google iznini yenile",
+    gs_off: "Bağlı değil", gs_ok: "Eşitlendi · {t}", gs_sync: "Eşitleniyor…", gs_auth: "Google izni gerekiyor — tıkla",
+    gs_follower: "Eşitleme {name} tarayıcısında çalışıyor", gs_error: "Hata: {m}", gs_viewer: "Bağlı (görüntüleyici — eşitlemeyi düzenleyiciler yapar)",
+    gs_setup: "Kurulum gerekli",
+    gsRules: "Sheet'te dikkat: 1. satır (başlıklar) ve gizli ID sütunu silinmesin. VFX ve To-Do'da en alta satır ekleyince sitede yeni kayıt açılır, satırı silince kayıt silinir. Takvim sekmesinde hücreye departman adı ya da cut türü (ör. MASTER LOCK) yaz, silince hücre boşalır.",
+    gsClientTitle: "Bir kerelik kurulum", gsClientHint: "Google Cloud'da oluşturduğun OAuth İstemci Kimliğini (Client ID) yapıştır. Kurulum adımları için sohbetteki talimatlara bak.",
+    gsClientSave: "Kaydet", gsLinkedBy: "{name} bağladı · {d}", gsLastSync: "Son eşitleme: {t}", gsWarnStruct: "Takvim sekmesinin satır/sütun düzeni değişmişti; sitedeki hâli yeniden yazıldı.",
+    gsTask: "Görev", gsDate: "Tarih", gsDone: "Tamamlandı", gsBy: "Ekleyen", help_gsheets: "Projeyi bir Google Sheet ile iki yönlü eşitler (VFX Breakdown, Takvim, To-Do)."
+});
+Object.assign(I18N.en, {
+    gsBtn: "Google Sheets", gsTitle: "Google Sheets sync",
+    gsIntro: "Sync this project both ways with a Google Sheet: VFX Breakdown, Calendar and To-Do in separate tabs. Changes on the site go to the Sheet and changes in the Sheet come to the site.",
+    gsCreate: "Create a new Google Sheet and link", gsExisting: "Link an existing Sheet", gsUrlPrompt: "Paste the Google Sheet link:",
+    gsOpen: "Open Sheet ↗", gsSyncNow: "Sync now", gsUnlink: "Unlink", gsConfirmUnlink: "Unlink the Google Sheet? (The Sheet is not deleted; syncing just stops.)",
+    gsReconnect: "Renew Google permission",
+    gs_off: "Not linked", gs_ok: "Synced · {t}", gs_sync: "Syncing…", gs_auth: "Google permission needed — click",
+    gs_follower: "Syncing runs in {name}'s browser", gs_error: "Error: {m}", gs_viewer: "Linked (viewer — editors run the sync)",
+    gs_setup: "Setup needed",
+    gsRules: "In the Sheet: don't delete row 1 (headers) or the hidden ID column. In VFX and To-Do, a new row at the bottom becomes a new item; deleting a row deletes it. In the Calendar tab type a department name or a cut type (e.g. MASTER LOCK) into a cell; clearing it empties the cell.",
+    gsClientTitle: "One-time setup", gsClientHint: "Paste the OAuth Client ID you created in Google Cloud. See the setup steps in the chat.",
+    gsClientSave: "Save", gsLinkedBy: "Linked by {name} · {d}", gsLastSync: "Last sync: {t}", gsWarnStruct: "The Calendar tab layout had changed; the site's version was written back.",
+    gsTask: "Task", gsDate: "Date", gsDone: "Done", gsBy: "Added by", help_gsheets: "Two-way sync of this project with a Google Sheet (VFX Breakdown, Calendar, To-Do)."
+});
+
+const GS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+const GS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
+const GS_TAB = { vfx: 'VFX Breakdown', cal: 'Takvim', todo: 'To-Do' };
+const GS_TICK_MS = 8000, GS_LEADER_STALE = 90000, GS_BEAT_MS = 30000;
+const GS = { token: null, exp: 0, busy: false, lastSeen: null, pid: null, calVer: null, fmtSig: {}, sheetIds: null, sheetFor: null,
+    lastSync: null, status: 'off', err: '', warn: '', lastBeat: 0, kickT: 0, clientId: '' };
+
+// --- Client ID: projede kayıtlı > kullanıcı tercihi > dosyadaki sabit ---
+function gsClientId() {
+    const g = App.project && App.project.gsheet;
+    return (g && g.clientId) || GS.clientId || (tourPrefs && tourPrefs.gClientId) || window.GOOGLE_OAUTH_CLIENT_ID || '';
+}
+
+// --- Google izni (Google Identity Services) ---
+function loadGis() {
+    return new Promise((res, rej) => {
+        if (window.google && google.accounts && google.accounts.oauth2) return res();
+        const s = document.createElement('script');
+        s.src = 'https://accounts.google.com/gsi/client';
+        s.async = true;
+        s.onload = () => res();
+        s.onerror = () => rej(new Error('Google sign-in script could not be loaded'));
+        document.head.appendChild(s);
+    });
+}
+function gsCachedToken() {
+    if (GS.token && Date.now() < GS.exp - 60000) return GS.token;
+    try {
+        const c = JSON.parse(sessionStorage.getItem('gsTok') || 'null');
+        if (c && App.user && c.uid === App.user.uid && Date.now() < c.exp - 60000) { GS.token = c.t; GS.exp = c.exp; return c.t; }
+    } catch (e) {}
+    return null;
+}
+async function gsAuth(interactive) {
+    const c = gsCachedToken();
+    if (c || !interactive) return c;
+    if (!gsClientId()) throw new Error(t('gs_setup'));
+    await loadGis();
+    return new Promise((res, rej) => {
+        const tc = google.accounts.oauth2.initTokenClient({
+            client_id: gsClientId(), scope: GS_SCOPE, login_hint: myEmail(), prompt: '',
+            callback: (r) => {
+                if (!r || r.error) return rej(new Error((r && r.error) || 'auth'));
+                GS.token = r.access_token;
+                GS.exp = Date.now() + (parseInt(r.expires_in) || 3600) * 1000;
+                try { sessionStorage.setItem('gsTok', JSON.stringify({ t: GS.token, exp: GS.exp, uid: App.user && App.user.uid })); } catch (e) {}
+                res(GS.token);
+            },
+            error_callback: (e) => rej(new Error((e && e.type) || 'popup'))
+        });
+        tc.requestAccessToken();
+    });
+}
+async function gsFetch(path, opts = {}) {
+    const tok = gsCachedToken();
+    if (!tok) throw Object.assign(new Error('auth'), { auth: true });
+    const r = await fetch(GS_API + path, {
+        method: opts.method || 'GET',
+        headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
+        body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+    if (r.status === 401) {
+        GS.token = null;
+        try { sessionStorage.removeItem('gsTok'); } catch (e) {}
+        throw Object.assign(new Error('auth'), { auth: true });
+    }
+    if (!r.ok) {
+        let m = '';
+        try { m = (await r.json()).error.message; } catch (e) {}
+        throw new Error(m || ('HTTP ' + r.status));
+    }
+    return r.json();
+}
+
+// --- Yardımcılar ---
+const gsQ = (tab) => "'" + tab.replace(/'/g, "''") + "'";
+function gsCol(n) { let s = ''; n++; while (n) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; }
+const gsStr = (v) => v === true ? 'TRUE' : v === false ? 'FALSE' : (v === null || v === undefined) ? '' : String(v);
+const gsCell = (rows, r, c) => gsStr(rows && rows[r] && rows[r][c]);
+function gsParseDate(v) {
+    if (v === '' || v === null || v === undefined) return '';
+    if (typeof v === 'number' || /^\d{5}(\.\d+)?$/.test(String(v))) {                 // Sheets tarih seri numarası
+        const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(Number(v)) * 86400000);
+        return d.toISOString().slice(0, 10);
+    }
+    const s = String(v).trim();
+    let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+    m = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
+    if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+    return '';
+}
+const gsBool = (v) => v === true || /^(true|doğru|dogru|evet|yes|1|x|✓)$/i.test(String(v).trim());
+function gsHexColor(hex) {
+    const h = String(hex || '#ffffff').replace('#', '');
+    const n = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h, 16);
+    return { red: ((n >> 16) & 255) / 255, green: ((n >> 8) & 255) / 255, blue: (n & 255) / 255 };
+}
+
+// --- Sitenin hâli → tablolar ---
+function gsVfxTable() {
+    const rounds = vfxRoundsList();
+    const multi = (parseInt(App.project.totalEpisodes) || 1) > 1;
+    const keys = ['id', ...(multi ? ['ep'] : []), 'code', 'tc', 'desc', ...rounds.map(r => 'r:' + r.id), 'extras', 'vendor', 'hours', 'due', 'status'];
+    const label = { id: 'ID', ep: t('vfxEp'), code: t('vfxCode'), tc: t('vfxTc'), desc: t('vfxDesc'), extras: t('vfxExtras'), vendor: t('vfxVendor'), hours: t('vfxHours'), due: t('vfxDue'), status: t('vfxStatus') };
+    const head = keys.map(k => k.startsWith('r:') ? (App.project.vfxRounds[k.slice(2)] || {}).label || '' : label[k]);
+    const shots = vfxSorted(vfxShotsList());
+    const val = (s, k) => {
+        if (k === 'id') return s.id;
+        if (k === 'ep') return parseInt(s.ep) ? 'EP' + String(parseInt(s.ep)).padStart(2, '0') : '';
+        if (k === 'status') return t('vfx_' + vfxStatusOf(s));
+        if (k.startsWith('r:')) { const n = (s.notes || {})[k.slice(2)] || {}; return n.text ? (n.done ? '✓ ' : '') + n.text : ''; }
+        return gsStr(s[k]);
+    };
+    return { keys, rows: [head, ...shots.map(s => keys.map(k => val(s, k)))], statuses: shots.map(vfxStatusOf) };
+}
+function gsTodoTable() {
+    const keys = ['id', 'text', 'date', 'done', 'by'];
+    const head = ['ID', t('gsTask'), t('gsDate'), t('gsDone'), t('gsBy')];
+    const list = todoList().sort((a, b) => String(a.date || '9999').localeCompare(String(b.date || '9999')) || String(a.createdAt || '').localeCompare(String(b.createdAt || '')));
+    return { keys, rows: [head, ...list.map(td => [td.id, td.text || '', td.date || '', td.done ? 'TRUE' : 'FALSE', (td.createdBy && (td.createdBy.name || td.createdBy.email)) || ''])] };
+}
+function gsCalTable() {
+    if (!App.version || !dates || !dates.length) return null;
+    const cells = new Map(serializeCells().map(c => [c.ep + '|' + c.procType + '|' + c.col, c]));
+    const iso = dates.map(d => toLocalISO(d));
+    const head = [t('wrEp'), t('wrDept'), ...dates.map(d => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`)];
+    const rowsMeta = [{ ep: 0, proc: 'set' }];
+    for (let e = 1; e <= TOTAL_EPISODES; e++) PROC_ORDER.forEach(p => rowsMeta.push({ ep: e, proc: p }));
+    const colors = [];
+    const rows = [head, ...rowsMeta.map((m, ri) => [m.ep ? 'EP' + String(m.ep).padStart(2, '0') : 'SET', m.proc === 'set' ? 'SET' : m.proc.toUpperCase(),
+        ...iso.map((_, ci) => {
+            const c = cells.get(m.ep + '|' + m.proc + '|' + ci);
+            if (!c) return '';
+            colors.push([ri + 1, ci + 2, c.bg || deptColors[m.proc], c.cutType ? cutFg(c.cutType) : '#000000']);
+            return String(c.text || '').trim() || m.proc.toUpperCase();
+        })])];
+    return { rows, rowsMeta, iso, colors, version: App.version.id };
+}
+function gsBuildAll() {
+    return { vfx: gsVfxTable(), todo: gsTodoTable(), cal: gsCalTable() };
+}
+
+// --- Sheet'te yapılan değişiklikleri siteye işle ---
+function gsStatusFrom(v) {
+    const s = String(v || '').trim().toLocaleLowerCase('tr-TR');
+    return VFX_STATUS.find(x => [I18N.tr['vfx_' + x], I18N.en['vfx_' + x], x].some(l => String(l).toLocaleLowerCase('tr-TR') === s)) || null;
+}
+function gsSetVfx(s, k, raw) {
+    const v = gsStr(raw);
+    if (k === 'ep') { const m = v.match(/(\d+)/); s.ep = m ? parseInt(m[1]) : 0; }
+    else if (k === 'status') { const st = gsStatusFrom(v); if (st) s.status = st; }
+    else if (k.startsWith('r:')) {
+        const rid = k.slice(2);
+        if (!App.project.vfxRounds[rid]) return;
+        const done = /^\s*✓/.test(v);
+        s.notes = Object.assign({}, s.notes, { [rid]: { text: v.replace(/^\s*✓\s*/, ''), done } });
+    }
+    else if (k === 'tc') { const d = v.replace(/\D/g, '').slice(0, 8); s.tc = (d.match(/.{1,2}/g) || []).join(':'); }
+    else if (k === 'code') s.code = v.trim().toUpperCase();
+    else if (k === 'due') s.due = gsParseDate(raw);
+    else if (k === 'hours') s.hours = v.replace(',', '.').trim();
+    else s[k] = v;
+}
+function gsPullVfx(prev, rows) {
+    let changed = false;
+    const keys = prev.keys;
+    // Not türü başlığı Sheet'te değiştiyse sütunun adı da değişsin
+    keys.forEach((k, ci) => {
+        if (!k.startsWith('r:')) return;
+        const nv = gsCell(rows, 0, ci).trim(), r = App.project.vfxRounds[k.slice(2)];
+        if (r && nv && nv !== gsCell(prev.rows, 0, ci) && nv !== r.label) { r.label = nv; changed = true; }
+    });
+    const prevById = new Map();
+    prev.rows.slice(1).forEach(r => prevById.set(gsStr(r[0]), r));
+    const seen = new Set();
+    for (let ri = 1; ri < rows.length; ri++) {
+        const row = rows[ri] || [];
+        const id = gsCell(rows, ri, 0).trim();
+        if (id && prevById.has(id)) {
+            seen.add(id);
+            const s = App.project.vfxShots[id];
+            if (!s) continue;
+            const old = prevById.get(id);
+            keys.forEach((k, ci) => {
+                if (k === 'id') return;
+                if (gsCell(rows, ri, ci) !== gsStr(old[ci])) { gsSetVfx(s, k, row[ci]); changed = true; }
+            });
+        } else if (!id && row.some((v, ci) => ci > 0 && gsStr(v).trim())) {
+            // Sheet'te en alta eklenmiş yeni satır → yeni shot
+            const nid = uid();
+            const s = { id: nid, ep: 0, code: '', tc: '', desc: '', notes: {}, extras: '', vendor: '', hours: '', due: '', status: 'todo', createdAt: new Date().toISOString() };
+            keys.forEach((k, ci) => { if (k !== 'id' && gsStr(row[ci]).trim()) gsSetVfx(s, k, row[ci]); });
+            if (!s.code) s.code = nextVfxCode(s.ep, null);
+            const grp = vfxSorted(vfxShotsList().filter(x => (parseInt(x.ep) || 0) === (parseInt(s.ep) || 0) && hasOrd(x)));
+            s.order = orderBetween(grp[grp.length - 1], null);
+            App.project.vfxShots[nid] = s;
+            changed = true;
+        }
+    }
+    // Sheet'te silinen satırlar
+    prevById.forEach((_, id) => {
+        if (!seen.has(id) && App.project.vfxShots[id]) {
+            delete App.project.vfxShots[id];
+            if (App.vfxThumbs[id]) removeVfxImage(id);
+            changed = true;
+        }
+    });
+    return changed;
+}
+function gsPullTodo(prev, rows) {
+    let changed = false;
+    const prevById = new Map();
+    prev.rows.slice(1).forEach(r => prevById.set(gsStr(r[0]), r));
+    const seen = new Set();
+    const set = (td, ci, raw) => {
+        if (ci === 1) td.text = gsStr(raw);
+        else if (ci === 2) td.date = gsParseDate(raw);
+        else if (ci === 3) {
+            const d = gsBool(raw);
+            if (d !== !!td.done) { td.done = d; if (d) { td.doneAt = new Date().toISOString(); clearTodoReminders(td); } else delete td.doneAt; }
+        }
+    };
+    for (let ri = 1; ri < rows.length; ri++) {
+        const row = rows[ri] || [];
+        const id = gsCell(rows, ri, 0).trim();
+        if (id && prevById.has(id)) {
+            seen.add(id);
+            const td = App.project.todos[id];
+            if (!td) continue;
+            const old = prevById.get(id);
+            [1, 2, 3].forEach(ci => { if (gsCell(rows, ri, ci) !== gsStr(old[ci])) { set(td, ci, row[ci]); changed = true; } });
+        } else if (!id && gsStr(row[1]).trim()) {
+            const nid = uid(), u = App.user || {};
+            const td = { id: nid, text: '', date: '', done: false, createdAt: new Date().toISOString(), createdBy: { name: u.displayName || u.email || '', email: myEmail() } };
+            [1, 2, 3].forEach(ci => set(td, ci, row[ci]));
+            App.project.todos[nid] = td;
+            changed = true;
+        }
+    }
+    prevById.forEach((_, id) => {
+        if (!seen.has(id) && App.project.todos[id]) { clearTodoReminders(App.project.todos[id]); delete App.project.todos[id]; changed = true; }
+    });
+    return changed;
+}
+function gsPullCal(prev, rows) {
+    if (!prev || !App.version || prev.version !== App.version.id) return false;
+    // Düzen bozulduysa (satır/sütun eklenmiş/silinmiş) Sheet'ten okumayı atla, sitenin hâlini yeniden yaz
+    const sameHead = prev.rows[0].every((v, ci) => ci < 2 || gsCell(rows, 0, ci) === gsStr(v));
+    const sameRows = prev.rows.every((r, ri) => ri === 0 || (gsCell(rows, ri, 0) === gsStr(r[0]) && gsCell(rows, ri, 1) === gsStr(r[1])));
+    if (!sameHead || !sameRows) { GS.warn = t('gsWarnStruct'); return false; }
+    let changed = false;
+    for (let ri = 1; ri < prev.rows.length; ri++) {
+        const m = prev.rowsMeta[ri - 1];
+        for (let ci = 2; ci < prev.rows[0].length; ci++) {
+            const nv = gsCell(rows, ri, ci).trim(), ov = gsStr(prev.rows[ri][ci]).trim();
+            if (nv === ov) continue;
+            const cell = getCell(ci - 2, m.ep, m.proc);
+            if (!cell) continue;
+            if (!nv) clearCell(cell);
+            else {
+                const up = nv.toLocaleUpperCase('tr-TR');
+                const ct = Object.keys(CUT_TYPES).find(k => typeRow(k) === m.proc && CUT_TYPES[k].label.toUpperCase() === up.replace('İ', 'I'));
+                if (ct) fillCell(cell, { text: CUT_TYPES[ct].label, bg: CUT_TYPES[ct].bg, cutType: ct });
+                else {
+                    const cur = cell.classList.contains('filled') ? readCell(cell) : null;
+                    fillCell(cell, { text: nv.toUpperCase(), bg: cur && !cur.cutType ? cur.bg : deptColors[m.proc], cutType: '' });
+                }
+            }
+            changed = true;
+        }
+    }
+    if (changed) commitChange();
+    return changed;
+}
+
+// --- Siteyi Sheet'e yaz (sadece farklı satırlar) ---
+function gsDiffWrites(tab, desired, fetched, data, clears, boolCol) {
+    const width = Math.max(...desired.map(r => r.length), ...fetched.map(r => (r || []).length), 1);
+    for (let ri = 0; ri < desired.length; ri++) {
+        const want = desired[ri], have = fetched[ri] || [];
+        let same = true;
+        for (let ci = 0; ci < width; ci++) if (gsStr(want[ci]) !== gsStr(have[ci])) { same = false; break; }
+        if (same) continue;
+        const vals = Array.from({ length: width }, (_, ci) => {
+            const v = want[ci] === undefined ? '' : want[ci];
+            return ci === boolCol && ri > 0 ? v === 'TRUE' : v;
+        });
+        data.push({ range: `${gsQ(tab)}!A${ri + 1}:${gsCol(width - 1)}${ri + 1}`, values: [vals] });
+    }
+    if (fetched.length > desired.length) clears.push(`${gsQ(tab)}!A${desired.length + 1}:${gsCol(Math.max(width, 26) - 1)}${fetched.length + 50}`);
+}
+
+async function gsEnsureTabs(id) {
+    const ss = await gsFetch('/' + encodeURIComponent(id) + '?fields=spreadsheetId,spreadsheetUrl,sheets.properties');
+    const have = new Map((ss.sheets || []).map(s => [s.properties.title, s.properties.sheetId]));
+    const missing = Object.values(GS_TAB).filter(t0 => !have.has(t0));
+    if (missing.length) {
+        const r = await gsFetch('/' + encodeURIComponent(id) + ':batchUpdate', { method: 'POST', body: { requests: missing.map(title => ({ addSheet: { properties: { title, gridProperties: { frozenRowCount: 1 } } } })) } });
+        (r.replies || []).forEach(rep => { if (rep.addSheet) have.set(rep.addSheet.properties.title, rep.addSheet.properties.sheetId); });
+    }
+    GS.sheetIds = Object.fromEntries(Object.entries(GS_TAB).map(([k, title]) => [k, have.get(title)]));
+    GS.sheetFor = id;
+    return ss;
+}
+
+// Biçim: başlık, gizli ID, durum renkleri, açılır listeler, takvim renkleri (sadece değişince)
+async function gsFormat(id, desired) {
+    const req = [];
+    const sid = GS.sheetIds;
+    const fullRow = (sheetId, r, cols, bg, fg, bold) => ({ repeatCell: { range: { sheetId, startRowIndex: r, endRowIndex: r + 1, startColumnIndex: 0, endColumnIndex: cols },
+        cell: { userEnteredFormat: { backgroundColor: gsHexColor(bg), textFormat: { bold: !!bold, foregroundColor: gsHexColor(fg || '#000000') } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } });
+    const header = (sheetId, cols, frozenCols) => [
+        { updateSheetProperties: { properties: { sheetId, gridProperties: { frozenRowCount: 1, frozenColumnCount: frozenCols || 0 } }, fields: 'gridProperties(frozenRowCount,frozenColumnCount)' } },
+        fullRow(sheetId, 0, cols, '#C27BA0', '#FFFFFF', true)];
+    // VFX
+    const v = desired.vfx, vCols = v.rows[0].length;
+    const vSig = JSON.stringify([v.statuses, vCols, v.rows.length, currentLang]);
+    if (sid.vfx !== undefined && GS.fmtSig.vfx !== vSig) {
+        req.push(...header(sid.vfx, vCols));
+        req.push({ updateDimensionProperties: { range: { sheetId: sid.vfx, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { hiddenByUser: true }, fields: 'hiddenByUser' } });
+        req.push({ repeatCell: { range: { sheetId: sid.vfx, startRowIndex: v.rows.length, endRowIndex: v.rows.length + 200, startColumnIndex: 0, endColumnIndex: vCols + 5 },
+            cell: { userEnteredFormat: { backgroundColor: gsHexColor('#FFFFFF'), textFormat: { bold: false, foregroundColor: gsHexColor('#000000') } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } });
+        v.statuses.forEach((st, i) => req.push(fullRow(sid.vfx, i + 1, vCols, '#' + VFX_COLORS[st].bg, '#' + VFX_COLORS[st].fg)));
+        req.push({ setDataValidation: { range: { sheetId: sid.vfx, startRowIndex: 1, endRowIndex: Math.max(v.rows.length + 200, 300), startColumnIndex: vCols - 1, endColumnIndex: vCols },
+            rule: { condition: { type: 'ONE_OF_LIST', values: VFX_STATUS.map(x => ({ userEnteredValue: t('vfx_' + x) })) }, showCustomUi: true, strict: false } } });
+        GS.fmtSig.vfx = vSig;
+    }
+    // To-Do
+    const td = desired.todo, tSig = JSON.stringify([td.rows.length, currentLang]);
+    if (sid.todo !== undefined && GS.fmtSig.todo !== tSig) {
+        req.push(...header(sid.todo, 5));
+        req.push({ updateDimensionProperties: { range: { sheetId: sid.todo, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { hiddenByUser: true }, fields: 'hiddenByUser' } });
+        req.push({ setDataValidation: { range: { sheetId: sid.todo, startRowIndex: 1, endRowIndex: Math.max(td.rows.length + 200, 300), startColumnIndex: 3, endColumnIndex: 4 }, rule: { condition: { type: 'BOOLEAN' } } } });
+        GS.fmtSig.todo = tSig;
+    }
+    // Takvim
+    const c = desired.cal;
+    if (c && sid.cal !== undefined) {
+        const cSig = JSON.stringify([c.colors, c.rows.length, c.rows[0].length]);
+        if (GS.fmtSig.cal !== cSig) {
+            const cols = c.rows[0].length;
+            req.push(...header(sid.cal, cols, 2));
+            req.push({ repeatCell: { range: { sheetId: sid.cal, startRowIndex: 1, endRowIndex: c.rows.length + 20, startColumnIndex: 2, endColumnIndex: cols + 10 },
+                cell: { userEnteredFormat: { backgroundColor: gsHexColor('#FFFFFF'), textFormat: { bold: false, foregroundColor: gsHexColor('#000000') }, horizontalAlignment: 'CENTER' } },
+                fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)' } });
+            c.rowsMeta.forEach((m, i) => req.push({ repeatCell: { range: { sheetId: sid.cal, startRowIndex: i + 1, endRowIndex: i + 2, startColumnIndex: 0, endColumnIndex: 2 },
+                cell: { userEnteredFormat: { backgroundColor: gsHexColor(m.ep ? deptColors[m.proc] : deptColors.set), textFormat: { bold: true } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } }));
+            c.colors.forEach(([r, col, bg, fg]) => req.push({ repeatCell: { range: { sheetId: sid.cal, startRowIndex: r, endRowIndex: r + 1, startColumnIndex: col, endColumnIndex: col + 1 },
+                cell: { userEnteredFormat: { backgroundColor: gsHexColor(bg), textFormat: { bold: true, foregroundColor: gsHexColor(fg) } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } }));
+            GS.fmtSig.cal = cSig;
+        }
+    }
+    for (let i = 0; i < req.length; i += 400) {
+        await gsFetch('/' + encodeURIComponent(id) + ':batchUpdate', { method: 'POST', body: { requests: req.slice(i, i + 400) } });
+    }
+}
+
+// --- Lider seçimi: aynı anda tek tarayıcı eşitlesin ---
+function gsLeaderInfo() {
+    const l = App.project && App.project.gsheet && App.project.gsheet.leader;
+    if (!l || !l.email || l.email === myEmail()) return null;
+    return Date.now() - new Date(l.at || 0).getTime() < GS_LEADER_STALE ? l : null;
+}
+async function gsHeartbeat(force) {
+    if (!force && Date.now() - GS.lastBeat < GS_BEAT_MS) return;
+    GS.lastBeat = Date.now();
+    const leader = { email: myEmail(), name: (App.user && (App.user.displayName || App.user.email)) || '', at: new Date().toISOString() };
+    App.project.gsheet.leader = leader;
+    try { await api().updateProject(App.project.id, { 'gsheet.leader': leader }); } catch (e) { console.warn('Sheets lider bilgisi yazılamadı', e); }
+}
+
+// --- Ana döngü ---
+async function gsTick() {
+    const g = App.project && App.project.gsheet;
+    if (!App.project || !App.user || window.isOfflineMode || App.publicShare || !g || !g.id) { gsSetStatus(g && g.id ? 'viewer' : 'off'); return; }
+    if (App.readOnly) { gsSetStatus('viewer'); return; }
+    if (GS.busy) return;
+    if (!gsCachedToken()) { gsSetStatus('auth'); return; }
+    const other = gsLeaderInfo();
+    if (other) { GS.followerName = other.name || other.email; gsSetStatus('follower'); return; }
+    GS.busy = true;
+    const pid = App.project.id;
+    gsSetStatus('sync');
+    try {
+        await gsHeartbeat();
+        if (GS.sheetFor !== g.id || !GS.sheetIds) await gsEnsureTabs(g.id);
+        if (GS.pid !== pid) { GS.lastSeen = null; GS.fmtSig = {}; GS.pid = pid; }
+        const ranges = Object.values(GS_TAB).map(tb => `ranges=${encodeURIComponent(gsQ(tb) + '!A1:ZZZ')}`).join('&');
+        const got = await gsFetch('/' + encodeURIComponent(g.id) + '/values:batchGet?' + ranges + '&valueRenderOption=UNFORMATTED_VALUE&majorDimension=ROWS');
+        if (!App.project || App.project.id !== pid) return;
+        const vr = got.valueRanges || [];
+        const fetched = { vfx: (vr[0] && vr[0].values) || [], cal: (vr[1] && vr[1].values) || [], todo: (vr[2] && vr[2].values) || [] };
+        // 1) Sheet → site
+        GS.warn = '';
+        if (GS.lastSeen) {
+            let ch = false;
+            if (gsPullVfx(GS.lastSeen.vfx, fetched.vfx)) { ch = true; if (App.module === 'vfx') refreshVfxSafely(); }
+            if (gsPullTodo(GS.lastSeen.todo, fetched.todo)) { ch = true; if (App.module === 'todos') refreshTodosSafely(); renderModuleNav(); }
+            gsPullCal(GS.lastSeen.cal, fetched.cal);   // takvim kendi kaydını yapar (commitChange)
+            if (ch) triggerAutoSave();
+        }
+        // 2) Site → Sheet
+        const desired = gsBuildAll();
+        const data = [], clears = [];
+        gsDiffWrites(GS_TAB.vfx, desired.vfx.rows, fetched.vfx, data, clears);
+        gsDiffWrites(GS_TAB.todo, desired.todo.rows, fetched.todo, data, clears, 3);
+        if (desired.cal) gsDiffWrites(GS_TAB.cal, desired.cal.rows, fetched.cal, data, clears);
+        if (clears.length) await gsFetch('/' + encodeURIComponent(g.id) + '/values:batchClear', { method: 'POST', body: { ranges: clears } });
+        if (data.length) await gsFetch('/' + encodeURIComponent(g.id) + '/values:batchUpdate', { method: 'POST', body: { valueInputOption: 'RAW', data } });
+        await gsFormat(g.id, desired);
+        GS.lastSeen = desired;
+        GS.lastSync = new Date();
+        GS.err = '';
+        gsSetStatus('ok');
+    } catch (e) {
+        if (e.auth) gsSetStatus('auth');
+        else { GS.err = e.message || String(e); gsSetStatus('error'); console.warn('Sheets eşitleme hatası:', e); }
+    } finally {
+        GS.busy = false;
+    }
+}
+function gsKick(delay = 1500) {
+    clearTimeout(GS.kickT);
+    GS.kickT = setTimeout(gsTick, delay);
+}
+window.gsKick = gsKick;
+setInterval(() => { if (App.view === 'workspace') gsTick(); }, GS_TICK_MS);
+
+// --- Bağla / kaldır ---
+async function gsLink(existingUrl) {
+    if (!App.project || App.readOnly) return;
+    await gsAuth(true);
+    let id;
+    if (existingUrl) {
+        const m = String(existingUrl).match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        id = m ? m[1] : String(existingUrl).trim();
+    } else {
+        const ss = await gsFetch('', { method: 'POST', body: {
+            properties: { title: `${$('projectName').value || App.project.projectName || 'Proje'} — PostPro Lab`, locale: currentLang === 'tr' ? 'tr_TR' : 'en_US' },
+            sheets: Object.values(GS_TAB).map(title => ({ properties: { title, gridProperties: { frozenRowCount: 1 } } }))
+        } });
+        id = ss.spreadsheetId;
+    }
+    const ss = await gsEnsureTabs(id);
+    const g = { id, url: ss.spreadsheetUrl || `https://docs.google.com/spreadsheets/d/${id}/edit`, clientId: gsClientId(),
+        linkedBy: { email: myEmail(), name: (App.user && (App.user.displayName || App.user.email)) || '' }, linkedAt: new Date().toISOString(),
+        leader: { email: myEmail(), name: (App.user && (App.user.displayName || App.user.email)) || '', at: new Date().toISOString() } };
+    await api().updateProject(App.project.id, { gsheet: g });
+    App.project.gsheet = g;
+    GS.lastSeen = null; GS.fmtSig = {}; GS.pid = App.project.id; GS.lastBeat = Date.now();
+    await gsTick();
+    renderGsModal();
+}
+async function gsUnlink() {
+    if (!confirm(t('gsConfirmUnlink'))) return;
+    await api().updateProject(App.project.id, { gsheet: DEL_FIELD });
+    App.project.gsheet = null;
+    GS.lastSeen = null; GS.sheetIds = null; GS.sheetFor = null;
+    gsSetStatus('off');
+    renderGsModal();
+}
+
+// --- Arayüz: kenar çubuğu butonu + pencere ---
+function gsSetStatus(st) {
+    GS.status = st;
+    const btn = $('gsheetBtn');
+    if (btn) {
+        btn.dataset.state = st;
+        btn.title = gsStatusText();
+    }
+    if (gsModal && !gsModal.hidden) renderGsModal();
+}
+function gsStatusText() {
+    const st = GS.status;
+    if (st === 'ok') return tf('gs_ok', { t: GS.lastSync ? formatTime(GS.lastSync) : '' });
+    if (st === 'follower') return tf('gs_follower', { name: GS.followerName || '' });
+    if (st === 'error') return tf('gs_error', { m: GS.err });
+    return t('gs_' + st);
+}
+let gsModal = null;
+function openGsModal() {
+    if (!gsModal) {
+        gsModal = document.createElement('div');
+        gsModal.className = 'rep-modal gs-modal';
+        gsModal.innerHTML = `<div class="rep-box gs-box"><div class="rep-head"><h2>🟩 ${escapeHtml(t('gsTitle'))}</h2><button class="icon-btn" data-gs="close">✕</button></div><div class="gs-body"></div></div>`;
+        document.body.appendChild(gsModal);
+        gsModal.addEventListener('click', async (e) => {
+            if (e.target === gsModal) { gsModal.hidden = true; return; }
+            const b = e.target.closest('[data-gs]');
+            if (!b) return;
+            const a = b.dataset.gs;
+            try {
+                if (a === 'close') gsModal.hidden = true;
+                else if (a === 'create') { b.disabled = true; await gsLink(null); }
+                else if (a === 'existing') { const u = prompt(t('gsUrlPrompt')); if (u) { b.disabled = true; await gsLink(u); } }
+                else if (a === 'sync') { if (!gsCachedToken()) await gsAuth(true); GS.lastBeat = 0; await gsTick(); }
+                else if (a === 'auth') { await gsAuth(true); await gsTick(); }
+                else if (a === 'unlink') await gsUnlink();
+                else if (a === 'saveClient') {
+                    const v = gsModal.querySelector('.gs-client').value.trim();
+                    if (!v) return;
+                    GS.clientId = v;
+                    if (tourPrefs) tourPrefs.gClientId = v;
+                    if (window.FB && FB.setUserPrefs) FB.setUserPrefs({ gClientId: v }).catch(() => {});
+                    renderGsModal();
+                }
+            } catch (err) {
+                alert(err.message || String(err));
+                renderGsModal();
+            }
+        });
+    }
+    gsModal.hidden = false;
+    renderGsModal();
+}
+function renderGsModal() {
+    if (!gsModal || gsModal.hidden || !App.project) return;
+    const g = App.project.gsheet;
+    const body = gsModal.querySelector('.gs-body');
+    const ro = App.readOnly;
+    if (!g || !g.id) {
+        body.innerHTML = `<p class="gs-intro">${escapeHtml(t('gsIntro'))}</p>
+            ${!gsClientId() ? `<div class="gs-setup"><b>${escapeHtml(t('gsClientTitle'))}</b><p>${escapeHtml(t('gsClientHint'))}</p>
+                <div class="gs-row"><input class="gs-client" placeholder="xxxxxxxx.apps.googleusercontent.com"><button class="primary-btn small" data-gs="saveClient">${escapeHtml(t('gsClientSave'))}</button></div></div>`
+            : ro ? '' : `<div class="gs-actions"><button class="primary-btn" data-gs="create">🟩 ${escapeHtml(t('gsCreate'))}</button>
+                <button class="ghost-btn" data-gs="existing">🔗 ${escapeHtml(t('gsExisting'))}</button></div>`}
+            <p class="gs-rules">${escapeHtml(t('gsRules'))}</p>`;
+        return;
+    }
+    body.innerHTML = `
+        <div class="gs-status st-${GS.status}"><span class="gs-dot"></span><span>${escapeHtml(gsStatusText())}</span></div>
+        ${GS.warn ? `<p class="gs-warn">⚠ ${escapeHtml(GS.warn)}</p>` : ''}
+        <p class="gs-meta">${escapeHtml(tf('gsLinkedBy', { name: (g.linkedBy && (g.linkedBy.name || g.linkedBy.email)) || '', d: formatDate(g.linkedAt) }))}</p>
+        <div class="gs-actions">
+            <a class="primary-btn" href="${escapeHtml(g.url)}" target="_blank" rel="noopener">${escapeHtml(t('gsOpen'))}</a>
+            ${ro ? '' : GS.status === 'auth' ? `<button class="ghost-btn" data-gs="auth">🔑 ${escapeHtml(t('gsReconnect'))}</button>` : `<button class="ghost-btn" data-gs="sync">🔄 ${escapeHtml(t('gsSyncNow'))}</button>`}
+            ${ro ? '' : `<button class="ghost-btn danger" data-gs="unlink">${escapeHtml(t('gsUnlink'))}</button>`}
+        </div>
+        <p class="gs-rules">${escapeHtml(t('gsRules'))}</p>`;
+}
+$('gsheetBtn').onclick = async () => {
+    // Bağlıysa ve izin yoksa: tıklama aynı zamanda Google iznini yeniler
+    const g = App.project && App.project.gsheet;
+    if (g && g.id && !App.readOnly && !gsCachedToken() && gsClientId()) { try { await gsAuth(true); gsTick(); } catch (e) {} }
+    openGsModal();
+};
+
+// ---------------------------------------------------------------------
 // 12) BAŞLANGIÇ — bu dosyadaki çeviriler eklendikten sonra dili yeniden uygula
 // ---------------------------------------------------------------------
 applyLanguage();
@@ -9020,6 +9635,10 @@ const firebaseConfig = {
     messagingSenderId: "794443378875",
     appId: "1:794443378875:web:c4656bf2323613a04bb99e"
 };
+
+// Google Sheets eşitlemesi için OAuth İstemci Kimliği (Google Cloud → Kimlik bilgileri).
+// Boş bırakılırsa site ilk bağlantıda sorar ve hesabına kaydeder.
+window.GOOGLE_OAUTH_CLIENT_ID = window.GOOGLE_OAUTH_CLIENT_ID || "";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
