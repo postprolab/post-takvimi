@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.16-1">
+<meta name="app-version" content="2026.10.16-2">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -9032,7 +9032,14 @@ Object.assign(I18N.tr, {
     gsRules: "Sheet'te dikkat: 1. satır (başlıklar) ve gizli ID sütunu silinmesin. VFX ve To-Do'da en alta satır ekleyince sitede yeni kayıt açılır, satırı silince kayıt silinir. Takvim sekmesinde hücreye departman adı ya da cut türü (ör. MASTER LOCK) yaz, silince hücre boşalır.",
     gsClientTitle: "Bir kerelik kurulum", gsClientHint: "Google Cloud'da oluşturduğun OAuth İstemci Kimliğini (Client ID) yapıştır. Kurulum adımları için sohbetteki talimatlara bak.",
     gsClientSave: "Kaydet", gsLinkedBy: "{name} bağladı · {d}", gsLastSync: "Son eşitleme: {t}", gsWarnStruct: "Takvim sekmesinin satır/sütun düzeni değişmişti; sitedeki hâli yeniden yazıldı.",
-    gsTask: "Görev", gsDate: "Tarih", gsDone: "Tamamlandı", gsBy: "Ekleyen", help_gsheets: "Projeyi bir Google Sheet ile iki yönlü eşitler (VFX Breakdown, Takvim, To-Do)."
+    gsTask: "Görev", gsDate: "Tarih", gsDone: "Tamamlandı", gsBy: "Ekleyen",
+    gsClientNow: "Client ID: {id}", gsClientChange: "Değiştir",
+    gsErr_popup_failed_to_open: "Tarayıcı Google penceresini engelledi. Adres çubuğundaki engellenen pencere simgesinden izin verip tekrar dene.",
+    gsErr_popup_closed: "Google penceresi kapatıldı. Tekrar dene.",
+    gsErr_access_denied: "Google izni verilmedi. İzin ekranında Sheets erişimini onaylaman gerekiyor.",
+    gsErr_invalid_client: "Client ID geçersiz görünüyor. Google Cloud → Clients'tan tamamını (.apps.googleusercontent.com dahil) kopyalayıp “Değiştir” ile tekrar yapıştır.",
+    gsErr_origin: "Google bu site adresini henüz tanımıyor (origin). Google Cloud → Clients → Authorized JavaScript origins'e site adresini eklediğinden emin ol; ayarın devreye girmesi birkaç dakika sürebilir.",
+    gsErr_api: "Google Sheets API bu projede açık değil. Google Cloud'da “Google Sheets API” → Enable yap, birkaç dakika sonra tekrar dene.", help_gsheets: "Projeyi bir Google Sheet ile iki yönlü eşitler (VFX Breakdown, Takvim, To-Do)."
 });
 Object.assign(I18N.en, {
     gsBtn: "Google Sheets", gsTitle: "Google Sheets sync",
@@ -9046,7 +9053,14 @@ Object.assign(I18N.en, {
     gsRules: "In the Sheet: don't delete row 1 (headers) or the hidden ID column. In VFX and To-Do, a new row at the bottom becomes a new item; deleting a row deletes it. In the Calendar tab type a department name or a cut type (e.g. MASTER LOCK) into a cell; clearing it empties the cell.",
     gsClientTitle: "One-time setup", gsClientHint: "Paste the OAuth Client ID you created in Google Cloud. See the setup steps in the chat.",
     gsClientSave: "Save", gsLinkedBy: "Linked by {name} · {d}", gsLastSync: "Last sync: {t}", gsWarnStruct: "The Calendar tab layout had changed; the site's version was written back.",
-    gsTask: "Task", gsDate: "Date", gsDone: "Done", gsBy: "Added by", help_gsheets: "Two-way sync of this project with a Google Sheet (VFX Breakdown, Calendar, To-Do)."
+    gsTask: "Task", gsDate: "Date", gsDone: "Done", gsBy: "Added by",
+    gsClientNow: "Client ID: {id}", gsClientChange: "Change",
+    gsErr_popup_failed_to_open: "The browser blocked the Google window. Allow pop-ups from the address bar icon and try again.",
+    gsErr_popup_closed: "The Google window was closed. Try again.",
+    gsErr_access_denied: "Google permission was not granted. Approve Sheets access on the consent screen.",
+    gsErr_invalid_client: "The Client ID looks invalid. Copy the whole value (ending with .apps.googleusercontent.com) from Google Cloud → Clients and paste it again via “Change”.",
+    gsErr_origin: "Google doesn't recognise this site address yet. Add it under Google Cloud → Clients → Authorized JavaScript origins; it can take a few minutes to apply.",
+    gsErr_api: "Google Sheets API is not enabled for this project. Enable “Google Sheets API” in Google Cloud and try again in a few minutes.", help_gsheets: "Two-way sync of this project with a Google Sheet (VFX Breakdown, Calendar, To-Do)."
 });
 
 const GS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
@@ -9059,7 +9073,7 @@ const GS = { token: null, exp: 0, busy: false, lastSeen: null, pid: null, calVer
 // --- Client ID: projede kayıtlı > kullanıcı tercihi > dosyadaki sabit ---
 function gsClientId() {
     const g = App.project && App.project.gsheet;
-    return (g && g.clientId) || GS.clientId || (tourPrefs && tourPrefs.gClientId) || window.GOOGLE_OAUTH_CLIENT_ID || '';
+    return GS.clientId || (g && g.clientId) || (tourPrefs && tourPrefs.gClientId) || window.GOOGLE_OAUTH_CLIENT_ID || '';
 }
 
 // --- Google izni (Google Identity Services) ---
@@ -9526,8 +9540,18 @@ function gsStatusText() {
     const st = GS.status;
     if (st === 'ok') return tf('gs_ok', { t: GS.lastSync ? formatTime(GS.lastSync) : '' });
     if (st === 'follower') return tf('gs_follower', { name: GS.followerName || '' });
-    if (st === 'error') return tf('gs_error', { m: GS.err });
+    if (st === 'error') return tf('gs_error', { m: gsExplain(GS.err) });
     return t('gs_' + st);
+}
+function gsExplain(err) {
+    const m = String((err && err.message) || err || '');
+    if (/popup_failed_to_open/i.test(m)) return t('gsErr_popup_failed_to_open');
+    if (/popup_closed/i.test(m)) return t('gsErr_popup_closed');
+    if (/access_denied/i.test(m)) return t('gsErr_access_denied');
+    if (/invalid_client|unauthorized_client|client.?id/i.test(m)) return t('gsErr_invalid_client');
+    if (/origin|redirect_uri/i.test(m)) return t('gsErr_origin');
+    if (/has not been used|is disabled|SERVICE_DISABLED|API.*not.*enabled/i.test(m)) return t('gsErr_api');
+    return m;
 }
 let gsModal = null;
 function openGsModal() {
@@ -9548,16 +9572,20 @@ function openGsModal() {
                 else if (a === 'sync') { if (!gsCachedToken()) await gsAuth(true); GS.lastBeat = 0; await gsTick(); }
                 else if (a === 'auth') { await gsAuth(true); await gsTick(); }
                 else if (a === 'unlink') await gsUnlink();
+                else if (a === 'changeClient') { GS.editClient = true; renderGsModal(); }
                 else if (a === 'saveClient') {
+                    GS.editClient = false;
                     const v = gsModal.querySelector('.gs-client').value.trim();
                     if (!v) return;
                     GS.clientId = v;
+                    GS.token = null; try { sessionStorage.removeItem('gsTok'); } catch (e) {}
+                    if (App.project && App.project.gsheet && App.project.gsheet.id) { App.project.gsheet.clientId = v; api().updateProject(App.project.id, { 'gsheet.clientId': v }).catch(() => {}); }
                     if (tourPrefs) tourPrefs.gClientId = v;
                     if (window.FB && FB.setUserPrefs) FB.setUserPrefs({ gClientId: v }).catch(() => {});
                     renderGsModal();
                 }
             } catch (err) {
-                alert(err.message || String(err));
+                alert(gsExplain(err));
                 renderGsModal();
             }
         });
@@ -9570,11 +9598,15 @@ function renderGsModal() {
     const g = App.project.gsheet;
     const body = gsModal.querySelector('.gs-body');
     const ro = App.readOnly;
+    const cid = gsClientId();
+    const clientLine = cid && !GS.editClient ? `<p class="gs-meta">${escapeHtml(tf('gsClientNow', { id: cid.length > 34 ? cid.slice(0, 22) + '…' + cid.slice(-12) : cid }))}
+        ${ro ? '' : ` · <button class="link-btn" data-gs="changeClient">${escapeHtml(t('gsClientChange'))}</button>`}</p>` : '';
+    const clientEdit = `<div class="gs-setup"><b>${escapeHtml(t('gsClientTitle'))}</b><p>${escapeHtml(t('gsClientHint'))}</p>
+        <div class="gs-row"><input class="gs-client" placeholder="xxxxxxxx.apps.googleusercontent.com" value="${escapeHtml(GS.editClient ? cid : '')}"><button class="primary-btn small" data-gs="saveClient">${escapeHtml(t('gsClientSave'))}</button></div></div>`;
     if (!g || !g.id) {
         body.innerHTML = `<p class="gs-intro">${escapeHtml(t('gsIntro'))}</p>
-            ${!gsClientId() ? `<div class="gs-setup"><b>${escapeHtml(t('gsClientTitle'))}</b><p>${escapeHtml(t('gsClientHint'))}</p>
-                <div class="gs-row"><input class="gs-client" placeholder="xxxxxxxx.apps.googleusercontent.com"><button class="primary-btn small" data-gs="saveClient">${escapeHtml(t('gsClientSave'))}</button></div></div>`
-            : ro ? '' : `<div class="gs-actions"><button class="primary-btn" data-gs="create">🟩 ${escapeHtml(t('gsCreate'))}</button>
+            ${(!cid || GS.editClient) ? clientEdit : ''}${clientLine}
+            ${!cid || GS.editClient ? '' : ro ? '' : `<div class="gs-actions"><button class="primary-btn" data-gs="create">🟩 ${escapeHtml(t('gsCreate'))}</button>
                 <button class="ghost-btn" data-gs="existing">🔗 ${escapeHtml(t('gsExisting'))}</button></div>`}
             <p class="gs-rules">${escapeHtml(t('gsRules'))}</p>`;
         return;
@@ -9582,6 +9614,7 @@ function renderGsModal() {
     body.innerHTML = `
         <div class="gs-status st-${GS.status}"><span class="gs-dot"></span><span>${escapeHtml(gsStatusText())}</span></div>
         ${GS.warn ? `<p class="gs-warn">⚠ ${escapeHtml(GS.warn)}</p>` : ''}
+        ${GS.editClient ? clientEdit : clientLine}
         <p class="gs-meta">${escapeHtml(tf('gsLinkedBy', { name: (g.linkedBy && (g.linkedBy.name || g.linkedBy.email)) || '', d: formatDate(g.linkedAt) }))}</p>
         <div class="gs-actions">
             <a class="primary-btn" href="${escapeHtml(g.url)}" target="_blank" rel="noopener">${escapeHtml(t('gsOpen'))}</a>
