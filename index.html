@@ -3,7 +3,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.15-5">
+<meta name="app-version" content="2026.10.15-6">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -1267,6 +1267,39 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 .sb-top-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .sb-top-row .sb-back { flex: 1; }
 @media (max-width: 600px) { .tour-btn:not(.mini) span { display: none; } .tour-btn { margin-left: 8px; } }
+
+/* Rapor seçimi menüsü */
+.context-menu .rep-choice { gap: 10px; align-items: flex-start; padding: 10px 15px; max-width: 360px; }
+.context-menu .rep-choice .rc-ic { font-size: 18px; line-height: 1.2; }
+.context-menu .rep-choice b { display: block; font-size: 13px; }
+.context-menu .rep-choice small { display: block; color: #8a93a3; font-size: 11px; margin-top: 2px; white-space: normal; }
+
+/* Çalışma raporu (önizleme) */
+.rep-box.wide { width: min(1120px, 100%); }
+.rep-paper.wide { max-width: 1040px; }
+.wr-sec { margin: 0 0 18px; }
+.wr-sec h3 { font-size: 14px; margin: 0 0 8px; padding-bottom: 4px; border-bottom: 2px solid #e00; color: #111; }
+.wr-sec h3 small { color: #888; font-weight: 400; }
+.wr-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.wr-kpi { border: 1px solid #ddd; border-radius: 8px; padding: 8px 11px; background: #fafafa; }
+.wr-kpi small { display: block; color: #777; font-size: 10.5px; text-transform: uppercase; letter-spacing: .4px; }
+.wr-kpi b { display: block; font-size: 16px; color: #111; margin-top: 2px; }
+.wr-kpi span { display: block; color: #666; font-size: 11px; margin-top: 2px; }
+.wr-scroll { overflow-x: auto; }
+.wr-table { width: 100%; border-collapse: collapse; font-size: 12.5px; color: #222; }
+.wr-table th, .wr-table td { border: 1px solid #ddd; padding: 5px 7px; text-align: center; white-space: nowrap; }
+.wr-table th { background: #f2f2f2; font-size: 11px; letter-spacing: .3px; }
+.wr-table .l { text-align: left; }
+.wr-table tfoot td { background: #f7f7f7; font-weight: 700; }
+.wr-table .z { color: #bbb; }
+.wr-table td.note { min-width: 160px; white-space: normal; }
+.wr-table td.note input { width: 100%; box-sizing: border-box; border: 1px dashed #e5c76b; background: #fffbea; border-radius: 4px; padding: 3px 6px; font: inherit; color: #222; }
+.wr-table td.note input:placeholder-shown:not(:focus) { background: transparent; border-color: #e3e3e3; }
+.wr-dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; border: 1px solid rgba(0,0,0,.25); }
+.wr-ms { margin: 0; padding-left: 18px; color: #222; font-size: 13px; }
+.wr-ms li { margin: 3px 0; }
+/* Takvim hücresi tarih balonu */
+.help-tip .ht-icon { flex-shrink: 0; }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -4960,7 +4993,7 @@ function showVersionMenu(anchor) {
                     ${canDelete ? `<button class="icon-btn" data-vact="delete" title="${escapeHtml(t('delete'))}">🗑</button>` : ''}
                 </span>` : ''}
             </div>`).join('') +
-        `<div class="menu-sep"></div><div class="item" data-vact="report">📊&nbsp; ${escapeHtml(t('repMenu'))}</div>` +
+        `<div class="menu-sep"></div><div class="item" data-vact="workreport">📋&nbsp; ${escapeHtml(t('repChooseWork'))}</div><div class="item" data-vact="report">📊&nbsp; ${escapeHtml(t('repChooseCompare'))}</div>` +
         (canEdit ? `<div class="menu-sep"></div>
          <div class="item" data-vact="copy">＋&nbsp; ${escapeHtml(t('newVersionCopy'))}</div>
          <div class="item" data-vact="blank">＋&nbsp; ${escapeHtml(t('newVersionBlank'))}</div>` : '');
@@ -4978,6 +5011,7 @@ function showVersionMenu(anchor) {
         else if (act === 'copy') newVersion(true);
         else if (act === 'blank') newVersion(false);
         else if (act === 'report') openReportModal();
+        else if (act === 'workreport') openWorkReport();
     });
     menu.querySelectorAll('.ver-item').forEach(item => item.onclick = () => {
         closeMenu();
@@ -5083,7 +5117,7 @@ Object.assign(I18N.en, {
     repNoteEp: "Add a note for this episode…", repNotes: "Note", repPreviewHint: "Preview — add your notes, then export PDF or copy the text.",
     autoSkipSun: "Leave Sundays empty", autoSkipHol: "Leave public holidays empty (Turkey)",
     autoSkipHint: "Nothing is scheduled on ticked days; durations count working days and later stages shift accordingly.",
-    help_report: "Compares this calendar with an earlier version and explains, episode by episode, why deliveries moved — ready to send to producers."
+    help_report: "Reports: a work report of the open calendar (department days per episode, durations) or a comparison with an earlier version."
 });
 Object.assign(I18N.tr, {
     repBtn: "RAPOR", repTitle: "Takvim değişiklik raporu", repMenu: "Takvim değişikliğini raporla",
@@ -5106,7 +5140,7 @@ Object.assign(I18N.tr, {
     repNoteEp: "Bu bölüm için not ekle…", repNotes: "Not", repPreviewHint: "Önizleme — notlarını ekle, sonra PDF al ya da metni kopyala.",
     autoSkipSun: "Pazar günlerini boş bırak", autoSkipHol: "Resmi tatilleri boş bırak (Türkiye)",
     autoSkipHint: "İşaretli günlere iş yazılmaz; süreler iş günü olarak sayılır ve sonraki aşamalar ona göre kayar.",
-    help_report: "Bu takvimi önceki bir versiyonla kıyaslar ve teslimlerin neden kaydığını bölüm bölüm açıklar — yapımcıya gönderilmeye hazır."
+    help_report: "Raporlar: açık takvimin çalışma raporu (bölüm başına departman günleri, süreler) ya da önceki bir versiyonla karşılaştırma."
 });
 
 const REP_PROCS = ['set', ...PROC_ORDER];
@@ -5392,7 +5426,244 @@ async function runReport() {
     }
 }
 window.openReportModal = openReportModal;
-$('reportBtn').onclick = openReportModal;
+$('reportBtn').onclick = (e) => showReportChooser(e.currentTarget);
+
+// ---------------------------------------------------------------------
+// 7e) ÇALIŞMA RAPORU (yapım raporu) — açık takvimin genel dökümü
+// Bölüm başına departman günleri, toplamlar, ortalamalar, proje süresi (hafta), önemli tarihler.
+// Gün = o satırda dolu hücre sayısı (iş günü).
+// ---------------------------------------------------------------------
+Object.assign(I18N.tr, {
+    repChooseWork: "Çalışma raporu", repChooseWorkSub: "Açık takvimin genel dökümü: bölüm başına departman günleri, süreler",
+    repChooseCompare: "Önceki versiyon ile karşılaştır", repChooseCompareSub: "Teslimlerin neden kaydığını bölüm bölüm açıklar",
+    wrTitle: "Çalışma raporu", wrEmpty: "Bu takvimde henüz dolu hücre yok.",
+    wrOverview: "Genel bakış", wrEpisodes: "Bölüm sayısı", wrStart: "Başlangıç", wrEnd: "Bitiş (son teslim)",
+    wrDuration: "Toplam süre", wrWeeksDays: "{w} hafta {d} gün", wrWeeksOnly: "{w} hafta", wrCalDays: "{n} takvim günü",
+    wrWorkDays: "İş olan gün", wrShoot: "Çekim (set)", wrPost: "Post prodüksiyon", wrPostSub: "ilk post işinden son teslime",
+    wrDeptTable: "Departman özeti", wrEpTable: "Bölüm bölüm döküm", wrMilestones: "Önemli tarihler",
+    wrDept: "Departman", wrTotal: "Toplam gün", wrAvg: "Ort. / bölüm", wrMin: "En az", wrMax: "En çok", wrPeriod: "Dönem",
+    wrEp: "Bölüm", wrLock: "Master Lock", wrDelivery: "Teslim", wrSpan: "Süre", wrNote: "Not", wrSum: "Toplam", wrAverage: "Ortalama",
+    wrCount: "{n} adet", wrFirstLast: "ilk {a} · son {b}", wrDaysUnit: "gün",
+    wrNoteGeneral: "Genel not (rapora eklenir)", wrNoteGeneralPh: "Maliyet, ekip, varsayımlar… (boş bırakılırsa raporda görünmez)", wrNotePh: "not…",
+    wrHint: "Önizleme — notlarını ekle, sonra PDF ya da Excel al.", wrExcel: "Excel"
+});
+Object.assign(I18N.en, {
+    repChooseWork: "Work report", repChooseWorkSub: "Overview of the open calendar: department days per episode, durations",
+    repChooseCompare: "Compare with a previous version", repChooseCompareSub: "Explains episode by episode why deliveries moved",
+    wrTitle: "Work report", wrEmpty: "This calendar has no filled cells yet.",
+    wrOverview: "Overview", wrEpisodes: "Episodes", wrStart: "Start", wrEnd: "End (last delivery)",
+    wrDuration: "Total duration", wrWeeksDays: "{w} weeks {d} days", wrWeeksOnly: "{w} weeks", wrCalDays: "{n} calendar days",
+    wrWorkDays: "Days with work", wrShoot: "Shoot (set)", wrPost: "Post-production", wrPostSub: "first post task to last delivery",
+    wrDeptTable: "Department summary", wrEpTable: "Episode breakdown", wrMilestones: "Key dates",
+    wrDept: "Department", wrTotal: "Total days", wrAvg: "Avg / episode", wrMin: "Min", wrMax: "Max", wrPeriod: "Period",
+    wrEp: "Episode", wrLock: "Master Lock", wrDelivery: "Delivery", wrSpan: "Span", wrNote: "Note", wrSum: "Total", wrAverage: "Average",
+    wrCount: "{n}", wrFirstLast: "first {a} · last {b}", wrDaysUnit: "days",
+    wrNoteGeneral: "General note (added to the report)", wrNoteGeneralPh: "Costs, crew, assumptions… (left out if empty)", wrNotePh: "note…",
+    wrHint: "Preview — add your notes, then export PDF or Excel.", wrExcel: "Excel"
+});
+
+const WR_DEPTS = PROC_ORDER;   // edit, cuts, vfx, color, sound, music, send
+const wrNotes = { general: '', eps: {} };
+const fmtNum = (n) => (Math.round(n * 10) / 10).toLocaleString(localeStr());
+function weeksText(days) {
+    const w = Math.floor(days / 7), d = days % 7;
+    return d ? tf('wrWeeksDays', { w, d }) : tf('wrWeeksOnly', { w });
+}
+
+function buildWorkReport(cal) {
+    const sp = calendarSpans({ startDate: cal.startDate, cells: cal.cells });
+    const allDays = new Set();
+    const base = parseLocalDate(cal.startDate || toLocalISO(new Date()));
+    (cal.cells || []).forEach(c => { const d = new Date(base); d.setDate(d.getDate() + (parseInt(c.col) || 0)); allDays.add(toLocalISO(d)); });
+    const eps = [...sp.eps].filter(e => e > 0).sort((a, b) => a - b);
+    let start = null, end = null, postStart = null;
+    sp.spans.forEach((s, k) => {
+        if (!start || s.start < start) start = s.start;
+        if (!end || s.end > end) end = s.end;
+        if (!k.endsWith('|set') && (!postStart || s.start < postStart)) postStart = s.start;
+    });
+    const shoot = sp.spans.get('0|set');
+    // Bölüm satırları
+    const rows = eps.map(ep => {
+        const days = {}, starts = [];
+        WR_DEPTS.forEach(p => { const s = sp.spans.get(ep + '|' + p); days[p] = s ? s.n : 0; if (s) starts.push(s.start); });
+        const lock = sp.cuts.get(ep + '|master');
+        const delivery = epDelivery(sp, ep);
+        const first = starts.sort()[0] || null;
+        return { ep, days, start: first, lock: lock ? lock.date : null, delivery, span: first && delivery ? isoDiff(delivery, first) + 1 : null };
+    });
+    // Departman özeti
+    const depts = WR_DEPTS.map(p => {
+        const vals = rows.map(r => r.days[p]).filter(n => n > 0);
+        let a = null, b = null;
+        eps.forEach(ep => { const s = sp.spans.get(ep + '|' + p); if (s) { if (!a || s.start < a) a = s.start; if (!b || s.end > b) b = s.end; } });
+        return { p, total: vals.reduce((x, y) => x + y, 0), avg: vals.length ? vals.reduce((x, y) => x + y, 0) / vals.length : 0,
+            min: vals.length ? Math.min(...vals) : 0, max: vals.length ? Math.max(...vals) : 0, nEps: vals.length, from: a, to: b };
+    }).filter(d => d.total > 0);
+    // Önemli tarihler (cut türleri)
+    const ms = {};
+    sp.cuts.forEach(c => {
+        const m = ms[c.type] = ms[c.type] || { label: c.label, n: 0, first: c.date, last: c.date };
+        m.n++; if (c.date < m.first) m.first = c.date; if (c.date > m.last) m.last = c.date;
+    });
+    const totalDays = start && end ? isoDiff(end, start) + 1 : 0;
+    const postDays = postStart && end ? isoDiff(end, postStart) + 1 : 0;
+    return { eps, rows, depts, ms: Object.values(ms), start, end, totalDays, workDays: allDays.size, shoot, postStart, postDays };
+}
+
+function workReportHtml(R, editable) {
+    if (!R.start) return `<div class="dash-empty"><div class="dash-empty-icon">📋</div><b>${escapeHtml(t('wrEmpty'))}</b></div>`;
+    const kpi = (label, value, sub) => `<div class="wr-kpi"><small>${escapeHtml(label)}</small><b>${escapeHtml(value)}</b>${sub ? `<span>${escapeHtml(sub)}</span>` : ''}</div>`;
+    const genNote = editable
+        ? `<label class="rep-note-edit general"><span>📝 ${escapeHtml(t('wrNoteGeneral'))}</span><textarea data-wnote="general" rows="2" placeholder="${escapeHtml(t('wrNoteGeneralPh'))}">${escapeHtml(wrNotes.general)}</textarea></label>`
+        : noteBlock(wrNotes.general);
+    const anyEpNote = Object.values(wrNotes.eps).some(v => v && v.trim());
+    const showNoteCol = editable || anyEpNote;
+    const deptHead = WR_DEPTS.map(p => `<th>${escapeHtml(agDept(p))}</th>`).join('');
+    const epRows = R.rows.map(r => `<tr>
+        <td class="l"><b>${escapeHtml(repEp(r.ep))}</b></td>
+        ${WR_DEPTS.map(p => `<td>${r.days[p] || '<span class="z">–</span>'}</td>`).join('')}
+        <td>${r.start ? escapeHtml(repD(r.start)) : '–'}</td>
+        <td>${r.lock ? escapeHtml(repD(r.lock)) : '–'}</td>
+        <td><b>${r.delivery ? escapeHtml(repD(r.delivery)) : '–'}</b></td>
+        <td>${r.span ? r.span : '–'}</td>
+        ${showNoteCol ? `<td class="l note">${editable ? `<input data-wnote="${r.ep}" value="${escapeHtml(wrNotes.eps[r.ep] || '')}" placeholder="${escapeHtml(t('wrNotePh'))}">` : escapeHtml(wrNotes.eps[r.ep] || '')}</td>` : ''}
+    </tr>`).join('');
+    const sum = (p) => R.rows.reduce((x, r) => x + (r.days[p] || 0), 0);
+    const avg = (p) => { const v = R.rows.map(r => r.days[p]).filter(Boolean); return v.length ? fmtNum(v.reduce((a, b) => a + b, 0) / v.length) : '–'; };
+    return `
+    <section class="wr-sec">
+        <h3>${escapeHtml(t('wrOverview'))}</h3>
+        <div class="wr-kpis">
+            ${kpi(t('wrEpisodes'), String(R.eps.length))}
+            ${kpi(t('wrDuration'), weeksText(R.totalDays), tf('wrCalDays', { n: R.totalDays }))}
+            ${kpi(t('wrStart'), formatDate(R.start, { day: 'numeric', month: 'long', year: 'numeric' }))}
+            ${kpi(t('wrEnd'), formatDate(R.end, { day: 'numeric', month: 'long', year: 'numeric' }))}
+            ${R.shoot ? kpi(t('wrShoot'), `${R.shoot.n} ${t('wrDaysUnit')}`, `${repD(R.shoot.start)} – ${repD(R.shoot.end)}`) : ''}
+            ${R.postDays ? kpi(t('wrPost'), weeksText(R.postDays), `${repD(R.postStart)} – ${repD(R.end)} · ${t('wrPostSub')}`) : ''}
+            ${kpi(t('wrWorkDays'), String(R.workDays))}
+        </div>
+    </section>
+    ${genNote}
+    <section class="wr-sec">
+        <h3>${escapeHtml(t('wrDeptTable'))}</h3>
+        <table class="wr-table">
+            <thead><tr><th class="l">${escapeHtml(t('wrDept'))}</th><th>${escapeHtml(t('wrTotal'))}</th><th>${escapeHtml(t('wrAvg'))}</th><th>${escapeHtml(t('wrMin'))}</th><th>${escapeHtml(t('wrMax'))}</th><th class="l">${escapeHtml(t('wrPeriod'))}</th></tr></thead>
+            <tbody>${R.depts.map(d => `<tr><td class="l"><span class="wr-dot" style="background:${deptColors[d.p]}"></span><b>${escapeHtml(agDept(d.p))}</b></td>
+                <td><b>${d.total}</b></td><td>${fmtNum(d.avg)}</td><td>${d.min}</td><td>${d.max}</td>
+                <td class="l">${d.from ? escapeHtml(repD(d.from) + ' – ' + repD(d.to)) : '–'}</td></tr>`).join('')}</tbody>
+        </table>
+    </section>
+    <section class="wr-sec">
+        <h3>${escapeHtml(t('wrEpTable'))} <small>(${escapeHtml(t('wrDaysUnit'))})</small></h3>
+        <div class="wr-scroll"><table class="wr-table ep">
+            <thead><tr><th class="l">${escapeHtml(t('wrEp'))}</th>${deptHead}<th>${escapeHtml(t('wrStart'))}</th><th>${escapeHtml(t('wrLock'))}</th><th>${escapeHtml(t('wrDelivery'))}</th><th>${escapeHtml(t('wrSpan'))}</th>${showNoteCol ? `<th class="l">${escapeHtml(t('wrNote'))}</th>` : ''}</tr></thead>
+            <tbody>${epRows}</tbody>
+            <tfoot>
+                <tr><td class="l">${escapeHtml(t('wrSum'))}</td>${WR_DEPTS.map(p => `<td>${sum(p) || '–'}</td>`).join('')}<td colspan="${showNoteCol ? 5 : 4}"></td></tr>
+                <tr><td class="l">${escapeHtml(t('wrAverage'))}</td>${WR_DEPTS.map(p => `<td>${avg(p)}</td>`).join('')}<td colspan="3"></td><td>${(() => { const v = R.rows.map(r => r.span).filter(Boolean); return v.length ? fmtNum(v.reduce((a, b) => a + b, 0) / v.length) : '–'; })()}</td>${showNoteCol ? '<td></td>' : ''}</tr>
+            </tfoot>
+        </table></div>
+    </section>
+    ${R.ms.length ? `<section class="wr-sec"><h3>${escapeHtml(t('wrMilestones'))}</h3><ul class="wr-ms">${R.ms.map(m =>
+        `<li><b>${escapeHtml(m.label)}</b> · ${escapeHtml(tf('wrCount', { n: m.n }))} · ${escapeHtml(tf('wrFirstLast', { a: repD(m.first), b: repD(m.last) }))}</li>`).join('')}</ul></section>` : ''}`;
+}
+
+const WR_PRINT_CSS = `<style>
+    @page { size: A4 landscape; margin: 12mm; }
+    .wr-sec { margin: 0 0 14px; break-inside: avoid; } .wr-sec h3 { font-size: 12pt; margin: 0 0 6px; border-bottom: 2px solid #e00; padding-bottom: 3px; }
+    .wr-kpis { display: flex; flex-wrap: wrap; gap: 8px; } .wr-kpi { border: 1px solid #ccc; border-radius: 6px; padding: 6px 10px; min-width: 120px; }
+    .wr-kpi small { display: block; color: #777; font-size: 8pt; text-transform: uppercase; } .wr-kpi b { font-size: 12pt; } .wr-kpi span { display: block; color: #666; font-size: 8pt; }
+    .wr-table { width: 100%; border-collapse: collapse; font-size: 9pt; } .wr-table th, .wr-table td { border: 1px solid #bbb; padding: 3px 6px; text-align: center; }
+    .wr-table th { background: #f1f1f1; } .wr-table .l { text-align: left; } .wr-table tfoot td { background: #fafafa; font-weight: 700; }
+    .wr-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; border: 1px solid #999; }
+    .z { color: #bbb; } .wr-ms { margin: 0; padding-left: 18px; font-size: 10pt; }
+    .rep-note { margin: 8px 0; padding: 7px 10px; background: #fff8e1; border-left: 3px solid #f0b400; font-size: 10pt; }
+</style>`;
+
+let wrEl = null, wrLast = null;
+function openWorkReport() {
+    if (!App.project) return;
+    if (!wrEl) {
+        wrEl = document.createElement('div');
+        wrEl.className = 'rep-modal wr-modal';
+        wrEl.innerHTML = `<div class="rep-box wide">
+            <div class="rep-head"><h2>📋 ${escapeHtml(t('wrTitle'))}</h2><button class="icon-btn" data-wr="close">✕</button></div>
+            <div class="rep-hint">👁 ${escapeHtml(t('wrHint'))}</div>
+            <div class="rep-body"><div class="rep-paper wide"></div></div>
+            <div class="rep-foot">
+                <button class="ghost-btn" data-wr="excel">📊 ${escapeHtml(t('wrExcel'))}</button>
+                <button class="ghost-btn" data-wr="pdf">📄 PDF</button>
+            </div></div>`;
+        document.body.appendChild(wrEl);
+        wrEl.addEventListener('click', (e) => {
+            if (e.target === wrEl) return closeWorkReport();
+            const b = e.target.closest('[data-wr]');
+            if (!b) return;
+            if (b.dataset.wr === 'close') closeWorkReport();
+            if (b.dataset.wr === 'pdf' && wrLast) printDocument(t('wrTitle') + ' · ' + (App.version ? App.version.name : ''), WR_PRINT_CSS + workReportHtml(wrLast, false));
+            if (b.dataset.wr === 'excel' && wrLast) exportWorkReportExcel(wrLast);
+        });
+        wrEl.addEventListener('input', (e) => {
+            const k = e.target.dataset.wnote;
+            if (k === undefined) return;
+            if (k === 'general') { wrNotes.general = e.target.value; e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }
+            else wrNotes.eps[k] = e.target.value;
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && wrEl && !wrEl.hidden) closeWorkReport(); });
+    }
+    const cal = collectProjectData($('projectName').value);
+    wrLast = buildWorkReport(cal);
+    const stamp = new Date().toLocaleString(localeStr(), { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    wrEl.querySelector('.rep-paper').innerHTML = `<div class="rep-paper-head"><div class="brand">POSTPRO LAB</div>
+        <h1>${escapeHtml($('projectName').value || '')}</h1>
+        <div class="sub">${escapeHtml(t('wrTitle'))} · ${escapeHtml(App.version ? App.version.name : '')} · ${escapeHtml(stamp)}</div></div>` + workReportHtml(wrLast, true);
+    wrEl.querySelectorAll('textarea').forEach(ta => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; });
+    wrEl.hidden = false;
+}
+function closeWorkReport() { if (wrEl) wrEl.hidden = true; }
+
+function exportWorkReportExcel(R) {
+    const head = { b: 1, fill: 'EEEEEE', border: 1, align: 'center', wrap: 1 };
+    const cell = { border: 1, align: 'center' };
+    const H = [t('wrEp'), ...WR_DEPTS.map(agDept), t('wrStart'), t('wrLock'), t('wrDelivery'), t('wrSpan'), t('wrNote')];
+    const rows = [
+        { h: 22, cells: [{ v: ($('projectName').value || '') + ' — ' + t('wrTitle') + (App.version ? ' (' + App.version.name + ')' : ''), st: { b: 1, sz: 13 } }] },
+        { cells: [{ v: t('wrDuration') + ': ' + weeksText(R.totalDays) + ' · ' + tf('wrCalDays', { n: R.totalDays }) + ' · ' + t('wrStart') + ' ' + (R.start || '') + ' · ' + t('wrEnd') + ' ' + (R.end || '') }] },
+        { cells: [] },
+        { h: 28, cells: H.map(v => ({ v, st: head })) }
+    ];
+    R.rows.forEach(r => rows.push({ cells: [
+        { v: repEp(r.ep), st: Object.assign({ b: 1 }, cell) }, ...WR_DEPTS.map(p => ({ v: r.days[p] || 0, st: cell })),
+        { v: r.start || '', st: cell }, { v: r.lock || '', st: cell }, { v: r.delivery || '', st: Object.assign({ b: 1 }, cell) }, { v: r.span || '', st: cell },
+        { v: wrNotes.eps[r.ep] || '', st: { border: 1, align: 'left', wrap: 1 } }] }));
+    rows.push({ cells: [{ v: t('wrSum'), st: Object.assign({ b: 1, fill: 'F6F6F6' }, cell) }, ...WR_DEPTS.map(p => ({ v: R.rows.reduce((x, r) => x + (r.days[p] || 0), 0), st: Object.assign({ b: 1, fill: 'F6F6F6' }, cell) }))] });
+    rows.push({ cells: [] }, { h: 24, cells: [t('wrDept'), t('wrTotal'), t('wrAvg'), t('wrMin'), t('wrMax'), t('wrPeriod')].map(v => ({ v, st: head })) });
+    R.depts.forEach(d => rows.push({ cells: [{ v: agDept(d.p), st: Object.assign({ b: 1 }, cell) }, { v: d.total, st: cell }, { v: Math.round(d.avg * 10) / 10, st: cell },
+        { v: d.min, st: cell }, { v: d.max, st: cell }, { v: d.from ? d.from + ' – ' + d.to : '', st: cell }] }));
+    if (wrNotes.general.trim()) rows.push({ cells: [] }, { cells: [{ v: t('repNotes') + ': ' + wrNotes.general.trim(), st: { wrap: 0 } }] });
+    const blob = XlsxLite.build({ name: 'Rapor', cols: H.map((_, i) => ({ w: i === 0 ? 12 : i === H.length - 1 ? 40 : 12 })), rows, images: [] });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${($('projectName').value || 'Proje').replace(/[\\/:*?"<>|]/g, '')}_Calisma_Raporu_${todayISO()}.xlsx`;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+
+// RAPOR butonu → iki seçenek
+function showReportChooser(anchor) {
+    menu.innerHTML = `
+        <div class="item rep-choice" data-rc="work"><span class="rc-ic">📋</span><span><b>${escapeHtml(t('repChooseWork'))}</b><small>${escapeHtml(t('repChooseWorkSub'))}</small></span></div>
+        <div class="item rep-choice" data-rc="compare"><span class="rc-ic">📊</span><span><b>${escapeHtml(t('repChooseCompare'))}</b><small>${escapeHtml(t('repChooseCompareSub'))}</small></span></div>`;
+    const r = anchor.getBoundingClientRect();
+    positionMenu(r.left, r.bottom + 4);
+    menu.querySelectorAll('[data-rc]').forEach(b => b.onclick = (ev) => {
+        ev.stopPropagation();
+        closeMenu();
+        if (b.dataset.rc === 'work') openWorkReport(); else openReportModal();
+    });
+}
+window.openWorkReport = openWorkReport;
 
 // ---------------------------------------------------------------------
 // 7c) ESKİ KAYITLARI PROJELERE AYIRMA
@@ -8394,12 +8665,33 @@ function hideHelp() {
     helpTip.hidden = true;
 }
 
+// Takvimdeki dolu hücre: tarihi + bölüm + departman
+function cellDateText(cell) {
+    const base = startDateInput.value ? parseLocalDate(startDateInput.value) : null;
+    if (!base) return '';
+    const d = new Date(base);
+    d.setDate(d.getDate() + (parseInt(cell.dataset.col) || 0));
+    const ep = parseInt(cell.dataset.ep) || 0, proc = cell.dataset.proc_type;
+    const date = d.toLocaleDateString(localeStr(), { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
+    const hol = typeof holidayName === 'function' ? holidayName(d) : '';
+    return [date, ep ? 'EP' + String(ep).padStart(2, '0') : '', proc === 'set' ? 'SET' : String(proc || '').toUpperCase(),
+        (cell.textContent || '').trim() && (cell.textContent || '').trim().toUpperCase() !== String(proc).toUpperCase() ? (cell.textContent || '').trim() : '',
+        hol ? '🇹🇷 ' + hol : ''].filter(Boolean).join(' · ');
+}
+const isCalCell = (el) => el && el.classList && el.classList.contains('timeline') && el.classList.contains('filled');
+
 function showHelp(el) {
-    if (!helpOn || !document.body.contains(el) || document.querySelector('.tour-layer')) return;
-    const key = el.dataset.help;
-    const text = t(key);
-    if (!text || text === key) return;
-    helpTip.innerHTML = `<span class="ht-icon">💡</span><span>${escapeHtml(text)}</span>`;
+    if (!document.body.contains(el) || document.querySelector('.tour-layer')) return;
+    let icon = '💡', text;
+    if (isCalCell(el)) { icon = '📅'; text = cellDateText(el); }
+    else {
+        if (!helpOn) return;
+        const key = el.dataset.help;
+        text = t(key);
+        if (!text || text === key) return;
+    }
+    if (!text) return;
+    helpTip.innerHTML = `<span class="ht-icon">${icon}</span><span>${escapeHtml(text)}</span>`;
     helpTip.hidden = false;
     const r = el.getBoundingClientRect();
     const tw = helpTip.offsetWidth, th = helpTip.offsetHeight;
@@ -8414,8 +8706,10 @@ function showHelp(el) {
 }
 
 document.addEventListener('mouseover', (e) => {
-    if (!helpOn || noHover) return;
-    const el = e.target.closest && e.target.closest('[data-help]');
+    if (noHover || !e.target.closest) return;
+    // Takvim hücresinin tarihi yardım balonları kapalıyken de gösterilir
+    const cell = e.target.closest('.cell.timeline.filled');
+    const el = cell || (helpOn ? e.target.closest('[data-help]') : null);
     if (el === helpEl) return;           // aynı aracın içinde dolaşıyor: sayaç devam
     hideHelp();
     if (!el) return;
