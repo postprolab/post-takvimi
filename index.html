@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.16-4">
+<meta name="app-version" content="2026.10.21-1">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -1347,6 +1347,32 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 .gs-modbtn[data-state="ok"] .gs-ind { background: #34d17a; box-shadow: 0 0 6px #34d17a; }
 .gs-modbtn[data-state="auth"] .gs-ind, .gs-modbtn[data-state="error"] .gs-ind { background: #ffb300; }
 @media (max-width: 600px) { .gs-row { flex-wrap: wrap; } .gs-row input, .gs-row select { flex-basis: 100%; } }
+
+/* Sheets: elle eşleştirme */
+.gs-box.gs-wide { width: min(980px, 100%); }
+.gs-map { display: flex; flex-direction: column; gap: 8px; }
+.gs-map-grid { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; }
+.gs-map-grid label { color: #aaa; font-size: 12.5px; }
+.gs-map select, .gs-map-grid select { background: #111; border: 1px solid #333; color: #fff; border-radius: 6px; padding: 5px 7px; font-family: inherit; font-size: 12px; max-width: 100%; }
+.gs-map-sub { color: #9aa3b2; font-size: 12px; }
+.gs-map-depts { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px; }
+.gs-dept { display: flex; align-items: center; gap: 6px; background: #13161b; border: 1px solid #262b33; border-radius: 6px; padding: 4px 6px; }
+.gs-dept span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 700; color: #ddd; }
+.gs-dept select { flex: 0 0 auto; }
+.gs-map-wrap { overflow: auto; max-height: 290px; border: 1px solid #262b33; border-radius: 8px; }
+.gs-map-tbl { border-collapse: collapse; font-size: 11.5px; min-width: 100%; }
+.gs-map-tbl th, .gs-map-tbl td { border: 1px solid #23272f; padding: 4px 6px; white-space: nowrap; text-align: left; color: #cfd3da; }
+.gs-map-tbl th { background: #15181e; color: #8a93a3; font-weight: 700; position: sticky; top: 0; z-index: 1; }
+.gs-map-tbl tr > th:first-child { position: sticky; left: 0; z-index: 2; }
+.gs-map-tbl tr.k-sel th { padding: 4px; }
+.gs-map-tbl tr.k-sel select { width: 100%; min-width: 120px; }
+.gs-map-tbl select.on { border-color: #34d17a; color: #c9ffd9; }
+.gs-map-tbl td.on { background: #14251a; color: #e6ffe9; }
+.gs-map-tbl tr.k-head td { background: #2a2140; color: #fff; font-weight: 700; }
+.gs-map-tbl tr.k-on td { outline: 1px solid #2c5d3a; }
+.gs-map-tbl th.k-ep { background: #3a2a10; color: #ffc857; } .gs-map-tbl th.k-dept { background: #10283a; color: #7cc4ff; } .gs-map-tbl th.k-date { color: #34d17a; }
+@media (max-width: 600px) { .gs-map-grid { grid-template-columns: 1fr; } }
+.gs-box { max-height: 94vh; overflow-y: auto; }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -9094,7 +9120,15 @@ Object.assign(I18N.tr, {
     gsErr_api: "Google Sheets API bu projede açık değil. Google Cloud'da “Google Sheets API” → Enable yap, birkaç dakika sonra tekrar dene.",
     gsErr_perm: "Bu Sheet'e erişim iznin yok. Sheet'in sahibinden seni düzenleyici olarak eklemesini iste.",
     gsErr_notfound: "Sheet bulunamadı. Linki kontrol et.",
-    help_gsheets: "Bu bölümü bir Google Sheet ile iki yönlü eşitler: Sheet'ten içe aktar ya da Sheet'e dışa aktar."
+    help_gsheets: "Bu bölümü bir Google Sheet ile iki yönlü eşitler: Sheet'ten içe aktar ya da Sheet'e dışa aktar.",
+    gsSkip: "— Atla —", gsAsRound: "Not sütunu (not türü)", gsColumn: "Sütun",
+    gsMapHeadRow: "Başlık satırı:", gsMapColsHint: "Her sütunun üstünden sitede neye karşılık geldiğini seç. Site bir tahmin yaptı; yanlışsa değiştir.",
+    gsMapOrient: "Tarihler:", gsMapOrientRow: "bir satırda yan yana", gsMapOrientCol: "bir sütunda alt alta",
+    gsMapDateRow: "Tarih satırı:", gsMapDateCol: "Tarih sütunu:", gsMapEpCol: "Bölüm sütunu:", gsMapEpRow: "Bölüm satırı:",
+    gsMapDeptCol: "Departman sütunu:", gsMapDeptRow: "Departman satırı:", gsMapNoEp: "Yok (tek bölüm)",
+    gsMapDepts: "Sheet'teki departman adlarını sitedekilerle eşleştir:",
+    gsMapVfxNeed: "En az bir sütunu bir alana eşleştir (ör. Shot No, Açıklama).", gsMapTodoNeed: "Görev metninin olduğu sütunu “Görev” olarak seç.",
+    gsMapCalNeed: "Tarih satırını, departman sütununu seç ve en az bir departman adını eşleştir."
 });
 Object.assign(I18N.en, {
     gsBtn: "Google Sheets", gsTitle: "Google Sheets sync",
@@ -9140,7 +9174,15 @@ Object.assign(I18N.en, {
     gsErr_api: "Google Sheets API is not enabled for this project. Enable “Google Sheets API” in Google Cloud and try again in a few minutes.",
     gsErr_perm: "You don't have access to this Sheet. Ask its owner to add you as an editor.",
     gsErr_notfound: "Sheet not found. Check the link.",
-    help_gsheets: "Two-way sync of this section with a Google Sheet: import from a Sheet or export to a Sheet."
+    help_gsheets: "Two-way sync of this section with a Google Sheet: import from a Sheet or export to a Sheet.",
+    gsSkip: "— Skip —", gsAsRound: "Note column (note type)", gsColumn: "Column",
+    gsMapHeadRow: "Header row:", gsMapColsHint: "Above each column, choose what it means on the site. The site made a guess; change it if wrong.",
+    gsMapOrient: "Dates are:", gsMapOrientRow: "in a row, side by side", gsMapOrientCol: "in a column, top to bottom",
+    gsMapDateRow: "Date row:", gsMapDateCol: "Date column:", gsMapEpCol: "Episode column:", gsMapEpRow: "Episode row:",
+    gsMapDeptCol: "Department column:", gsMapDeptRow: "Department row:", gsMapNoEp: "None (single episode)",
+    gsMapDepts: "Match the Sheet's department names to the site's:",
+    gsMapVfxNeed: "Map at least one column to a field (e.g. Shot No, Description).", gsMapTodoNeed: "Choose the column holding the task text as “Task”.",
+    gsMapCalNeed: "Choose the date row and department column, and match at least one department name."
 });
 
 const GS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
@@ -9777,6 +9819,44 @@ function gsDetectTable(m, rows) {
     return { headerRow: hr, cols, rounds, ignored, idCol: idCol >= 0 ? idCol : width, hasId: idCol >= 0, data };
 }
 
+// Sitenin tahmininden elle düzenlenebilir eşleme: { hr, map: { sütun: alan | 'round' | 'skip' } }
+function gsAutoTableMan(m, rows) {
+    const d = gsDetectTable(m, rows);
+    if (!d) {
+        let hr = 0;
+        while (hr < rows.length - 1 && !(rows[hr] || []).some(v => gsStr(v).trim())) hr++;
+        return { hr, map: {} };
+    }
+    const map = {};
+    Object.entries(d.cols).forEach(([k, c]) => map[c] = k);
+    d.rounds.forEach(r => map[r.col] = 'round');
+    return { hr: d.headerRow, map };
+}
+function gsBuildTable(m, rows, man) {
+    const hr = man.hr, head = rows[hr] || [];
+    const width = Math.max(head.length, ...rows.slice(hr + 1).map(x => (x || []).length), 0);
+    const cols = {}, rounds = [], ignored = [];
+    let idCol = -1;
+    for (let c = 0; c < width; c++) {
+        const raw = gsStr(head[c]).trim();
+        if (gsLow(raw) === 'ppl id') { idCol = c; continue; }
+        const k = man.map[c] || 'skip';
+        if (k === 'skip') { if (raw) ignored.push(raw); continue; }
+        if (k === 'round') { if (m === 'vfx') rounds.push({ col: c, label: raw || (t('gsColumn') + ' ' + gsCol(c)) }); continue; }
+        cols[k] = c;
+    }
+    if (m === 'todo' && cols.text === undefined) return null;
+    const allCols = [...Object.values(cols), ...rounds.map(r => r.col)];
+    if (!allCols.length) return null;
+    const data = [];
+    for (let r = hr + 1; r < rows.length; r++) if (allCols.some(c => gsCell(rows, r, c).trim())) data.push(r);
+    return { headerRow: hr, cols, rounds, ignored, idCol: idCol >= 0 ? idCol : width, hasId: idCol >= 0, data };
+}
+const GS_FIELDS = {
+    vfx: () => [['code', t('vfxCode')], ['ep', t('vfxEp')], ['tc', t('vfxTc')], ['desc', t('vfxDesc')], ['extras', t('vfxExtras')], ['vendor', t('vfxVendor')], ['hours', t('vfxHours')], ['due', t('vfxDue')], ['status', t('vfxStatus')], ['round', t('gsAsRound')]],
+    todo: () => [['text', t('gsTask')], ['date', t('gsDate')], ['done', t('gsDone')], ['by', t('gsBy')]]
+};
+
 // Modül tanımları: eşleme ile çalışan genel motor bunları kullanır
 const GSD = {
     vfx: {
@@ -9985,72 +10065,120 @@ function gsHeadDate(v, yearHint) {
     return null;
 }
 // grid: rows[r][c] değerleri; bg: (r,c) → 'rrggbb' (sadece içe aktarırken, renkle işaretlenmiş hücreler için)
-function gsDetectCal(rows, bg) {
+// Bir satırdaki tarihleri oku (üst satırdaki "EKİM 2026" gibi yazılardan yıl ipucu alır)
+function gsCalDatesOfRow(rows, r) {
+    const hints = [];
+    let y = null;
+    for (let k = Math.max(0, r - 3); k < r; k++) (rows[k] || []).forEach(v => { const mm = gsStr(v).match(/\b(20\d\d)\b/); if (mm && !y) y = +mm[1]; });
+    const above = rows[r - 1] || [];
+    let yy = y;
+    for (let c = 0; c < Math.max((rows[r] || []).length, above.length); c++) { const mm = gsStr(above[c]).match(/\b(20\d\d)\b/); if (mm) yy = +mm[1]; hints[c] = yy; }
+    const dc = {};
+    let prev = null, off = 0;
+    (rows[r] || []).forEach((v, c) => {
+        let iso = gsHeadDate(v, hints[c]);
+        if (!iso) return;
+        const explicit = typeof v === 'number' || /\d{4}|[./]\d{2}$/.test(gsStr(v).trim()) || hints[c];
+        if (!explicit) {
+            if (off) iso = (parseInt(iso) + off) + iso.slice(4);
+            if (prev && iso < prev) { off++; iso = (parseInt(iso) + 1) + iso.slice(4); }
+        }
+        dc[c] = iso; prev = iso;
+    });
+    return dc;
+}
+const gsTranspose = (rows) => {
+    const W = Math.max(0, ...rows.map(r => (r || []).length));
+    return Array.from({ length: W }, (_, c) => rows.map(r => (r || [])[c]));
+};
+// Sitenin tahmini: tarih satırı, bölüm sütunu, departman sütunu ve departman adları
+function gsAutoCalMan(rows, tr) {
+    const view = tr ? gsTranspose(rows) : rows;
     let best = null;
-    for (let r = 0; r < Math.min(rows.length, 30); r++) {
-        // Yıl ipucu: üstteki satırlarda "EKİM 2026" gibi yazılar
-        const hints = [];
-        let y = null;
-        const above = rows[r - 1] || [];
-        for (let c = 0; c < Math.max((rows[r] || []).length, above.length); c++) { const mm = gsStr(above[c]).match(/\b(20\d\d)\b/); if (mm) y = +mm[1]; hints[c] = y; }
-        const dc = {};
-        let prev = null, off = 0;
-        (rows[r] || []).forEach((v, c) => {
-            let iso = gsHeadDate(v, hints[c]);
-            if (!iso) return;
-            const explicit = typeof v === 'number' || /\d{4}|[./]\d{2}$/.test(gsStr(v).trim()) || hints[c];
-            if (!explicit) {
-                if (off) iso = (parseInt(iso) + off) + iso.slice(4);
-                if (prev && iso < prev) { off++; iso = (parseInt(iso) + 1) + iso.slice(4); }
-            }
-            dc[c] = iso; prev = iso;
-        });
-        const n = Object.keys(dc).length;
-        if (n >= 3 && (!best || n > best.n)) best = { r, dc, n };
+    for (let r = 0; r < Math.min(view.length, 40); r++) {
+        const n = Object.keys(gsCalDatesOfRow(view, r)).length;
+        if (n >= 3 && (!best || n > best.n)) best = { r, n };
     }
-    if (!best) return null;
-    const hr = best.r;
+    const man = { tr: !!tr, hr: best ? best.r : 0, epCol: -1, deptCol: -1, deptMap: {} };
+    if (!best) return man;
+    const dc = gsCalDatesOfRow(view, best.r);
+    const first = Math.min(...Object.keys(dc).map(Number));
+    let bestEp = 0, bestDept = 0;
+    for (let c = 0; c < first; c++) {
+        let ne = 0, nd = 0;
+        for (let r = best.r + 1; r < view.length; r++) { const U = gsUp((view[r] || [])[c]); if (!U) continue; if (gsEpFrom(U) !== null) ne++; if (gsProcFrom(U)) nd++; }
+        if (ne > bestEp) { bestEp = ne; man.epCol = c; }
+        if (nd > bestDept) { bestDept = nd; man.deptCol = c; }
+    }
+    if (man.deptCol < 0 && first > 0) man.deptCol = first - 1;
+    gsCalDeptLabels(view, man).forEach(l => man.deptMap[l] = gsProcFrom(l) || 'skip');
+    return man;
+}
+function gsCalDeptLabels(view, man) {
+    const out = [];
+    if (man.deptCol < 0) return out;
+    for (let r = man.hr + 1; r < view.length && out.length < 60; r++) {
+        const U = gsUp((view[r] || [])[man.deptCol]);
+        if (U && !out.includes(U) && !/^\d+([.,]\d+)?$/.test(U)) out.push(U);
+    }
+    return out;
+}
+// Seçilen eşlemeyle takvimi oku → { headerRow, dateCols, rowMap, cells, from, to, eps, tr }
+function gsBuildCal(rows, bg, man) {
+    const view = man.tr ? gsTranspose(rows) : rows;
+    const vbg = bg ? (man.tr ? (r, c) => bg(c, r) : bg) : null;
+    const dc = gsCalDatesOfRow(view, man.hr);
     const dateCols = {};
-    Object.entries(best.dc).forEach(([c, iso]) => { if (dateCols[iso] === undefined) dateCols[iso] = +c; });
-    const first = Math.min(...Object.values(dateCols));
-    if (first < 1) return null;
+    Object.entries(dc).forEach(([c, iso]) => { if (+c !== man.epCol && +c !== man.deptCol && dateCols[iso] === undefined) dateCols[iso] = +c; });
+    if (!Object.keys(dateCols).length || man.deptCol < 0) return null;
     const rowMap = {};
-    let ep = null;
-    for (let r = hr + 1; r < rows.length; r++) {
-        const U = gsUp((rows[r] || []).slice(0, first).map(gsStr).join(' '));
-        if (!U) continue;
-        const e = gsEpFrom(U);
-        if (e !== null) ep = e;
-        const p = gsProcFrom(U);
-        if (!p) continue;
-        const key = (p === 'set' ? 0 : ep) + '|' + p;
+    let ep = man.epCol < 0 ? 1 : null;
+    for (let r = man.hr + 1; r < view.length; r++) {
+        if (man.epCol >= 0) {
+            const E = gsUp((view[r] || [])[man.epCol]);
+            const e = E ? (gsEpFrom(E) ?? (/^\d{1,3}$/.test(E) ? parseInt(E) : null)) : null;
+            if (e !== null) ep = e;
+        }
+        const D = gsUp((view[r] || [])[man.deptCol]);
+        const p = D ? man.deptMap[D] : null;
+        if (!p || p === 'skip') continue;
         if (p !== 'set' && !ep) continue;
+        const key = (p === 'set' ? 0 : ep) + '|' + p;
         if (rowMap[key] === undefined) rowMap[key] = r;
     }
+    if (!Object.keys(rowMap).length) return null;
     // Renkle işaretli hücreler: sütunun/satırın çoğunluk rengi zemin sayılır (hafta sonu grisi, satır tonu vb.)
     const mapped = Object.values(rowMap), dcs = Object.values(dateCols);
     const colBase = {}, rowBase = {};
-    if (bg) {
+    if (vbg) {
         const major = (list) => { const cnt = {}; list.forEach(x => { if (x) cnt[x] = (cnt[x] || 0) + 1; }); const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0]; return top && top[1] >= list.length * 0.7 ? top[0] : null; };
-        dcs.forEach(c => colBase[c] = major(mapped.map(r => bg(r, c))));
-        mapped.forEach(r => rowBase[r] = major(dcs.map(c => bg(r, c))));
+        dcs.forEach(c => colBase[c] = major(mapped.map(r => vbg(r, c))));
+        mapped.forEach(r => rowBase[r] = major(dcs.map(c => vbg(r, c))));
     }
     const cells = [];
     Object.entries(rowMap).forEach(([key, r]) => {
         const [e, p] = key.split('|');
         Object.entries(dateCols).forEach(([iso, c]) => {
-            const txt = gsStr((rows[r] || [])[c]).trim();
-            const col = bg ? bg(r, c) : null;
+            const txt = gsStr((view[r] || [])[c]).trim();
+            const col = vbg ? vbg(r, c) : null;
             const colored = col && col !== colBase[c] && col !== rowBase[r];
             if (txt || colored) cells.push({ ep: +e, proc: p, iso, text: txt });
         });
     });
     const isos = Object.keys(dateCols).sort();
-    return { headerRow: hr, dateCols, rowMap, cells, from: isos[0], to: isos[isos.length - 1],
+    return { headerRow: man.hr, dateCols, rowMap, cells, from: isos[0], to: isos[isos.length - 1], tr: !!man.tr,
         eps: Math.max(0, ...Object.keys(rowMap).map(k => +k.split('|')[0])) };
 }
+function gsDetectCal(rows, bg) {
+    const a = gsAutoCalMan(rows, false), b = gsAutoCalMan(rows, true);
+    const da = gsBuildCal(rows, bg, a), db = gsBuildCal(rows, bg, b);
+    return (db && (!da || db.cells.length > da.cells.length)) ? db : da;
+}
 
-async function gsCalMapMod(L, tab, rows, st) {
+async function gsCalMapMod(L, tab, rows0, st) {
+    const rows = L.tr ? gsTranspose(rows0) : rows0;
+    const A1 = (r, c) => L.tr ? gsA1(L.tab, c, r) : gsA1(L.tab, r, c);
+    const F1 = (r, c, fm, f) => L.tr ? gsCellFmt(tab.gid, c, c + 1, r, r + 1, fm, f) : gsCellFmt(tab.gid, r, r + 1, c, c + 1, fm, f);
     const start = parseLocalDate(startDateInput.value);
     const colOf = (iso) => dayDiff(parseLocalDate(iso), start);
     const siteVal = (ep, proc, iso) => {
@@ -10087,12 +10215,12 @@ async function gsCalMapMod(L, tab, rows, st) {
         cells[r + '|' + c] = want;
         const sv = gsUp(gsCell(rows, r, c));
         if (sv === want) return;
-        raw.push({ range: gsA1(L.tab, r, c), values: [[want]] });
+        raw.push({ range: A1(r, c), values: [[want]] });
         if (want) {
             const cell = getCell(colOf(iso), e, p), ct = cell && cell.dataset.cut_type;
-            fmt.push(gsCellFmt(tab.gid, r, r + 1, c, c + 1, { backgroundColor: gsHexColor(cell ? cell.style.backgroundColor : deptColors[p]), textFormat: { bold: true, foregroundColor: gsHexColor(ct ? cutFg(ct) : '#000000') } }, 'backgroundColor,textFormat(bold,foregroundColor)'));
+            fmt.push(F1(r, c, { backgroundColor: gsHexColor(cell ? cell.style.backgroundColor : deptColors[p]), textFormat: { bold: true, foregroundColor: gsHexColor(ct ? cutFg(ct) : '#000000') } }, 'backgroundColor,textFormat(bold,foregroundColor)'));
         } else if (sv) {
-            fmt.push(gsCellFmt(tab.gid, r, r + 1, c, c + 1, { backgroundColor: gsHexColor('#FFFFFF') }, 'backgroundColor'));
+            fmt.push(F1(r, c, { backgroundColor: gsHexColor('#FFFFFF') }, 'backgroundColor'));
         }
     });
     await gsValues(L.id, raw, false);
@@ -10231,27 +10359,118 @@ async function gsReadTab(id, title, withColors) {
     return { rows, bg: (r, c) => colors[r + '|' + c] || null };
 }
 
+// Eşlemeden sonucu yeniden hesapla (her seçim değişikliğinde)
+function gsImportRebuild() {
+    const u = GS.ui, imp = u.imp, m = u.mod;
+    if (!imp || !imp.rows) return;
+    if (m === 'cal') {
+        const d = gsBuildCal(imp.rows, imp.bg, imp.man);
+        imp.det = d;
+        imp.preview = d ? tf('gsPrevCal', { d: Object.keys(d.dateCols).length, a: formatDate(d.from), b: formatDate(d.to), e: d.eps, c: d.cells.length }) : t('gsMapCalNeed');
+        return;
+    }
+    const d = gsBuildTable(m, imp.rows, imp.man);
+    imp.det = d;
+    if (!d) { imp.preview = t(m === 'vfx' ? 'gsMapVfxNeed' : 'gsMapTodoNeed'); return; }
+    const head = imp.rows[d.headerRow] || [];
+    const names = Object.values(d.cols).sort((a, b) => a - b).map(c => gsStr(head[c]).trim() || gsCol(c));
+    const lines = [tf(m === 'vfx' ? 'gsPrevVfx' : 'gsPrevTodo', { n: d.data.length, cols: names.join(', ') || '—' })];
+    if (d.rounds.length) lines.push(tf('gsPrevRounds', { cols: d.rounds.map(r => r.label).join(', ') }));
+    imp.preview = lines.join('\n');
+}
 async function gsImportPreview() {
     const u = GS.ui, imp = u.imp, m = u.mod;
-    imp.preview = null; imp.det = null;
+    imp.preview = null; imp.det = null; imp.rows = null;
     if (!imp.tab) return;
     const { rows, bg } = await gsReadTab(imp.id, imp.tab, m === 'cal');
     imp.rows = rows; imp.bg = bg;
     if (m === 'cal') {
-        const d = gsDetectCal(rows, bg);
-        imp.det = d;
-        imp.preview = d ? tf('gsPrevCal', { d: Object.keys(d.dateCols).length, a: formatDate(d.from), b: formatDate(d.to), e: d.eps, c: d.cells.length }) : t('gsNoHeadCal');
-        return;
+        const a = gsAutoCalMan(rows, false), b = gsAutoCalMan(rows, true);
+        const da = gsBuildCal(rows, bg, a), db = gsBuildCal(rows, bg, b);
+        imp.man = (db && (!da || db.cells.length > da.cells.length)) ? b : a;
+    } else imp.man = gsAutoTableMan(m, rows);
+    gsImportRebuild();
+}
+// Eşleme ekranı (önizleme tablosu + seçimler)
+function gsMapHtml() {
+    const u = GS.ui, imp = u.imp, m = u.mod, man = imp.man;
+    if (!imp.rows || !man) return '';
+    const view = m === 'cal' && man.tr ? gsTranspose(imp.rows) : imp.rows;
+    const cellTxt = (v) => { const x = gsStr(v).trim(); return x.length > 22 ? x.slice(0, 21) + '…' : x; };
+    const TR = m === 'cal' && man.tr;
+    const rName = (r) => TR ? gsCol(r) : String(r + 1), cName = (c) => TR ? String(c + 1) : gsCol(c);
+    const rowLabel = (r) => { const bits = (view[r] || []).map(cellTxt).filter(Boolean).slice(0, 4).join(' · '); return `${rName(r)}. ${bits || '—'}`.slice(0, 70); };
+    const rowOpts = (sel) => Array.from({ length: Math.min(view.length, 60) }, (_, r) => `<option value="${r}" ${r === sel ? 'selected' : ''}>${escapeHtml(rowLabel(r))}</option>`).join('');
+    const W = Math.min(Math.max(0, ...view.slice(man.hr, man.hr + 12).map(r => (r || []).length)), m === 'cal' ? 14 : 40);
+    const colName = (c) => { const h = cellTxt((view[man.hr] || [])[c]); return cName(c) + (h ? ': ' + h : ''); };
+    if (m === 'cal') {
+        const colOpts = (sel, none) => `${none ? `<option value="-1" ${sel < 0 ? 'selected' : ''}>${escapeHtml(none)}</option>` : ''}` +
+            Array.from({ length: Math.max(W, 1) }, (_, c) => `<option value="${c}" ${c === sel ? 'selected' : ''}>${escapeHtml(colName(c))}</option>`).join('');
+        const labels = gsCalDeptLabels(view, man);
+        const procOpts = (sel) => [['skip', t('gsSkip')], ['set', t('dept_set')], ...PROC_ORDER.map(p => [p, t('dept_' + p)])]
+            .map(([v, l]) => `<option value="${v}" ${v === sel ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('');
+        const dc = gsCalDatesOfRow(view, man.hr);
+        const mapped = imp.det ? new Set(Object.values(imp.det.rowMap)) : new Set();
+        const sample = Array.from({ length: Math.min(view.length - man.hr, 14) }, (_, i) => man.hr + i);
+        return `<div class="gs-map">
+            <div class="gs-map-grid">
+                <label>${escapeHtml(t('gsMapOrient'))}</label><select class="gs-man" data-k="tr"><option value="0" ${man.tr ? '' : 'selected'}>${escapeHtml(t('gsMapOrientRow'))}</option><option value="1" ${man.tr ? 'selected' : ''}>${escapeHtml(t('gsMapOrientCol'))}</option></select>
+                <label>${escapeHtml(t(man.tr ? 'gsMapDateCol' : 'gsMapDateRow'))}</label><select class="gs-man" data-k="hr">${rowOpts(man.hr)}</select>
+                <label>${escapeHtml(t(man.tr ? 'gsMapEpRow' : 'gsMapEpCol'))}</label><select class="gs-man" data-k="epCol">${colOpts(man.epCol, t('gsMapNoEp'))}</select>
+                <label>${escapeHtml(t(man.tr ? 'gsMapDeptRow' : 'gsMapDeptCol'))}</label><select class="gs-man" data-k="deptCol">${colOpts(man.deptCol, '—')}</select>
+            </div>
+            ${labels.length ? `<div class="gs-map-sub">${escapeHtml(t('gsMapDepts'))}</div><div class="gs-map-depts">${labels.map((l, i) =>
+                `<div class="gs-dept"><span title="${escapeHtml(l)}">${escapeHtml(cellTxt(l))}</span><select class="gs-man" data-k="dept" data-i="${i}">${procOpts(man.deptMap[l] || 'skip')}</select></div>`).join('')}</div>` : ''}
+            <div class="gs-map-wrap"><table class="gs-map-tbl">
+                <tr><th></th>${Array.from({ length: W }, (_, c) => `<th class="${c === man.epCol ? 'k-ep' : c === man.deptCol ? 'k-dept' : dc[c] ? 'k-date' : ''}">${cName(c)}</th>`).join('')}</tr>
+                ${sample.map(r => `<tr class="${r === man.hr ? 'k-head' : mapped.has(r) ? 'k-on' : ''}"><th>${rName(r)}</th>${Array.from({ length: W }, (_, c) => {
+                    const col = imp.bg && r > man.hr ? (man.tr ? imp.bg(c, r) : imp.bg(r, c)) : null;
+                    return `<td ${col ? `style="background:#${col};color:#000"` : ''}>${escapeHtml(cellTxt((view[r] || [])[c]))}</td>`; }).join('')}</tr>`).join('')}
+            </table></div>
+        </div>`;
     }
-    const d = gsDetectTable(m, rows);
-    imp.det = d;
-    if (!d) { imp.preview = t(m === 'vfx' ? 'gsNoHeadVfx' : 'gsNoHeadTodo'); return; }
-    const head = rows[d.headerRow] || [];
-    const names = Object.values(d.cols).sort((a, b) => a - b).map(c => gsStr(head[c]).trim());
-    const lines = [tf(m === 'vfx' ? 'gsPrevVfx' : 'gsPrevTodo', { n: d.data.length, cols: names.join(', ') || '—' })];
-    if (d.rounds.length) lines.push(tf('gsPrevRounds', { cols: d.rounds.map(r => r.label).join(', ') }));
-    if (d.ignored.length) lines.push(tf('gsPrevIgnored', { cols: d.ignored.join(', ') }));
-    imp.preview = lines.join('\n');
+    const fields = GS_FIELDS[m]();
+    const used = new Set(Object.values(man.map).filter(k => k !== 'round' && k !== 'skip'));
+    const fOpts = (c) => {
+        const cur = man.map[c] || 'skip';
+        return `<option value="skip" ${cur === 'skip' ? 'selected' : ''}>${escapeHtml(t('gsSkip'))}</option>` + fields.map(([k, l]) =>
+            `<option value="${k}" ${cur === k ? 'selected' : ''}>${escapeHtml(l)}${k !== 'round' && k !== cur && used.has(k) ? ' ↺' : ''}</option>`).join('');
+    };
+    const dataRows = imp.det ? imp.det.data.slice(0, 6) : Array.from({ length: Math.min(view.length - man.hr - 1, 6) }, (_, i) => man.hr + 1 + i);
+    return `<div class="gs-map">
+        <div class="gs-map-grid"><label>${escapeHtml(t('gsMapHeadRow'))}</label><select class="gs-man" data-k="hr">${rowOpts(man.hr)}</select></div>
+        <div class="gs-map-sub">${escapeHtml(t('gsMapColsHint'))}</div>
+        <div class="gs-map-wrap"><table class="gs-map-tbl">
+            <tr class="k-sel"><th></th>${Array.from({ length: W }, (_, c) => `<th><select class="gs-man ${man.map[c] && man.map[c] !== 'skip' ? 'on' : ''}" data-k="col" data-c="${c}">${fOpts(c)}</select></th>`).join('')}</tr>
+            <tr class="k-head"><th>${man.hr + 1}</th>${Array.from({ length: W }, (_, c) => `<td>${escapeHtml(cellTxt((view[man.hr] || [])[c]))}</td>`).join('')}</tr>
+            ${dataRows.map(r => `<tr><th>${r + 1}</th>${Array.from({ length: W }, (_, c) => `<td class="${man.map[c] && man.map[c] !== 'skip' ? 'on' : ''}">${escapeHtml(cellTxt((view[r] || [])[c]))}</td>`).join('')}</tr>`).join('')}
+        </table></div>
+    </div>`;
+}
+function gsOnMapChange(el) {
+    const imp = GS.ui.imp, man = imp && imp.man;
+    if (!man) return;
+    const k = el.dataset.k, v = el.value;
+    if (GS.ui.mod === 'cal') {
+        const view = () => man.tr ? gsTranspose(imp.rows) : imp.rows;
+        if (k === 'tr') { const nm = gsAutoCalMan(imp.rows, v === '1'); Object.assign(man, nm); }
+        else if (k === 'hr') man.hr = +v;
+        else if (k === 'epCol') man.epCol = +v;
+        else if (k === 'deptCol') {
+            man.deptCol = +v;
+            gsCalDeptLabels(view(), man).forEach(l => { if (!man.deptMap[l]) man.deptMap[l] = gsProcFrom(l) || 'skip'; });
+        } else if (k === 'dept') { const l = gsCalDeptLabels(view(), man)[+el.dataset.i]; if (l) man.deptMap[l] = v; }
+        if (k === 'hr' || k === 'epCol') gsCalDeptLabels(view(), man).forEach(l => { if (!man.deptMap[l]) man.deptMap[l] = gsProcFrom(l) || 'skip'; });
+    } else {
+        if (k === 'hr') { man.hr = +v; }
+        else if (k === 'col') {
+            const c = +el.dataset.c;
+            // Aynı alan başka sütunda seçiliyse oradan kaldır (her alan tek sütuna)
+            if (v !== 'round' && v !== 'skip') Object.keys(man.map).forEach(x => { if (man.map[x] === v) man.map[x] = 'skip'; });
+            man.map[c] = v;
+        }
+    }
+    gsImportRebuild();
 }
 async function gsImportLoad(url) {
     const id = gsIdFromUrl(url);
@@ -10289,12 +10508,13 @@ async function gsDoImport() {
         applyVersion(vid, normalizeVersionData(data));
         watchVersion();
         triggerAutoSave();
-        const L = { id: imp.id, url: imp.url, tab: imp.tab, gid: tab.gid, std: false, mode: 'import', versionId: vid,
+        const L = { id: imp.id, url: imp.url, tab: imp.tab, gid: tab.gid, std: false, mode: 'import', versionId: vid, tr: !!d.tr,
             headerRow: d.headerRow, dateCols: d.dateCols, rowMap: d.rowMap, linkedBy: who, linkedAt: now };
         await gsSaveLink('cal', L);
         // İlk "görülen" hâl = Sheet'in şimdiki metni → eşitleme sadece farkları yazar
         const st = gsState('cal', L), seenCells = {};
-        Object.values(d.rowMap).forEach(r => Object.values(d.dateCols).forEach(c => seenCells[r + '|' + c] = gsUp(gsCell(imp.rows, r, c))));
+        const view = d.tr ? gsTranspose(imp.rows) : imp.rows;
+        Object.values(d.rowMap).forEach(r => Object.values(d.dateCols).forEach(c => seenCells[r + '|' + c] = gsUp(gsCell(view, r, c))));
         st.seen = { cells: seenCells }; gsStoreSeen(st);
         if (App.module !== 'calendar') showModule('calendar');
         return true;
@@ -10434,6 +10654,12 @@ function openGsModal(mod) {
         gsModal.innerHTML = `<div class="rep-box gs-box"><div class="rep-head"><h2>🟩 ${escapeHtml(t('gsTitle'))}</h2><button class="icon-btn" data-gs="close">✕</button></div><div class="gs-tabs"></div><div class="gs-body"></div></div>`;
         document.body.appendChild(gsModal);
         gsModal.addEventListener('change', async (e) => {
+            if (e.target.classList.contains('gs-man') && GS.ui.imp) {
+                const wrap = gsModal.querySelector('.gs-map-wrap'), sx = wrap ? wrap.scrollLeft : 0;
+                gsOnMapChange(e.target); renderGsModal();
+                const w2 = gsModal.querySelector('.gs-map-wrap'); if (w2) w2.scrollLeft = sx;
+                return;
+            }
             if (!e.target.classList.contains('gs-tabsel') || !GS.ui.imp) return;
             GS.ui.imp.tab = e.target.value;
             GS.ui.busy = true; renderGsModal();
@@ -10495,6 +10721,7 @@ function renderGsModal() {
     const clientEdit = `<div class="gs-setup"><b>${escapeHtml(t('gsClientTitle'))}</b><p>${escapeHtml(t('gsClientHint'))}</p>
         <div class="gs-row"><input class="gs-client" placeholder="xxxxxxxx.apps.googleusercontent.com" value="${escapeHtml(GS.editClient ? cid : '')}"><button class="primary-btn small" data-gs="saveClient">${escapeHtml(t('gsClientSave'))}</button></div></div>`;
     const body = gsModal.querySelector('.gs-body');
+    gsModal.querySelector('.gs-box').classList.toggle('gs-wide', !L && !!GS.ui.imp);
     const rules = `<p class="gs-rules">${escapeHtml(t('gsRules_' + m))}</p>`;
     if (!L) {
         const needClient = !cid || GS.editClient;
@@ -10502,6 +10729,7 @@ function renderGsModal() {
         const impBox = imp ? `
             <div class="gs-row"><label>${escapeHtml(t('gsPickTab'))}</label>
                 <select class="gs-tabsel" ${dis}>${imp.tabs.map(x => `<option ${x.title === imp.tab ? 'selected' : ''}>${escapeHtml(x.title)}</option>`).join('')}</select></div>
+            ${busy ? '' : gsMapHtml()}
             <pre class="gs-preview ${imp.det ? '' : 'bad'}">${escapeHtml(busy ? t('gsReading') : (imp.preview || ''))}</pre>
             <div class="gs-actions"><button class="primary-btn" data-gs="impDo" ${imp.det && !busy ? '' : 'disabled'}>${escapeHtml(t('gsDoImport'))}</button>
                 <button class="ghost-btn" data-gs="impCancel" ${dis}>✕</button></div>`
