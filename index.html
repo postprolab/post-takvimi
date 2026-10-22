@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.21-1">
+<meta name="app-version" content="2026.10.22-1">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -352,6 +352,19 @@ body.read-only-mode .cell.timeline { cursor: default; }
 .notes-dept[data-dep="send"]  { box-shadow: inset 0 -2px #10ac84; }
 .resize-handle { position: absolute; top: 0; right: 0; width: 6px; height: 100%; cursor: col-resize; background: transparent; }
 .resize-handle:hover { background: #00ff99; }
+
+/* Takvim yakınlaştırma */
+.zoom-ctl { display: inline-flex; align-items: center; gap: 2px; background: #1a1d24; border: 1px solid #333; border-radius: 8px; padding: 2px; }
+.zoom-ctl .nav-btn { min-width: 30px; padding: 4px 8px; font-size: 16px; font-weight: 800; line-height: 1; margin: 0; }
+.zoom-ctl .nav-btn:disabled { opacity: .35; cursor: default; }
+#zoomLbl { min-width: 42px; text-align: center; font-size: 11px; font-weight: 700; color: #bbb; }
+body.cal-zoom-s .header .cell.date span { display: none; }
+body.cal-zoom-s .header .cell.date { font-size: 8px; padding: 0; }
+body.cal-zoom-s .cell.timeline { font-size: 6px !important; padding: 0; }
+body.cal-zoom-xs .header .cell.date { font-size: 0; }
+body.cal-zoom-xs .header .cell.date::after { content: attr(data-d); font-size: 7px; }
+body.cal-zoom-xs .cell.timeline { font-size: 0 !important; }
+body.cal-zoom-l .cell.timeline { font-size: 11px !important; }
 
 </style>
 <style>
@@ -1469,6 +1482,7 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
                 </div>
                 <div class="tb-sep"></div>
                 <button id="openModalBtn" data-help="help_setStart" class="nav-btn nav-btn-primary"><span>📅</span> <span data-i18n="setStartDate">SET START DATE</span></button>
+                <div class="zoom-ctl" data-help="help_zoom"><button id="zoomOutBtn" class="nav-btn" title="Uzaklaştır">−</button><span id="zoomLbl">100%</span><button id="zoomInBtn" class="nav-btn" title="Yakınlaştır">+</button></div>
                 <button id="toggleTodayBtn" data-help="help_today" class="nav-btn"><span>📍</span> <span data-i18n="todayLine">TODAY LINE</span></button>
                 <button id="toggleViewBtn" data-help="help_viewToggle" class="nav-btn">🔄 CALENDAR VIEW</button>
                 <button id="openAutoModalBtn" data-help="help_auto" class="nav-btn" style="background:#2a2d35 !important; border-color:var(--neon-green) !important;"><span>🤖</span> <span data-i18n="autoSchedule">AUTO SCHEDULE</span></button>
@@ -1680,6 +1694,8 @@ PLATFORM_CUTS.forEach(p => {
 
 // 💬 Altyazı çalışması (CUTS menüsünün en altında)
 CUT_TYPES.subtitle = { label: "ALTYAZI", bg: "#00897B", fg: "#FFFFFF" };
+// 📤 Export (CUTS menüsünün en altında)
+CUT_TYPES.export = { label: "EXPORT", bg: "#5E35B1", fg: "#FFFFFF" };
 
 // 📦 SEND satırına özel türler (sağ tık menüsü). Yeni tür eklemek için buraya bir satır yeter.
 const SEND_TYPES = {
@@ -1761,7 +1777,7 @@ const I18N = {
         readOnlyBannerText: "This is a read-only shared view — editing is disabled.",
         myProjects: "MY PROJECTS", deleteAll: "DELETE ALL", close: "CLOSE", deleteProject: "Delete Project",
         selectStartDate: "SELECT START DATE", apply: "APPLY", cancel: "CANCEL",
-        subtitleCut: "Subtitles", cellsSelected: "{n} cells selected — applies to all", renameMany: "New name for {n} cells:",
+        subtitleCut: "Subtitles", exportCut: "Export", zoomIn: "Zoom in", zoomOut: "Zoom out", zoomHint: "Zoom (Ctrl + mouse wheel)", cellsSelected: "{n} cells selected — applies to all", renameMany: "New name for {n} cells:",
         epCellsCount: "{n} filled cells", epCloneSame: "Clone this episode's plan to {next} (same days)",
         epCloneShift: "Clone to {next} and shift… (suggested: {d} days)", epCloneMany: "Clone to several following episodes…",
         epSelectAll: "Select all of this episode (to move it)", epClear: "Clear this episode",
@@ -1790,7 +1806,7 @@ const I18N = {
         readOnlyBannerText: "Bu bir salt-okunur paylaşım görünümüdür — düzenleme yapılamaz.",
         myProjects: "PROJELERİM", deleteAll: "TÜMÜNÜ SİL", close: "KAPAT", deleteProject: "Projeyi Sil",
         selectStartDate: "BAŞLANGIÇ TARİHİ SEÇ", apply: "UYGULA", cancel: "VAZGEÇ",
-        subtitleCut: "Altyazı", cellsSelected: "{n} hücre seçili — hepsine uygulanır", renameMany: "{n} hücrenin yeni adı:",
+        subtitleCut: "Altyazı", exportCut: "Export", zoomIn: "Yakınlaştır", zoomOut: "Uzaklaştır", zoomHint: "Yakınlaştır / uzaklaştır (Ctrl + fare tekerleği)", cellsSelected: "{n} hücre seçili — hepsine uygulanır", renameMany: "{n} hücrenin yeni adı:",
         epCellsCount: "{n} dolu hücre", epCloneSame: "Planı alt bölüme klonla → {next} (aynı günler)",
         epCloneShift: "Alt bölüme klonla ve kaydır… → {next} (önerilen: {d} gün)", epCloneMany: "Sonraki birkaç bölüme klonla…",
         epSelectAll: "Bu bölümün tamamını seç (taşımak için)", epClear: "Bu bölümü temizle",
@@ -2144,12 +2160,45 @@ function filterDept(dept, btn) {
     if (isVerticalActive) renderVerticalDashboard();
 }
 
+// ---------------------------------------------------------------------
+// YAKINLAŞTIR / UZAKLAŞTIR (yatay görünüm): gün sütunlarının genişliği değişir
+// ---------------------------------------------------------------------
+const CAL_ZOOMS = [14, 20, 26, 34, 45, 60, 80, 110];
+let calZoom = (() => { try { const v = parseInt(localStorage.getItem('calZoom')); return CAL_ZOOMS.includes(v) ? v : 45; } catch (e) { return 45; } })();
+function calCellW() { return calZoom; }
+function applyCalZoom(keepCenter) {
+    const labels = document.querySelector('#grid .grid-labels');
+    const stickyW = labels ? labels.offsetWidth : 210;
+    const oldW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-width')) || 45;
+    const center = keepCenter ? (container.scrollLeft + container.clientWidth / 2 - stickyW) / oldW : null;
+    document.documentElement.style.setProperty('--cell-width', calZoom + 'px');
+    document.body.classList.toggle('cal-zoom-s', calZoom < 34);
+    document.body.classList.toggle('cal-zoom-xs', calZoom < 24);
+    document.body.classList.toggle('cal-zoom-l', calZoom > 60);
+    const lbl = document.getElementById('zoomLbl');
+    if (lbl) lbl.textContent = Math.round(calZoom / 45 * 100) + '%';
+    const zi = document.getElementById('zoomInBtn'), zo = document.getElementById('zoomOutBtn');
+    if (zi) zi.disabled = calZoom === CAL_ZOOMS[CAL_ZOOMS.length - 1];
+    if (zo) zo.disabled = calZoom === CAL_ZOOMS[0];
+    if (center !== null) setScrollInstant(Math.max(0, center * calZoom + stickyW - container.clientWidth / 2), container.scrollTop);
+    if (typeof dates !== 'undefined' && dates.length) updateTodayLine(false);
+    try { localStorage.setItem('calZoom', calZoom); } catch (e) {}
+}
+function stepCalZoom(dir) {
+    const i = CAL_ZOOMS.indexOf(calZoom);
+    const n = Math.max(0, Math.min(CAL_ZOOMS.length - 1, (i < 0 ? 4 : i) + dir));
+    if (CAL_ZOOMS[n] === calZoom) return;
+    calZoom = CAL_ZOOMS[n];
+    applyCalZoom(true);
+}
+window.stepCalZoom = stepCalZoom;
+
 function updateTodayLine(scrollToToday = true) {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const todayIdx = dates.findIndex(d => d.getTime() === today.getTime());
     const line = document.getElementById('todayLine');
     if (todayIdx !== -1) {
-        const xPos = 70 + 140 + (todayIdx * 45);
+        const xPos = 70 + 140 + (todayIdx * calCellW());
         line.style.left = xPos + "px";
         line.style.height = document.getElementById('grid').scrollHeight + "px";
         if (scrollToToday) setScrollInstant(xPos - (container.offsetWidth / 2), container.scrollTop);
@@ -2231,7 +2280,7 @@ function buildHeader() {
     const days = dates.map((d, i) => {
         const dayName = escapeHtml(d.toLocaleDateString(localeStr(), { weekday: 'short' }).toUpperCase());
         const hol = holidayName(d);
-        return `<div class="cell date${milestoneCols.has(i) ? ' milestone' : ''}${hol ? ' holiday' : ''}" data-col="${i}" style="grid-row: 2; grid-column: ${i + 1}"${hol ? ` title="🇹🇷 ${escapeHtml(hol)}"` : ''}>` +
+        return `<div class="cell date${milestoneCols.has(i) ? ' milestone' : ''}${hol ? ' holiday' : ''}" data-col="${i}" data-d="${d.getDate()}" style="grid-row: 2; grid-column: ${i + 1}"${hol ? ` title="🇹🇷 ${escapeHtml(hol)}"` : ''}>` +
                `<div style="line-height:1.2; padding-top:2px;">${d.getDate()}/${d.getMonth() + 1}<br><span style="font-size:8px; opacity:0.7;">${dayName}</span></div></div>`;
     }).join("");
 
@@ -2365,6 +2414,7 @@ gridEl.addEventListener('dblclick', (e) => {
     const now = Date.now();
     if (lastDbl.cell === cell && now - lastDbl.t < 450) return;
     lastDbl = { cell, t: now };
+    if (e.shiftKey && shiftFillTo(cell)) return;
     if (cell.classList.contains('filled')) {
         contextTarget = cell;
         showGridMenu(e.clientX, e.clientY);
@@ -2374,6 +2424,22 @@ gridEl.addEventListener('dblclick', (e) => {
         commitChange();
     }
 });
+
+// Shift + çift tık: aynı satırdaki dolu hücreden (seçili olan ya da en yakın soldaki) buraya kadar kopyala
+function shiftFillTo(cell) {
+    const ep = cell.dataset.ep, proc = cell.dataset.proc_type, target = parseInt(cell.dataset.col);
+    let src = null;
+    selectedCells.forEach(c => { if (c.classList.contains('filled') && c.dataset.ep === ep && c.dataset.proc_type === proc && c !== cell) src = c; });
+    if (!src) for (let c = target - 1; c >= 0; c--) { const x = getCell(c, ep, proc); if (x && x.classList.contains('filled')) { src = x; break; } }
+    if (!src) for (let c = target + 1; c < TOTAL_DAYS; c++) { const x = getCell(c, ep, proc); if (x && x.classList.contains('filled')) { src = x; break; } }
+    if (!src) return false;
+    const data = readCell(src), from = parseInt(data.col);
+    const [a, b] = from < target ? [from + 1, target] : [target, from - 1];
+    for (let c = a; c <= b; c++) { const x = getCell(c, ep, proc); if (x) fillCell(x, data); }
+    clearActiveSelection();
+    commitChange();
+    return true;
+}
 
 gridEl.addEventListener('mousedown', (e) => {
     const cell = timelineCellFrom(e);
@@ -2552,6 +2618,10 @@ window.showGridMenu = function (x, y) {
                  <div class="item" data-act="cut" data-cut="subtitle">
                     <span class="swatch" style="background:${CUT_TYPES.subtitle.bg}"></span>💬 ${escapeHtml(t('subtitleCut'))}
                     ${currentType === 'subtitle' ? '<span class="check">✓</span>' : ''}
+                 </div>
+                 <div class="item" data-act="cut" data-cut="export">
+                    <span class="swatch" style="background:${CUT_TYPES.export.bg}"></span>📤 ${escapeHtml(t('exportCut'))}
+                    ${currentType === 'export' ? '<span class="check">✓</span>' : ''}
                  </div>`;
 
         if (currentType) {
@@ -3527,6 +3597,24 @@ document.getElementById('runAutoSetupBtn').onclick = function () {
 // Takvim artık bir proje açıldığında çiziliyor (workspace.js → openProject)
 // ---------------------------------------------------------------------
 applyLanguage();
+
+// Yakınlaştırma düğmeleri ve Ctrl + tekerlek
+(function setupCalZoom() {
+    const zi = document.getElementById('zoomInBtn'), zo = document.getElementById('zoomOutBtn');
+    if (zi) zi.onclick = () => stepCalZoom(1);
+    if (zo) zo.onclick = () => stepCalZoom(-1);
+    let acc = 0, last = 0;
+    container.addEventListener('wheel', (e) => {
+        if (!(e.ctrlKey || e.metaKey) || isVerticalActive) return;
+        e.preventDefault();
+        acc += e.deltaY;
+        const now = Date.now();
+        if (Math.abs(acc) < 40 && now - last < 400) return;
+        stepCalZoom(acc < 0 ? 1 : -1);
+        acc = 0; last = now;
+    }, { passive: false });
+    applyCalZoom(false);
+})();
 
 </script>
 <script>
@@ -8662,6 +8750,7 @@ Object.assign(I18N.en, {
     helpTipsOn: "Help tips: On", helpTipsOff: "Help tips: Off",
     help_setStart: "Sets the calendar's start date. Your plan is not deleted — it shifts to the new date.",
     help_today: "Shows or hides a green line marking today on the calendar.",
+    help_zoom: "Zoom the calendar in or out (also Ctrl + mouse wheel over the calendar). Tip: Shift + double-click a cell to copy the nearest work day in that row up to there.",
     help_viewToggle: "Switches between the timeline and the monthly calendar view. In calendar view, right-click a day to add an entry.",
     help_auto: "Builds the whole post-production calendar automatically from the number of episodes and department durations.",
     help_exportVertical: "Downloads a printable day-by-day list of the calendar. If days are selected in calendar view, only those are included.",
@@ -8697,6 +8786,7 @@ Object.assign(I18N.tr, {
     helpTipsOn: "Yardım balonları: Açık", helpTipsOff: "Yardım balonları: Kapalı",
     help_setStart: "Takvimin başlangıç tarihini seçer. Mevcut plan silinmez, yeni tarihe kaydırılır.",
     help_today: "Bugünün tarihini takvimde yeşil bir çizgiyle gösterir veya gizler.",
+    help_zoom: "Takvimi yakınlaştırır / uzaklaştırır (takvim üzerinde Ctrl + fare tekerleği de çalışır). İpucu: Shift basılıyken bir hücreye çift tıklarsan, o satırdaki en yakın iş günü oraya kadar kopyalanır.",
     help_viewToggle: "Zaman çizelgesi ile aylık takvim görünümü arasında geçiş yapar. Takvim görünümünde bir güne sağ tıklayarak kayıt ekleyebilirsin.",
     help_auto: "Bölüm sayısı ve departman sürelerini girerek tüm post prodüksiyon takvimini otomatik oluşturur.",
     help_exportVertical: "Takvimi gün gün listelenmiş, yazdırılabilir bir dosya olarak indirir. Takvim görünümünde seçili günler varsa sadece onları alır.",
