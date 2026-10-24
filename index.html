@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.22-2">
+<meta name="app-version" content="2026.10.24-1">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -1434,6 +1434,14 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 .sh-add select { background: #111; border: 1px solid #333; color: #fff; border-radius: 7px; padding: 9px 10px; font: inherit; font-size: 13px; }
 .sh-check { flex-direction: row !important; align-items: center; gap: 8px !important; font-weight: 600 !important; color: #ccc !important; }
 .sh-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1f6f3d; color: #fff; padding: 10px 18px; border-radius: 10px; font-weight: 700; z-index: 30000; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+
+.sh-tabrow { display: flex; align-items: flex-end; gap: 10px; }
+.sh-tabrow .sh-tabs { flex: 1; min-width: 0; }
+.sh-dropstrip { flex: 0 0 auto; border: 2px dashed #3d6b4c; color: #9fd9b2; border-radius: 9px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; margin-bottom: 3px; white-space: nowrap; transition: background .15s, border-color .15s; }
+.sh-dropstrip:hover { background: #142a1c; border-color: #34d17a; color: #fff; }
+.sh-dropstrip.drag { background: #1f6f3d; border-color: #34d17a; color: #fff; transform: scale(1.04); }
+.sh-tablet { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: #1d2a3a; border: 1px solid #2f4a68; color: #d7e7ff; border-radius: 10px; padding: 10px 14px; font-size: 13px; line-height: 1.45; }
+.sh-tablet a { text-decoration: none; display: inline-flex; align-items: center; }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -10985,6 +10993,15 @@ function shParse(url) {
     const g = s.match(/[#&?]gid=(\d+)/);
     return { sheetId: m[1], gid: g ? g[1] : '' };
 }
+// Dokunmatik cihaz (tablet/telefon): Google gömülü pencerede düzenlemeye izin vermiyor
+const shTouch = () => { try { return matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches; } catch (e) { return false; } };
+// Sheets uygulamasını açan link (Android: intent; iPad/iPhone: googlesheets:// — uygulama yoksa tarayıcıda açılır)
+function shAppUrl(x) {
+    const web = shEditUrl(x);
+    const ua = navigator.userAgent || '';
+    if (/Android/i.test(ua)) return `intent://docs.google.com/spreadsheets/d/${encodeURIComponent(x.sheetId)}/edit#Intent;scheme=https;package=com.google.android.apps.docs.editors.sheets;S.browser_fallback_url=${encodeURIComponent(web)};end`;
+    return web;
+}
 const shEditUrl = (x) => `https://docs.google.com/spreadsheets/d/${encodeURIComponent(x.sheetId)}/edit${x.gid ? '#gid=' + encodeURIComponent(x.gid) : ''}`;
 const shMd = (txt) => escapeHtml(txt).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
 function shGuideHtml(withActions) {
@@ -11076,7 +11093,10 @@ function renderSheetsModule() {
                     ${ro ? '' : `<button class="primary-btn small" data-shact="add">+ ${escapeHtml(t('shAdd'))}</button>`}
                 </div>
             </div>
-            ${list.length ? `<div class="sh-tabs">${tabs}</div>` : ''}
+            ${list.length ? `<div class="sh-tabrow"><div class="sh-tabs">${tabs}</div>
+                ${cur && !ro && !shTouch() ? `<div class="sh-dropstrip" data-shact="img" data-help="help_shImg">🖼 ${escapeHtml(t('shDropStrip'))}</div>` : ''}</div>` : ''}
+            ${cur && shTouch() ? `<div class="sh-tablet">📱 ${escapeHtml(t('shTablet'))}
+                <a class="primary-btn small" href="${escapeHtml(shAppUrl(cur))}" target="_blank" rel="noopener">${escapeHtml(t('shOpenApp'))}</a></div>` : ''}
             <div class="sh-frame" id="shFrame">
                 ${cur && !ro ? `<div class="sh-drop" hidden><div>🖼 ${escapeHtml(t('shDrop'))}</div></div>` : ''}
                 ${cur ? `<iframe src="${escapeHtml(shEditUrl(cur))}" title="${escapeHtml(cur.title)}" allow="clipboard-read; clipboard-write; fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe>`
@@ -11167,6 +11187,9 @@ $('sheetsModule').addEventListener('contextmenu', (e) => {
 Object.assign(I18N.tr, {
     shImg: "Resim ekle", help_shImg: "Bir resmi Sheet'te seçtiğin hücreye ekler. Resmi Sheet penceresinin üstüne sürükleyip bırakabilirsin.",
     shDrop: "Resmi bırak — hangi hücreye ekleneceğini soracağım",
+    shDropStrip: "Resmi buraya sürükle ya da tıkla",
+    shTablet: "Tablette Google, Sheet'i bu pencerede sadece görüntülemeye izin veriyor. Hücreleri düzenlemek için Sheets uygulamasında aç.",
+    shOpenApp: "Sheets uygulamasında aç",
     shImgTitle: "Hücreye resim ekle", shImgTab: "Sekme", shImgCell: "Hücre", shImgCellPh: "ör. B5",
     shImgGrow: "Satırı resme göre büyüt", shImgDo: "Hücreye ekle", shImgWorking: "Yükleniyor…", shImgDone: "Resim {cell} hücresine eklendi.",
     shImgBadCell: "Hücreyi B5 gibi yaz (harf + satır numarası).", shImgNotImg: "Bu bir resim dosyası değil.",
@@ -11177,6 +11200,9 @@ Object.assign(I18N.tr, {
 Object.assign(I18N.en, {
     shImg: "Add image", help_shImg: "Adds an image into a cell of the Sheet. You can also drag & drop an image onto the Sheet window.",
     shDrop: "Drop the image — I'll ask which cell it goes in",
+    shDropStrip: "Drag an image here or click",
+    shTablet: "On tablets Google only allows viewing the Sheet inside this window. To edit cells, open it in the Sheets app.",
+    shOpenApp: "Open in Sheets app",
     shImgTitle: "Add image to a cell", shImgTab: "Tab", shImgCell: "Cell", shImgCellPh: "e.g. B5",
     shImgGrow: "Make the row taller to fit", shImgDo: "Add to cell", shImgWorking: "Uploading…", shImgDone: "Image added to {cell}.",
     shImgBadCell: "Type the cell like B5 (letter + row number).", shImgNotImg: "This is not an image file.",
@@ -11295,7 +11321,7 @@ function shToast(msg) {
     let depth = 0;
     const isFiles = (e) => e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
     const zone = () => document.querySelector('#shFrame .sh-drop');
-    const show = (v) => { const z = zone(); if (z) z.hidden = !v; };
+    const show = (v) => { const z = zone(); if (z) z.hidden = !v; const st = document.querySelector('.sh-dropstrip'); if (st) st.classList.toggle('drag', !!v); };
     document.addEventListener('dragenter', (e) => {
         if (App.module !== 'sheets' || App.view !== 'workspace' || App.readOnly || !isFiles(e)) return;
         depth++; show(true);
