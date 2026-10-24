@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.24-3">
+<meta name="app-version" content="2026.10.24-4">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -11089,22 +11089,19 @@ function renderSheetsModule() {
                 <h2>📊 ${escapeHtml(t('modSheets'))}</h2>
                 <div class="sh-tools">
                     <button class="ghost-btn" data-shact="how" data-help="help_mod_sheets">❔ ${escapeHtml(t('shHow'))}</button>
-                    ${cur && !ro ? `<button class="ghost-btn" data-shact="img" data-help="help_shImg">🖼 ${escapeHtml(t('shImg'))}</button>` : ''}
                     ${cur ? `<button class="ghost-btn" data-shact="reload" title="${escapeHtml(t('shReload'))}">⟳</button>
                     <button class="ghost-btn" data-shact="full">⛶ ${escapeHtml(t('shFull'))}</button>
                     <a class="ghost-btn" href="${escapeHtml(shEditUrl(cur))}" target="_blank" rel="noopener">↗ ${escapeHtml(t('shOpenNew'))}</a>` : ''}
                     ${ro ? '' : `<button class="primary-btn small" data-shact="add">+ ${escapeHtml(t('shAdd'))}</button>`}
                 </div>
             </div>
-            ${list.length ? `<div class="sh-tabrow"><div class="sh-tabs">${tabs}</div>
-                ${cur && !ro && !shTouch() ? `<div class="sh-dropstrip" data-shact="img" title="${escapeHtml(t('shDropTip'))}">🖼 ${escapeHtml(t('shDropStrip'))}</div>` : ''}</div>` : ''}
+            ${list.length ? `<div class="sh-tabrow"><div class="sh-tabs">${tabs}</div></div>` : ''}
             ${cur && shTouch() ? `<div class="sh-tablet">📱 ${escapeHtml(t('shTablet'))}
                 <a class="primary-btn small" href="${escapeHtml(shAppUrl(cur))}" target="_blank" rel="noopener">${escapeHtml(t('shOpenApp'))}</a></div>` : ''}
             <div class="sh-frame" id="shFrame">
                 ${cur ? `<iframe src="${escapeHtml(shEditUrl(cur))}" title="${escapeHtml(cur.title)}" allow="clipboard-read; clipboard-write; fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe>`
                     : `<div class="sh-empty">${ro ? `<p>${escapeHtml(t('shViewerEmpty'))}</p>` : shGuideHtml(`<div class="sh-actions"><button class="primary-btn" data-shact="add">${escapeHtml(t('shGuideAddNow'))}</button></div>`)}</div>`}
             </div>
-            ${cur && !ro && !shTouch() ? `<div class="sh-hint">💡 ${escapeHtml(t('shDropTip'))}</div>` : ''}
             ${cur ? `<div class="sh-hint">${escapeHtml(t('shHint'))} <a href="${escapeHtml(shEditUrl(cur))}" target="_blank" rel="noopener">${escapeHtml(t('shHintAct'))} ↗</a></div>` : ''}
         </div>`;
     // İlk girişte rehber penceresi (Sheet varken; boşken rehber zaten sayfada)
@@ -11169,7 +11166,6 @@ $('sheetsModule').addEventListener('click', (e) => {
     if (a === 'add') showSheetAdd();
     else if (a === 'how') showSheetsGuide();
     else if (a === 'reload') { const fr = document.querySelector('#shFrame iframe'); if (fr) fr.src = fr.src; }
-    else if (a === 'img') shPickImage();
     else if (a === 'full') { const fr = $('shFrame'); if (fr && fr.requestFullscreen) fr.requestFullscreen().catch(() => {}); }
 });
 $('sheetsModule').addEventListener('contextmenu', (e) => {
@@ -11330,31 +11326,6 @@ function shToast(msg) {
     document.body.appendChild(d);
     setTimeout(() => d.remove(), 6500);
 }
-// Sürükle-bırak: dosya sayfaya girince Sheet penceresinin üstüne bırakma alanı açılır
-(function shDnD() {
-    let depth = 0;
-    const isFiles = (e) => e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
-    const zone = () => document.querySelector('.sh-dropstrip');
-    const show = (v) => { const st = document.querySelector('.sh-dropstrip'); if (st) st.classList.toggle('drag', !!v); };
-    document.addEventListener('dragenter', (e) => {
-        if (App.module !== 'sheets' || App.view !== 'workspace' || App.readOnly || !isFiles(e)) return;
-        depth++; show(true);
-    });
-    document.addEventListener('dragleave', (e) => {
-        if (App.module !== 'sheets' || !isFiles(e)) return;
-        depth = Math.max(0, depth - 1);
-        if (!depth) show(false);
-    });
-    document.addEventListener('dragover', (e) => { if (App.module === 'sheets' && isFiles(e) && zone()) e.preventDefault(); });
-    document.addEventListener('drop', (e) => {
-        if (App.module !== 'sheets' || !isFiles(e)) return;
-        e.preventDefault();
-        depth = 0; show(false);
-        const f = [...e.dataTransfer.files].find(x => /^image\//.test(x.type));
-        if (!f) { if (e.dataTransfer.files.length) alert(t('shImgNotImg')); return; }
-        shImageDialog(f);
-    });
-})();
 
 // ---------------------------------------------------------------------
 // 12) BAŞLANGIÇ — bu dosyadaki çeviriler eklendikten sonra dili yeniden uygula
