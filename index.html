@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.24-2">
+<meta name="app-version" content="2026.10.24-3">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -1433,7 +1433,7 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 .sh-img-row { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
 .sh-add select { background: #111; border: 1px solid #333; color: #fff; border-radius: 7px; padding: 9px 10px; font: inherit; font-size: 13px; }
 .sh-check { flex-direction: row !important; align-items: center; gap: 8px !important; font-weight: 600 !important; color: #ccc !important; }
-.sh-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1f6f3d; color: #fff; padding: 10px 18px; border-radius: 10px; font-weight: 700; z-index: 30000; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+.sh-toast { max-width: min(560px, 92vw); text-align: center; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1f6f3d; color: #fff; padding: 10px 18px; border-radius: 10px; font-weight: 700; z-index: 30000; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
 
 .sh-tabrow { display: flex; align-items: flex-end; gap: 10px; }
 .sh-tabrow .sh-tabs { flex: 1; min-width: 0; }
@@ -11097,14 +11097,14 @@ function renderSheetsModule() {
                 </div>
             </div>
             ${list.length ? `<div class="sh-tabrow"><div class="sh-tabs">${tabs}</div>
-                ${cur && !ro && !shTouch() ? `<div class="sh-dropstrip" data-shact="img" data-help="help_shImg">🖼 ${escapeHtml(t('shDropStrip'))}</div>` : ''}</div>` : ''}
+                ${cur && !ro && !shTouch() ? `<div class="sh-dropstrip" data-shact="img" title="${escapeHtml(t('shDropTip'))}">🖼 ${escapeHtml(t('shDropStrip'))}</div>` : ''}</div>` : ''}
             ${cur && shTouch() ? `<div class="sh-tablet">📱 ${escapeHtml(t('shTablet'))}
                 <a class="primary-btn small" href="${escapeHtml(shAppUrl(cur))}" target="_blank" rel="noopener">${escapeHtml(t('shOpenApp'))}</a></div>` : ''}
             <div class="sh-frame" id="shFrame">
-                ${cur && !ro ? `<div class="sh-drop" hidden><div>🖼 ${escapeHtml(t('shDrop'))}</div></div>` : ''}
                 ${cur ? `<iframe src="${escapeHtml(shEditUrl(cur))}" title="${escapeHtml(cur.title)}" allow="clipboard-read; clipboard-write; fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe>`
                     : `<div class="sh-empty">${ro ? `<p>${escapeHtml(t('shViewerEmpty'))}</p>` : shGuideHtml(`<div class="sh-actions"><button class="primary-btn" data-shact="add">${escapeHtml(t('shGuideAddNow'))}</button></div>`)}</div>`}
             </div>
+            ${cur && !ro && !shTouch() ? `<div class="sh-hint">💡 ${escapeHtml(t('shDropTip'))}</div>` : ''}
             ${cur ? `<div class="sh-hint">${escapeHtml(t('shHint'))} <a href="${escapeHtml(shEditUrl(cur))}" target="_blank" rel="noopener">${escapeHtml(t('shHintAct'))} ↗</a></div>` : ''}
         </div>`;
     // İlk girişte rehber penceresi (Sheet varken; boşken rehber zaten sayfada)
@@ -11190,12 +11190,13 @@ $('sheetsModule').addEventListener('contextmenu', (e) => {
 Object.assign(I18N.tr, {
     shImg: "Resim ekle", help_shImg: "Bir resmi Sheet'te seçtiğin hücreye ekler. Resmi Sheet penceresinin üstüne sürükleyip bırakabilirsin.",
     shDrop: "Resmi bırak — hangi hücreye ekleneceğini soracağım",
-    shDropStrip: "Resmi buraya sürükle ya da tıkla",
+    shDropStrip: "Hücre adıyla ekle: resmi buraya sürükle",
+    shDropTip: "İki yol var: 1) Resmi doğrudan Sheet'in üstüne sürükle — Google hücrelerin üstüne koyar; resme tıklayıp ⋮ menüsünden “Resmi seçili hücreye yerleştir” ile seçtiğin hücrenin içine alırsın. 2) Bu kutuya bırak — hücre adını (ör. B5) yazarsın, site resmi o hücrenin içine yerleştirir.",
     shTablet: "Tablette Google, Sheet'i bu pencerede sadece görüntülemeye izin veriyor. Hücreleri düzenlemek için Sheets uygulamasında aç.",
     shOpenApp: "Sheets uygulamasında aç",
     shImgAuth: "Google'a izin ver", shImgAuthHint: "İlk kullanımda Google'dan Drive'a resim yükleme izni gerekiyor.", shImgTabLater: "(izin verince sekmeler gelecek)",
     shImgTitle: "Hücreye resim ekle", shImgTab: "Sekme", shImgCell: "Hücre", shImgCellPh: "ör. B5",
-    shImgGrow: "Satırı resme göre büyüt", shImgDo: "Hücreye ekle", shImgWorking: "Yükleniyor…", shImgDone: "Resim {cell} hücresine eklendi.",
+    shImgGrow: "Satırı resme göre büyüt", shImgDo: "Hücreye ekle", shImgWorking: "Yükleniyor…", shImgDone: "Resim {cell} hücresine eklendi. Sheet'te “Erişim izni ver” çıkarsa bir kere bas (her dosyada bir kez sorulur).",
     shImgBadCell: "Hücreyi B5 gibi yaz (harf + satır numarası).", shImgNotImg: "Bu bir resim dosyası değil.",
     shImgNeedSetup: "Resim eklemek için bir kerelik Google kurulumu (Client ID) gerekiyor. Kenar çubuğundaki “Google Sheets” penceresinden yapabilirsin.",
     shImgDriveOff: "Google Drive API açık değil ya da izin verilmedi. Google Cloud'da “Google Drive API”yi Enable yap ve Data Access'e drive.file iznini ekle.",
@@ -11204,12 +11205,13 @@ Object.assign(I18N.tr, {
 Object.assign(I18N.en, {
     shImg: "Add image", help_shImg: "Adds an image into a cell of the Sheet. You can also drag & drop an image onto the Sheet window.",
     shDrop: "Drop the image — I'll ask which cell it goes in",
-    shDropStrip: "Drag an image here or click",
+    shDropStrip: "Add by cell name: drag image here",
+    shDropTip: "Two ways: 1) Drag the image straight onto the Sheet — Google places it over the cells; click it and use ⋮ → “Place image in selected cell” to put it inside the cell you selected. 2) Drop it on this box — type the cell (e.g. B5) and the site puts it inside that cell.",
     shTablet: "On tablets Google only allows viewing the Sheet inside this window. To edit cells, open it in the Sheets app.",
     shOpenApp: "Open in Sheets app",
     shImgAuth: "Allow Google access", shImgAuthHint: "The first time, Google needs to allow uploading images to your Drive.", shImgTabLater: "(tabs appear after you allow access)",
     shImgTitle: "Add image to a cell", shImgTab: "Tab", shImgCell: "Cell", shImgCellPh: "e.g. B5",
-    shImgGrow: "Make the row taller to fit", shImgDo: "Add to cell", shImgWorking: "Uploading…", shImgDone: "Image added to {cell}.",
+    shImgGrow: "Make the row taller to fit", shImgDo: "Add to cell", shImgWorking: "Uploading…", shImgDone: "Image added to {cell}. If the Sheet shows “Allow access”, click it once (asked once per file).",
     shImgBadCell: "Type the cell like B5 (letter + row number).", shImgNotImg: "This is not an image file.",
     shImgNeedSetup: "Adding images needs the one-time Google setup (Client ID). Do it in the “Google Sheets” window in the sidebar.",
     shImgDriveOff: "Google Drive API is not enabled or permission was not granted. Enable “Google Drive API” in Google Cloud and add the drive.file scope under Data Access.",
@@ -11326,14 +11328,14 @@ function shToast(msg) {
     const d = document.createElement('div');
     d.className = 'sh-toast'; d.textContent = '✓ ' + msg;
     document.body.appendChild(d);
-    setTimeout(() => d.remove(), 3200);
+    setTimeout(() => d.remove(), 6500);
 }
 // Sürükle-bırak: dosya sayfaya girince Sheet penceresinin üstüne bırakma alanı açılır
 (function shDnD() {
     let depth = 0;
     const isFiles = (e) => e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
-    const zone = () => document.querySelector('#shFrame .sh-drop');
-    const show = (v) => { const z = zone(); if (z) z.hidden = !v; const st = document.querySelector('.sh-dropstrip'); if (st) st.classList.toggle('drag', !!v); };
+    const zone = () => document.querySelector('.sh-dropstrip');
+    const show = (v) => { const st = document.querySelector('.sh-dropstrip'); if (st) st.classList.toggle('drag', !!v); };
     document.addEventListener('dragenter', (e) => {
         if (App.module !== 'sheets' || App.view !== 'workspace' || App.readOnly || !isFiles(e)) return;
         depth++; show(true);
