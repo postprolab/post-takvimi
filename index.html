@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.24-4">
+<meta name="app-version" content="2026.10.24-5">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -1445,6 +1445,17 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 .sh-auth { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #2a2412; border: 1px solid #5a4a1a; border-radius: 8px; padding: 9px 11px; font-size: 12.5px; color: #ffe2a0; }
 .sh-auth[hidden] { display: none; }
 .sh-auth span { flex: 1; min-width: 180px; }
+
+.sh-drop div small { display: block; font-size: 13px; font-weight: 600; opacity: .85; margin-top: 6px; }
+.sh-setup { background: #12151a; border: 1px solid #2a2f38; border-radius: 9px; padding: 11px 13px; font-size: 13px; line-height: 1.5; color: #d6dae2; }
+.sh-setup ol { margin: 6px 0 8px; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.sh-code { position: relative; }
+.sh-code pre { margin: 0; max-height: 170px; overflow: auto; background: #0b0d10; border: 1px solid #23272f; border-radius: 7px; padding: 10px; font-size: 11px; line-height: 1.45; color: #b9f6ca; white-space: pre; }
+.sh-code button { position: absolute; top: 6px; right: 6px; }
+.sh-warn { margin: 0; color: #ffc857; font-size: 12.5px; }
+.sh-sub { margin: 0; color: #9aa3b2; font-size: 12.5px; }
+.sh-toast.working { background: #2b3a55; }
+.sh-frame { padding: 6px; background: #1a1d24; box-sizing: border-box; } .sh-frame iframe { border-radius: 6px; }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -11092,6 +11103,7 @@ function renderSheetsModule() {
                     ${cur ? `<button class="ghost-btn" data-shact="reload" title="${escapeHtml(t('shReload'))}">⟳</button>
                     <button class="ghost-btn" data-shact="full">⛶ ${escapeHtml(t('shFull'))}</button>
                     <a class="ghost-btn" href="${escapeHtml(shEditUrl(cur))}" target="_blank" rel="noopener">↗ ${escapeHtml(t('shOpenNew'))}</a>` : ''}
+                    ${cur && !ro && !shTouch() ? `<button class="ghost-btn" data-shact="imgsetup" data-help="help_shImg">🖼 ${escapeHtml(t('shImgSetupBtn'))}</button>` : ''}
                     ${ro ? '' : `<button class="primary-btn small" data-shact="add">+ ${escapeHtml(t('shAdd'))}</button>`}
                 </div>
             </div>
@@ -11099,6 +11111,7 @@ function renderSheetsModule() {
             ${cur && shTouch() ? `<div class="sh-tablet">📱 ${escapeHtml(t('shTablet'))}
                 <a class="primary-btn small" href="${escapeHtml(shAppUrl(cur))}" target="_blank" rel="noopener">${escapeHtml(t('shOpenApp'))}</a></div>` : ''}
             <div class="sh-frame" id="shFrame">
+                ${cur && !ro && !shTouch() ? `<div class="sh-drop" hidden><div>🖼 ${escapeHtml(t('shDrop'))}<small>${escapeHtml(t('shDropSub'))}</small></div></div>` : ''}
                 ${cur ? `<iframe src="${escapeHtml(shEditUrl(cur))}" title="${escapeHtml(cur.title)}" allow="clipboard-read; clipboard-write; fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe>`
                     : `<div class="sh-empty">${ro ? `<p>${escapeHtml(t('shViewerEmpty'))}</p>` : shGuideHtml(`<div class="sh-actions"><button class="primary-btn" data-shact="add">${escapeHtml(t('shGuideAddNow'))}</button></div>`)}</div>`}
             </div>
@@ -11165,6 +11178,7 @@ $('sheetsModule').addEventListener('click', (e) => {
     const a = b.dataset.shact;
     if (a === 'add') showSheetAdd();
     else if (a === 'how') showSheetsGuide();
+    else if (a === 'imgsetup') shShowSetup();
     else if (a === 'reload') { const fr = document.querySelector('#shFrame iframe'); if (fr) fr.src = fr.src; }
     else if (a === 'full') { const fr = $('shFrame'); if (fr && fr.requestFullscreen) fr.requestFullscreen().catch(() => {}); }
 });
@@ -11187,6 +11201,13 @@ Object.assign(I18N.tr, {
     shImg: "Resim ekle", help_shImg: "Bir resmi Sheet'te seçtiğin hücreye ekler. Resmi Sheet penceresinin üstüne sürükleyip bırakabilirsin.",
     shDrop: "Resmi bırak — hangi hücreye ekleneceğini soracağım",
     shDropStrip: "Hücre adıyla ekle: resmi buraya sürükle",
+    shDropSub: "Önce Sheet'te hücreyi seç, sonra resmi bırak",
+    shImgSetupBtn: "Resim sürükle-bırak", shHowImg: "Sheet'te bir hücreye tıkla, sonra resmi bilgisayarından Sheet penceresinin üstüne sürükleyip bırak: resim o hücrenin içine girer. Bunun için her Sheet dosyasına bir kerelik küçük bir script eklenir.",
+    shSetupTitle: "Bir kerelik kurulum (her Sheet dosyası için)",
+    shSetupSteps: ["Sheet'i **↗ Yeni pencerede aç**.", "Menüden **Uzantılar → Apps Script**'e gir.", "Açılan kod sayfasındaki her şeyi silip aşağıdaki kodu yapıştır (📋 Kopyala), sonra **💾 Kaydet**'e bas.", "Sheet sekmesine dön, sayfayı yenile (F5) ve herhangi bir hücreye bir kere tıkla. Bu kadar; artık site içinden de çalışır."],
+    shSetupNote: "Script sadece seçtiğin hücrenin adresini gizli bir “_ppl” sekmesine yazar; başka hiçbir şeye dokunmaz. İlk resimde Sheet'in üstünde “Erişime izin ver” çıkarsa Sheet'i yeni pencerede açıp bir kere izin ver.",
+    shCopy: "Kopyala", shCopied: "Kopyalandı", shNoSel: "Seçili hücreyi göremedim: bu Sheet'te kurulum yapılmamış ya da henüz hücre seçilmemiş.", shOrType: "Ya da şimdilik hücreyi elle yaz:",
+    shImgWorkingCell: "Resim {cell} hücresine ekleniyor…",
     shDropTip: "İki yol var: 1) Resmi doğrudan Sheet'in üstüne sürükle — Google hücrelerin üstüne koyar; resme tıklayıp ⋮ menüsünden “Resmi seçili hücreye yerleştir” ile seçtiğin hücrenin içine alırsın. 2) Bu kutuya bırak — hücre adını (ör. B5) yazarsın, site resmi o hücrenin içine yerleştirir.",
     shTablet: "Tablette Google, Sheet'i bu pencerede sadece görüntülemeye izin veriyor. Hücreleri düzenlemek için Sheets uygulamasında aç.",
     shOpenApp: "Sheets uygulamasında aç",
@@ -11202,6 +11223,13 @@ Object.assign(I18N.en, {
     shImg: "Add image", help_shImg: "Adds an image into a cell of the Sheet. You can also drag & drop an image onto the Sheet window.",
     shDrop: "Drop the image — I'll ask which cell it goes in",
     shDropStrip: "Add by cell name: drag image here",
+    shDropSub: "Select a cell in the Sheet first, then drop the image",
+    shImgSetupBtn: "Image drag & drop", shHowImg: "Click a cell in the Sheet, then drag an image from your computer onto the Sheet window: it goes inside that cell. This needs a small one-time script in each Sheet file.",
+    shSetupTitle: "One-time setup (per Sheet file)",
+    shSetupSteps: ["**↗ Open the Sheet in a new window**.", "Go to **Extensions → Apps Script**.", "Delete everything in the code page, paste the code below (📋 Copy), then click **💾 Save**.", "Back in the Sheet tab, reload (F5) and click any cell once. Done — it now works inside the site too."],
+    shSetupNote: "The script only writes the address of the cell you select into a hidden “_ppl” tab; it touches nothing else. If the Sheet shows “Allow access” on the first image, open it in a new window and allow once.",
+    shCopy: "Copy", shCopied: "Copied", shNoSel: "I couldn't see the selected cell: this Sheet isn't set up yet or no cell has been selected.", shOrType: "Or type the cell for now:",
+    shImgWorkingCell: "Adding image to {cell}…",
     shDropTip: "Two ways: 1) Drag the image straight onto the Sheet — Google places it over the cells; click it and use ⋮ → “Place image in selected cell” to put it inside the cell you selected. 2) Drop it on this box — type the cell (e.g. B5) and the site puts it inside that cell.",
     shTablet: "On tablets Google only allows viewing the Sheet inside this window. To edit cells, open it in the Sheets app.",
     shOpenApp: "Open in Sheets app",
@@ -11251,7 +11279,7 @@ async function shDriveUpload(file) {
     if (!p.ok) console.warn('Drive: herkese açık yapılamadı', p.status);
     return id;
 }
-async function shImageDialog(file) {
+async function shImageDialog(file, opts = {}) {
     if (!file || !/^image\//.test(file.type)) { alert(t('shImgNotImg')); return; }
     const cur = sheetsList().find(x => x.id === shState.active);
     if (!cur) return;
@@ -11262,6 +11290,7 @@ async function shImageDialog(file) {
     m.innerHTML = `<div class="rep-box sh-box sh-add"><div class="rep-head"><h2>🖼 ${escapeHtml(t('shImgTitle'))}</h2><button class="icon-btn" data-sh="x">✕</button></div>
         <form class="sh-box-body" autocomplete="off">
             <div class="sh-img-prev"><img src="${prevUrl}" alt=""><span>${escapeHtml(file.name)}</span></div>
+            ${opts.setup ? `<p class="sh-warn">${escapeHtml(t('shNoSel'))}</p>${shSetupHtml()}<p class="sh-sub">${escapeHtml(t('shOrType'))}</p>` : ''}
             <div class="sh-img-row">
                 <label>${escapeHtml(t('shImgTab'))}<select name="tab"><option value="">…</option></select></label>
                 <label>${escapeHtml(t('shImgCell'))}<input name="cell" placeholder="${escapeHtml(t('shImgCellPh'))}" value="${escapeHtml(shLastCell[cur.id] || '')}" required></label>
@@ -11274,6 +11303,7 @@ async function shImageDialog(file) {
         </form></div>`;
     document.body.appendChild(m);
     const f = m.querySelector('form'), err = m.querySelector('.sh-err'), btn = f.querySelector('[type=submit]');
+    shWireCopy(m);
     const close = () => { URL.revokeObjectURL(prevUrl); m.remove(); };
     m.addEventListener('click', (e) => { if (e.target === m || e.target.closest('[data-sh="x"]')) close(); });
     const fail = (e) => {
@@ -11320,11 +11350,143 @@ async function shImageDialog(file) {
         } catch (er) { fail(er); }
     });
 }
-function shToast(msg) {
+
+// --- Seçili hücreyi algılama: Sheet'e bir kerelik eklenen Apps Script ---
+// Kullanıcı Sheet'te bir hücre seçince script bunu gizli "_ppl" sekmesine yazar
+// (e-posta | sekme kimliği | hücre | zaman). Site resim bırakılınca oradan okur.
+const SH_SCRIPT = `// PostPro Lab — seçili hücreyi siteye bildirir (resim sürükle-bırak için)
+function onSelectionChange(e) {
+  var r = e.range, sh = r.getSheet(), ss = e.source;
+  if (sh.getName() === '_ppl') return;
+  var h = ss.getSheetByName('_ppl');
+  if (!h) { h = ss.insertSheet('_ppl'); h.hideSheet(); ss.setActiveSheet(sh); }
+  var who = String(Session.getActiveUser().getEmail() || 'anon').toLowerCase();
+  var last = h.getLastRow(), row = 0;
+  if (last) { var v = h.getRange(1, 1, last, 1).getValues(); for (var i = 0; i < v.length; i++) if (v[i][0] === who) { row = i + 1; break; } }
+  if (!row) row = last + 1;
+  h.getRange(row, 1, 1, 4).setValues([[who, sh.getSheetId(), r.getCell(1, 1).getA1Notation(), new Date().getTime()]]);
+}`;
+async function shReadSelection(cur) {
+    try {
+        const got = await gsFetch(gsEnc(cur.sheetId) + '/values/' + encodeURIComponent("'_ppl'!A1:D100") + '?valueRenderOption=UNFORMATTED_VALUE');
+        const rows = (got.values || []).filter(r => r && r[2]);
+        if (!rows.length) return null;
+        const me = myEmail();
+        const mine = rows.filter(r => String(r[0]).toLowerCase() === me);
+        const pick = (mine.length ? mine : rows).sort((a, b) => (Number(b[3]) || 0) - (Number(a[3]) || 0))[0];
+        const cell = String(pick[2]).toUpperCase();
+        if (!/^[A-Z]{1,3}\d{1,7}$/.test(cell)) return null;
+        return { gid: String(pick[1]), cell };
+    } catch (e) {
+        if (e.auth) throw e;
+        return null;                                   // _ppl sekmesi yok → script kurulmamış
+    }
+}
+function shSetupHtml() {
+    return `<div class="sh-setup">
+        <b>⚙️ ${escapeHtml(t('shSetupTitle'))}</b>
+        <ol>${t('shSetupSteps').map(x => `<li>${shMd(x)}</li>`).join('')}</ol>
+        <div class="sh-code"><pre>${escapeHtml(SH_SCRIPT)}</pre><button type="button" class="primary-btn small" data-sh="copy">📋 ${escapeHtml(t('shCopy'))}</button></div>
+        <p class="sh-note">${escapeHtml(t('shSetupNote'))}</p>
+    </div>`;
+}
+function shWireCopy(root) {
+    const b = root.querySelector('[data-sh="copy"]');
+    if (!b) return;
+    b.addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(SH_SCRIPT); }
+        catch (e) { const ta = document.createElement('textarea'); ta.value = SH_SCRIPT; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+        b.textContent = '✓ ' + t('shCopied');
+    });
+}
+function shShowSetup() {
+    const cur = sheetsList().find(x => x.id === shState.active);
+    const m = document.createElement('div');
+    m.className = 'rep-modal sh-modal';
+    m.innerHTML = `<div class="rep-box sh-box"><div class="rep-head"><h2>🖼 ${escapeHtml(t('shImgSetupBtn'))}</h2><button class="icon-btn" data-sh="x">✕</button></div>
+        <div class="sh-box-body"><p>${escapeHtml(t('shHowImg'))}</p>${shSetupHtml()}
+        <div class="sh-actions">${cur ? `<a class="ghost-btn" href="${escapeHtml(shEditUrl(cur))}" target="_blank" rel="noopener">↗ ${escapeHtml(t('shOpenNew'))}</a>` : ''}
+        <button class="ghost-btn" data-sh="x">${escapeHtml(t('shGuideOk'))}</button></div></div></div>`;
+    document.body.appendChild(m);
+    shWireCopy(m);
+    m.addEventListener('click', (e) => { if (e.target === m || e.target.closest('[data-sh="x"]')) m.remove(); });
+}
+// Bırakılan resim: izin → seçili hücreyi oku → doğrudan o hücreye ekle
+async function shOnDrop(file) {
+    if (!file || !/^image\//.test(file.type)) { alert(t('shImgNotImg')); return; }
+    const cur = sheetsList().find(x => x.id === shState.active);
+    if (!cur) return;
+    if (!gsClientId()) { alert(t('shImgNeedSetup')); if (typeof openGsModal === 'function') openGsModal('cal'); return; }
+    if (!(gsCachedToken() && gsHasScope(GS_DRIVE_SCOPE))) return shNeedAuth(file);
+    let sel = null;
+    try { sel = await shReadSelection(cur); } catch (e) { return shNeedAuth(file); }
+    if (!sel) return shImageDialog(file, { setup: true });
+    shToast(tf('shImgWorkingCell', { cell: sel.cell }), true);
+    try {
+        await shInsertImage(cur, sel.gid, sel.cell, file, true);
+        shToast(tf('shImgDone', { cell: sel.cell }));
+    } catch (e) {
+        alert(e && (e.drive || /insufficient|scope|Drive API|has not been used|disabled/i.test(e.message)) ? t('shImgDriveOff') : gsExplain(e));
+    }
+}
+// Google izni bir tıklamayla açılabilir: küçük pencere, tıklayınca kaldığı yerden devam
+function shNeedAuth(file) {
+    const m = document.createElement('div');
+    m.className = 'rep-modal sh-modal';
+    m.innerHTML = `<div class="rep-box sh-box sh-add"><div class="rep-head"><h2>🔑 ${escapeHtml(t('shImgAuth'))}</h2><button class="icon-btn" data-sh="x">✕</button></div>
+        <div class="sh-box-body"><p>${escapeHtml(t('shImgAuthHint'))}</p><p class="sh-err" hidden></p>
+        <div class="sh-actions"><button class="primary-btn" data-sh="go">${escapeHtml(t('shImgAuth'))}</button></div></div></div>`;
+    document.body.appendChild(m);
+    m.addEventListener('click', async (e) => {
+        if (e.target === m || e.target.closest('[data-sh="x"]')) return m.remove();
+        if (!e.target.closest('[data-sh="go"]')) return;
+        try { await gsAuth(true, true); m.remove(); shOnDrop(file); }
+        catch (er) { const x = m.querySelector('.sh-err'); x.textContent = gsExplain(er); x.hidden = false; }
+    });
+}
+async function shInsertImage(cur, gid, cell, file, grow) {
+    const meta = await gsLoadMeta(cur.sheetId);
+    const tab = meta.tabs.find(x => String(x.gid) === String(gid)) || meta.tabs.find(x => String(x.gid) === String(cur.gid)) || meta.tabs[0];
+    const small = await shShrink(file);
+    const id = await shDriveUpload(small);
+    await gsFetch(gsEnc(cur.sheetId) + '/values/' + encodeURIComponent(gsQ(tab.title) + '!' + cell) + '?valueInputOption=USER_ENTERED',
+        { method: 'PUT', body: { values: [[`=IMAGE("https://lh3.googleusercontent.com/d/${id}")`]] } });
+    if (grow) {
+        const row = parseInt(cell.replace(/^[A-Z]+/, '')) - 1;
+        await gsBatch(cur.sheetId, [{ updateDimensionProperties: { range: { sheetId: tab.gid, dimension: 'ROWS', startIndex: row, endIndex: row + 1 }, properties: { pixelSize: 120 }, fields: 'pixelSize' } }]);
+    }
+}
+// Sürükle-bırak: dosya sayfaya girince Sheet'in üstüne bırakma alanı açılır (tarayıcı yeni sekmede açmasın)
+(function shDnD() {
+    let depth = 0;
+    const isFiles = (e) => e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
+    const zone = () => document.querySelector('#shFrame .sh-drop');
+    const show = (v) => { const z = zone(); if (z) z.hidden = !v; };
+    document.addEventListener('dragenter', (e) => {
+        if (App.module !== 'sheets' || App.view !== 'workspace' || App.readOnly || !isFiles(e) || !zone()) return;
+        depth++; show(true);
+    });
+    document.addEventListener('dragleave', (e) => {
+        if (App.module !== 'sheets' || !isFiles(e)) return;
+        depth = Math.max(0, depth - 1);
+        if (!depth) show(false);
+    });
+    document.addEventListener('dragover', (e) => { if (App.module === 'sheets' && isFiles(e) && zone()) e.preventDefault(); });
+    document.addEventListener('drop', (e) => {
+        if (App.module !== 'sheets' || !isFiles(e) || !zone()) return;
+        e.preventDefault();
+        depth = 0; show(false);
+        const f = [...e.dataTransfer.files].find(x => /^image\//.test(x.type));
+        if (!f) { if (e.dataTransfer.files.length) alert(t('shImgNotImg')); return; }
+        shOnDrop(f);
+    });
+})();
+function shToast(msg, working) {
+    document.querySelectorAll('.sh-toast').forEach(x => x.remove());
     const d = document.createElement('div');
-    d.className = 'sh-toast'; d.textContent = '✓ ' + msg;
+    d.className = 'sh-toast' + (working ? ' working' : ''); d.textContent = (working ? '⏳ ' : '✓ ') + msg;
     document.body.appendChild(d);
-    setTimeout(() => d.remove(), 6500);
+    if (!working) setTimeout(() => d.remove(), 6500);
 }
 
 // ---------------------------------------------------------------------
