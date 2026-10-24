@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.24-1">
+<meta name="app-version" content="2026.10.24-2">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -1442,6 +1442,9 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 .sh-dropstrip.drag { background: #1f6f3d; border-color: #34d17a; color: #fff; transform: scale(1.04); }
 .sh-tablet { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: #1d2a3a; border: 1px solid #2f4a68; color: #d7e7ff; border-radius: 10px; padding: 10px 14px; font-size: 13px; line-height: 1.45; }
 .sh-tablet a { text-decoration: none; display: inline-flex; align-items: center; }
+.sh-auth { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #2a2412; border: 1px solid #5a4a1a; border-radius: 8px; padding: 9px 11px; font-size: 12.5px; color: #ffe2a0; }
+.sh-auth[hidden] { display: none; }
+.sh-auth span { flex: 1; min-width: 180px; }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -11190,6 +11193,7 @@ Object.assign(I18N.tr, {
     shDropStrip: "Resmi buraya sürükle ya da tıkla",
     shTablet: "Tablette Google, Sheet'i bu pencerede sadece görüntülemeye izin veriyor. Hücreleri düzenlemek için Sheets uygulamasında aç.",
     shOpenApp: "Sheets uygulamasında aç",
+    shImgAuth: "Google'a izin ver", shImgAuthHint: "İlk kullanımda Google'dan Drive'a resim yükleme izni gerekiyor.", shImgTabLater: "(izin verince sekmeler gelecek)",
     shImgTitle: "Hücreye resim ekle", shImgTab: "Sekme", shImgCell: "Hücre", shImgCellPh: "ör. B5",
     shImgGrow: "Satırı resme göre büyüt", shImgDo: "Hücreye ekle", shImgWorking: "Yükleniyor…", shImgDone: "Resim {cell} hücresine eklendi.",
     shImgBadCell: "Hücreyi B5 gibi yaz (harf + satır numarası).", shImgNotImg: "Bu bir resim dosyası değil.",
@@ -11203,6 +11207,7 @@ Object.assign(I18N.en, {
     shDropStrip: "Drag an image here or click",
     shTablet: "On tablets Google only allows viewing the Sheet inside this window. To edit cells, open it in the Sheets app.",
     shOpenApp: "Open in Sheets app",
+    shImgAuth: "Allow Google access", shImgAuthHint: "The first time, Google needs to allow uploading images to your Drive.", shImgTabLater: "(tabs appear after you allow access)",
     shImgTitle: "Add image to a cell", shImgTab: "Tab", shImgCell: "Cell", shImgCellPh: "e.g. B5",
     shImgGrow: "Make the row taller to fit", shImgDo: "Add to cell", shImgWorking: "Uploading…", shImgDone: "Image added to {cell}.",
     shImgBadCell: "Type the cell like B5 (letter + row number).", shImgNotImg: "This is not an image file.",
@@ -11263,6 +11268,7 @@ async function shImageDialog(file) {
                 <label>${escapeHtml(t('shImgTab'))}<select name="tab"><option value="">…</option></select></label>
                 <label>${escapeHtml(t('shImgCell'))}<input name="cell" placeholder="${escapeHtml(t('shImgCellPh'))}" value="${escapeHtml(shLastCell[cur.id] || '')}" required></label>
             </div>
+            <div class="sh-auth" hidden><span>🔑 ${escapeHtml(t('shImgAuthHint'))}</span><button type="button" class="ghost-btn" data-sh="auth">${escapeHtml(t('shImgAuth'))}</button></div>
             <label class="sh-check"><input type="checkbox" name="grow" checked> ${escapeHtml(t('shImgGrow'))}</label>
             <p class="sh-note">${escapeHtml(t('shImgNote'))}</p>
             <p class="sh-err" hidden></p>
@@ -11277,24 +11283,30 @@ async function shImageDialog(file) {
         err.textContent = msg; err.hidden = false; btn.disabled = false; btn.textContent = t('shImgDo');
     };
     f.cell.focus();
-    // Sekmeleri getir (izin gerekiyorsa Google penceresi açılır)
+    // Sekmeleri getir. Google izin penceresi sadece bir tıklamayla açılabilir (tarayıcılar
+    // kendiliğinden açılan pencereyi engeller); izin yoksa "Google'a izin ver" düğmesi gösterilir.
     let meta = null;
-    try {
-        await gsAuth(true, true);
+    const authBox = m.querySelector('.sh-auth');
+    const loadTabs = async () => {
         meta = await gsLoadMeta(cur.sheetId, true);
-        const sel = f.tab;
-        sel.innerHTML = meta.tabs.map(x => `<option value="${x.gid}" ${String(x.gid) === String(cur.gid || meta.tabs[0].gid) ? 'selected' : ''}>${escapeHtml(x.title)}</option>`).join('');
-    } catch (e) { fail(e); }
+        f.tab.innerHTML = meta.tabs.map(x => `<option value="${x.gid}" ${String(x.gid) === String(cur.gid || meta.tabs[0].gid) ? 'selected' : ''}>${escapeHtml(x.title)}</option>`).join('');
+        authBox.hidden = true; err.hidden = true;
+    };
+    if (gsCachedToken() && gsHasScope(GS_DRIVE_SCOPE)) { try { await loadTabs(); } catch (e) { fail(e); } }
+    else { authBox.hidden = false; f.tab.innerHTML = `<option value="">${escapeHtml(t('shImgTabLater'))}</option>`; }
+    authBox.querySelector('[data-sh="auth"]').addEventListener('click', async () => {
+        try { await gsAuth(true, true); await loadTabs(); } catch (e) { fail(e); }
+    });
     f.addEventListener('submit', async (e) => {
         e.preventDefault();
         const cell = f.cell.value.trim().toUpperCase().replace(/\s+/g, '');
         const mm = cell.match(/^([A-Z]{1,3})(\d{1,6})$/);
         if (!mm) { err.textContent = t('shImgBadCell'); err.hidden = false; return; }
-        if (!meta) return;
-        const tab = meta.tabs.find(x => String(x.gid) === f.tab.value) || meta.tabs[0];
         err.hidden = true; btn.disabled = true; btn.textContent = t('shImgWorking');
         try {
-            await gsAuth(true, true);
+            await gsAuth(true, true);                      // tıklamanın içinde: izin penceresi engellenmez
+            if (!meta) await loadTabs();
+            const tab = meta.tabs.find(x => String(x.gid) === f.tab.value) || meta.tabs.find(x => String(x.gid) === String(cur.gid)) || meta.tabs[0];
             const small = await shShrink(file);
             const id = await shDriveUpload(small);
             await gsFetch(gsEnc(cur.sheetId) + '/values/' + encodeURIComponent(gsQ(tab.title) + '!' + cell) + '?valueInputOption=USER_ENTERED',
