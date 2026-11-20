@@ -1546,6 +1546,15 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 #seqmapModule .sm-f .v { font: 500 13px var(--sm-tc); overflow-wrap: anywhere; }
 #seqmapModule .sm-f .v.tc { white-space: nowrap; }
 #seqmapModule .sm-f .v.ui { font-family: inherit; }
+#seqmapModule #sm-unmatched { cursor: pointer; text-decoration: underline dotted; }
+#seqmapModule .sm-stage.picking .sm-canvas { cursor: crosshair !important; }
+#seqmapModule .sm-stage.picking { box-shadow: inset 0 0 0 2px #f2c14e; }
+#seqmapModule .sm-unlist { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+#seqmapModule .sm-unitem { border-left: 3px solid var(--c); padding: 4px 0 6px 9px; gap: 4px; }
+#seqmapModule .sm-unitem .k { color: var(--c); }
+#seqmapModule .sm-unitem button { align-self: flex-start; margin-top: 3px; }
+#seqmapModule .sm-st { font-size: 15px; font-weight: 800; color: #ffd36b; }
+#seqmapModule .sm-st b { color: var(--sm-muted); font-weight: 400; }
 #seqmapModule .sm-f .lbl { font-size: 11px; color: var(--sm-muted); }
 #seqmapModule .sm-f.warnf .v { color: #ffb15c; font-weight: 700; }
 #seqmapModule .sm-notetext { white-space: pre-wrap; font-size: 14px; }
@@ -11959,7 +11968,19 @@ const AAF = (() => {
       const master = chainMobs.find(m => m.kind === 'master') || chainMobs.find(m => m.name) || null;
       const srcs = chainMobs.filter(m => m.kind === 'source');
       const bottom = srcs[srcs.length - 1];
-      return { chainMobs, master, tape: bottom ? bottom.name : '', fileMob: srcs[0] ? srcs[0].name : '', file, tc, srcRate };
+      // Sahne / take: Avid'in Scene / Take sütunları (ses kayıt cihazından gelen BWF bilgisi ya da elle girilen)
+      let scene = '', take = '';
+      for (const m of chainMobs) { const u = userCols(m); if (!scene && u.scene) scene = u.scene; if (!take && u.take) take = u.take; }
+      return { chainMobs, master, tape: bottom ? bottom.name : '', fileMob: srcs[0] ? srcs[0].name : '', file, tc, srcRate, scene, take };
+    }
+
+    function userCols(m) {
+      if (!m) return {};
+      if (!m._uc) {
+        const tv = Object.assign({}, taggedValues(R, m.o, 0x4409), taggedValues(R, m.o, 0x4406)), get = (re) => { const k = Object.keys(tv).find(x => re.test(x)); return k ? String(tv[k]).trim() : ''; };
+        m._uc = { scene: get(/^scene$/i), take: get(/^take$/i) };
+      }
+      return m._uc;
     }
 
     // --- Sekans adayları: üst seviye CompositionMob'lar ---
@@ -12059,10 +12080,12 @@ const AAF = (() => {
           const subMob = mobs.get(r.mobId);
           const direct = subMob && subMob.name ? subMob.name : '';
           const name = direct || (src.master && src.master.name) || src.tape || '';
+          const dm = userCols(subMob);
           clips.push({ track, kind: s.kind, ri: recStart + ri, ro: recStart + ro, si, so, pct: u.pct, srcFps, srcTcFps, srcDrop,
             name, clip: direct || (src.master ? src.master.name : ''), master: src.master && src.master.name !== direct ? src.master.name : '', source: src.tape || src.fileMob, file: src.file ? decodeURIComponent(String(src.file).replace(/^file:\/\/(localhost)?/i, '')) : '',
             fileMob: src.fileMob, nested: subMob && subMob.kind === 'comp' ? subMob.name : '',
-            trans: prevT ? 'D' : 'C', transDur: prevT ? Math.round(prevT.len * k) : 0, effect: u.effect });
+            trans: prevT ? 'D' : 'C', transDur: prevT ? Math.round(prevT.len * k) : 0, effect: u.effect,
+            scene: dm.scene || src.scene || '', take: dm.take || src.take || '' });
         });
       });
       // Locator'lar (Avid: EventMobSlot içinde CommentMarker + _ATN_CRM_* etiketleri)
@@ -12075,6 +12098,19 @@ const AAF = (() => {
           const tv = taggedValues(R, m, 0x0204);
           locs.push({ frame: recStart + Math.round(p * k), color: String(tv._ATN_CRM_COLOR || 'Red').toUpperCase(), text: tv._ATN_CRM_COM || R.str(m, 0x0602) || '', user: tv._ATN_CRM_USER || '' });
         });
+      });
+      // Görüntüde sahne/take yoksa (kamera dosyaları genelde boş) aynı anda çalan senkron sesten al
+      const snd = clips.filter(c => c.kind === 'sound' && c.scene).sort((a, b) => a.ri - b.ri);
+      if (snd.length) clips.forEach(c => {
+        if (c.kind !== 'picture' || c.scene || c.fxOnly) return;
+        const mid = (c.ri + c.ro) / 2;
+        let best = null, ov = 0;
+        for (const a of snd) {
+          if (a.ri >= c.ro) break;
+          const o = Math.min(a.ro, c.ro) - Math.max(a.ri, c.ri);
+          if (o > ov || (o === ov && best && a.track < best.track && a.ri <= mid)) { ov = o; best = a; }
+        }
+        if (best && ov >= (c.ro - c.ri) * 0.5) { c.scene = best.scene; c.take = best.take; c.stFrom = best.name; }
       });
       return { name: comp.name || 'İsimsiz sekans', fps, drop, rate, recStart, clips, locs,
         tracks: named.map(n => n.track) };
@@ -12101,12 +12137,12 @@ Object.assign(I18N.tr, {
     smLoading: "Harita yükleniyor…", smSaving: "Projeye kaydediliyor…", smSaved: "Kaydedildi", smReading: "Dosya okunuyor…",
     smSaveFail: "Harita projeye kaydedilemedi: {m}", smLoadFail: "Harita yüklenemedi: {m}",
     smBy: "{name} yükledi · {d}", smUpdatedRemote: "{name} bu bölümün haritasını güncelledi.",
-    smUnmatched: "{n} not haritada yer bulamadı", smUnmatchedHint: "Notun “Sahne / TC” alanına time kod (01:02:03:04) ya da plan/sahne adı yaz.",
-    smNoteOpen: "Notlarda aç", smNoteDone: "Çözüldü", smNoteUndone: "Açık", smNoteAt: "Bağlandığı yer", smNoteByTc: "time kod", smNoteByName: "plan adı",
+    smUnmatched: "{n} not haritada yer bulamadı", smUnmatchedHint: "Notun “Sahne / TC” alanına time kod (01:02:03:04) ya da sahne (37-8, Sahne 37) yaz, ya da aşağıdan “Haritada yer seç” de.",
+    smNoteOpen: "Notlarda aç", smPick: "Haritada yer seç", smRePick: "Yerini değiştir", smUnpick: "Elle seçilen yeri kaldır", smPickHint: "Şimdi haritada notun ait olduğu plana ya da yere tıkla (Esc: vazgeç)", smNoteByPick: "elle seçildi", smNoteByScene: "sahne", smUnmatchedTitle: "Haritada yer bulamayan notlar", smUnmatchedClick: "listele", smNoteDone: "Çözüldü", smNoteUndone: "Açık", smNoteAt: "Bağlandığı yer", smNoteByTc: "time kod", smNoteByName: "plan adı",
     smLane_sound: "Ses", smLane_music: "Müzik", smLane_vfx: "VFX", smLane_color: "Color", smLane_edit: "Edit", smLane_cuts: "Cuts", smLane_send: "Send", smLane_other: "Diğer",
     smMixed: "{n} plan farklı fps: {r} (sekans {s})", smNoMain: "Ana sekans bulunamadı; AAF'teki en büyük parça gösteriliyor.",
     seqToMap: "Sekansa işle", seqToMapHint: "Bu not Sekans Haritası'nda, “Sahne / TC” alanındaki time koddan ya da plan adından inen okla gösterilir.",
-    seqAllOn: "Bu bölümün notlarını sekansa işle", seqToMapHintAll: "Genel notlar her bölümün Sekans Haritası'nda gösterilir (Sahne / TC alanındaki time koda ya da plan adına göre).", seqAllOff: "Sekanstan çıkar (tümü)"
+    seqAllOn: "Bu bölümün notlarını sekansa işle", seqAllOff: "Sekanstan çıkar (tümü)"
 });
 Object.assign(I18N.en, {
     modSeqMap: "Sequence Map", help_mod_seqmap: "The episode's master sequence (Avid AAF / EDL) as a timeline; episode notes marked “Show on sequence” appear as arrows on department lanes.",
@@ -12117,12 +12153,12 @@ Object.assign(I18N.en, {
     smLoading: "Loading map…", smSaving: "Saving to project…", smSaved: "Saved", smReading: "Reading file…",
     smSaveFail: "Could not save the map: {m}", smLoadFail: "Could not load the map: {m}",
     smBy: "Uploaded by {name} · {d}", smUpdatedRemote: "{name} updated this episode's map.",
-    smUnmatched: "{n} notes found no place on the map", smUnmatchedHint: "Put a timecode (01:02:03:04) or a shot/scene name in the note's “Scene / TC” field.",
-    smNoteOpen: "Open in notes", smNoteDone: "Resolved", smNoteUndone: "Open", smNoteAt: "Placed at", smNoteByTc: "timecode", smNoteByName: "shot name",
+    smUnmatched: "{n} notes found no place on the map", smUnmatchedHint: "Put a timecode (01:02:03:04) or a scene (37-8, Scene 37) in the note's “Scene / TC” field, or use “Pick a place on the map” below.",
+    smNoteOpen: "Open in notes", smPick: "Pick a place on the map", smRePick: "Change place", smUnpick: "Remove picked place", smPickHint: "Now click the shot or spot this note belongs to (Esc: cancel)", smNoteByPick: "picked by hand", smNoteByScene: "scene", smUnmatchedTitle: "Notes with no place on the map", smUnmatchedClick: "list", smNoteDone: "Resolved", smNoteUndone: "Open", smNoteAt: "Placed at", smNoteByTc: "timecode", smNoteByName: "shot name",
     smLane_sound: "Sound", smLane_music: "Music", smLane_vfx: "VFX", smLane_color: "Color", smLane_edit: "Edit", smLane_cuts: "Cuts", smLane_send: "Send", smLane_other: "Other",
     smMixed: "{n} shots at a different fps: {r} (sequence {s})", smNoMain: "Main sequence not found; showing the largest part of the AAF.",
     seqToMap: "Show on sequence", seqToMapHint: "This note is shown on the Sequence Map with an arrow from the timecode or shot name in “Scene / TC”.",
-    seqAllOn: "Show this episode's notes on the sequence", seqToMapHintAll: "General notes are shown on every episode's Sequence Map (by the timecode or shot name in Scene / TC).", seqAllOff: "Remove all from sequence"
+    seqAllOn: "Show this episode's notes on the sequence", seqAllOff: "Remove all from sequence"
 });
 
 const SeqMap = (() => {
@@ -12138,6 +12174,8 @@ const SeqMap = (() => {
     let SEQ = null, CLIPS = [], TRACKS = [], BYTRACK = new Map(), START = 0, END = 1, ppf = 1, minPpf = .1, POS = 0, SEL = null, SELNOTE = null;
     let SOURCES = [], NOTES = [], UNMATCHED = [];
     const NOTEKEY = new Map();
+    let PICK = null, SHOWUN = false;
+    const findNote = (id) => { for (const e of Object.values(App.project.episodeNotes || {})) { const n = e && Array.isArray(e.notes) && e.notes.find(x => x.id === id); if (n) return n; } return null; };
     const HIDDEN = new Set();
     const RATE_MAP = { '23.976': [24, false], '24': [24, false], '25': [25, false], '29.97': [30, true], '29.97nd': [30, false], '30': [30, false], '50': [50, false], '59.94': [60, true], '60': [60, false] };
     const pref = (k, d) => { try { const v = localStorage.getItem('sm:' + k); return v === null ? d : v; } catch (e) { return d; } };
@@ -12320,24 +12358,57 @@ const SeqMap = (() => {
 
     // ---------- Notlar: "Sekansa işle" seçilenler ----------
     const normName = (s) => String(s || '').toLocaleUpperCase('tr-TR').replace(/\s+/g, '');
-    function noteTarget(n) {
-        const txt = `${n.ref || ''} ${n.text || ''}`;
-        let m = txt.match(/(\d{1,2})[:;.](\d{2})[:;.](\d{2})(?:[:;.](\d{2,3}))?/);
+    // Sahne yazımlarını eşitle: "37/8" = "37-8", "Sc 37", "Sahne 37" → "37"
+    const normScene = (s) => String(s || '').toLocaleUpperCase('tr-TR').replace(/^(SAHNE|SAH\.?|SC\.?|SCN|S\.)\s*/, '').replace(/\s+/g, '').replace(/[\/_.]/g, '-').replace(/-+$/, '');
+    // Kurgucunun subclip adındaki sahne kısmı: "5/13-1B+" → "5-13"; ses dosyası adı "37-8/002.new.01" → "37-8"
+    const nameScene = (nm) => { const m = String(nm || '').match(/^(\d+[A-Z]?(?:[\/-]\d+[A-Z]?)*?)(?:[-\/](\d{1,3}[A-Z]?\+?|\d{3})(?:[.+].*)?)$/i); return m ? normScene(m[1]) : ''; };
+    function sceneTokens(str, loose) {
+        const s = String(str || '');
+        const out = [];
+        const re = loose ? /(?:^|\s)(\d{1,3}[A-Za-z]?(?:\s*[\/-]\s*\d{1,3}[A-Za-z]?){0,2})(?=$|[\s,;:.])/g
+                         : /(?:SAHNE|SAH\.?|SC\.?|SCN)\s*(\d{1,3}[A-Za-z]?(?:\s*[\/-]\s*\d{1,3}[A-Za-z]?){0,2})/gi;
+        for (const m of s.matchAll(re)) out.push(normScene(m[1].replace(/\s+/g, '')));
+        return out;
+    }
+    function sceneHit(tok) {
+        if (!tok) return null;
+        const ok = (sc) => sc && (sc === tok || sc.startsWith(tok + '-'));
+        return CLIPS.filter(c => isV(c.tk) && !c.fxOnly && (ok(normScene(c.scene)) || ok(nameScene(c.name)) || ok(nameScene(c.clip))))
+            .sort((a, b) => a.ri - b.ri || trackOrder(a.tk, b.tk))[0] || null;
+    }
+    function tcIn(str) {
+        const m = String(str || '').match(/(\d{1,2})[:;.](\d{2})[:;.](\d{2})(?:[:;.](\d{2,3}))?/);
         if (m) {
             const [h, mi, s] = [+m[1], +m[2], +m[3]], ff = m[4] ? +m[4] : 0;
             let f = tcToF(`${h}:${String(mi).padStart(2, '0')}:${String(s).padStart(2, '0')}:${String(Math.min(ff, RATE.nominal - 1)).padStart(2, '0')}`);
-            // Sekansın saatinden küçükse göreli yazılmış olabilir (00:12:30 = başlangıçtan 12 dk 30 sn sonra)
-            if (f !== null && f < START) f = START + f;
-            if (f !== null && f >= START && f <= END) return { frame: f, how: 'tc', clip: clipAt(f, true) };
+            if (f !== null && f < START) f = START + f;        // göreli (00:12:30 = başlangıçtan 12 dk 30 sn sonra)
+            if (f !== null && f >= START && f <= END) return f;
         }
-        m = (n.ref || '').match(/^\s*(\d{1,3})[:.](\d{2})\s*$/);
-        if (m) { const f = START + (+m[1] * 60 + +m[2]) * RATE.nominal; if (f <= END) return { frame: f, how: 'tc', clip: clipAt(f, true) }; }
-        const ref = normName(n.ref);
-        if (ref.length >= 2) {
-            const hit = CLIPS.filter(c => isV(c.tk) && !c.fxOnly && (normName(c.name).includes(ref) || normName(c.clip).includes(ref) || normName(c.source).startsWith(ref)))
-                .sort((a, b) => a.ri - b.ri || trackOrder(a.tk, b.tk))[0];
-            if (hit) return { frame: hit.ri, how: 'name', clip: hit };
+        return null;
+    }
+    function noteTarget(n) {
+        // 1) Haritada elle seçilen yer
+        if (n.seqTc) { const f = tcToF(n.seqTc); if (f !== null && f >= START && f <= END) return { frame: f, how: 'pick', clip: clipAt(f, true) }; }
+        const ref = String(n.ref || '').trim();
+        // 2) Sahne / TC alanında time kod
+        let f = tcIn(ref);
+        if (f !== null) return { frame: f, how: 'tc', clip: clipAt(f, true) };
+        let m = ref.match(/^(\d{1,3})[:.](\d{2})$/);
+        if (m) { f = START + (+m[1] * 60 + +m[2]) * RATE.nominal; if (f <= END) return { frame: f, how: 'tc', clip: clipAt(f, true) }; }
+        // 3) Sahne / TC alanında sahne ya da plan adı
+        if (ref) {
+            for (const tok of [normScene(ref), ...sceneTokens(ref, true)]) { const c = sceneHit(tok); if (c) return { frame: c.ri, how: 'scene', clip: c }; }
+            const r = normName(ref);
+            if (r.length >= 2) {
+                const hit = CLIPS.filter(c => isV(c.tk) && !c.fxOnly && (normName(c.name).includes(r) || normName(c.clip).includes(r) || normName(c.source).startsWith(r)))
+                    .sort((a, b) => a.ri - b.ri || trackOrder(a.tk, b.tk))[0];
+                if (hit) return { frame: hit.ri, how: 'name', clip: hit };
+            }
         }
+        // 4) Not metninde time kod ya da "sahne 37" / "sc 37"
+        f = tcIn(n.text);
+        if (f !== null) return { frame: f, how: 'tc', clip: clipAt(f, true) };
+        for (const tok of sceneTokens(n.text, false)) { const c = sceneHit(tok); if (c) return { frame: c.ri, how: 'scene', clip: c }; }
         return null;
     }
     function collectNotes() {
@@ -12354,7 +12425,8 @@ const SeqMap = (() => {
             else UNMATCHED.push(n);
         });
         $('unmatched').hidden = !UNMATCHED.length;
-        $('unmatched').textContent = UNMATCHED.length ? '⚠ ' + tf('smUnmatched', { n: UNMATCHED.length }) : '';
+        $('unmatched').textContent = UNMATCHED.length ? '⚠ ' + tf('smUnmatched', { n: UNMATCHED.length }) + ' · ' + t('smUnmatchedClick') + ' ›' : '';
+        if (!UNMATCHED.length) SHOWUN = false;
         $('unmatched').title = UNMATCHED.length ? t('smUnmatchedHint') + '\n\n' + UNMATCHED.map(n => `• ${n.ref || '—'}: ${n.text}`).join('\n') : '';
     }
     const shownNotes = () => !$('notes').checked ? [] : NOTES.filter(x => $('doneNotes').checked || !x.n.done);
@@ -12385,7 +12457,7 @@ const SeqMap = (() => {
         const W = Math.max(Math.ceil((END - START) * ppf) + 120, scroll.clientWidth);
         LAYOUT = { tracks, TH, TOP, NH, totalH, W };
         const q = $('find').value.trim().toLocaleUpperCase('tr-TR');
-        if (q !== MATCH.q) { MATCH = { q, set: q ? new Set(CLIPS.filter(c => (c.name + ' ' + c.source + ' ' + (c.reel || '')).toLocaleUpperCase('tr-TR').includes(q)).map(c => c.idx)) : null }; }
+        if (q !== MATCH.q) { MATCH = { q, set: q ? new Set(CLIPS.filter(c => (c.name + ' ' + c.source + ' ' + (c.reel || '') + ' ' + (c.scene || '') + '/' + (c.take || '')).toLocaleUpperCase('tr-TR').includes(q)).map(c => c.idx)) : null }; }
         canvas.style.width = W + 'px'; canvas.style.height = totalH + 'px';
         // Sol başlıklar: not katları + track'ler
         $('heads').innerHTML = (NH ? `<div class="sm-lanehead-wrap" style="height:${NH}px">${lanes.map(l => `<div class="sm-lanehead" style="height:${LANE_H}px;--c:${laneColor(l)}">${esc(t('smLane_' + l))}</div>`).join('')}</div>` : '') +
@@ -12473,7 +12545,7 @@ const SeqMap = (() => {
                     const tx = x < 0 && x + w > 60 ? 0 : x;          // uzun planın adı ekranın solunda kalmasın
                     const tw = x + w - tx - 10;
                     ctx.font = '700 12px system-ui, -apple-system, "Segoe UI", sans-serif';
-                    ctx.fillText(fitText(ctx, c.name, tw), tx + 5, tall && w > 70 ? cy + ch / 2 - 7 : cy + ch / 2);
+                    ctx.fillText(fitText(ctx, label(c), tw), tx + 5, tall && w > 70 ? cy + ch / 2 - 7 : cy + ch / 2);
                     if (tall && w > 70) { ctx.font = '500 10px ui-monospace, Consolas, monospace'; ctx.globalAlpha *= .75; ctx.fillText(fitText(ctx, durTxt(c.len), tw), tx + 5, cy + ch / 2 + 8); ctx.globalAlpha = dim ? 0.3 : 1; }
                     const badge = c.pct !== 100 ? c.pct + '%' : '';
                     if (badge && w > 60) { ctx.font = '700 9px ui-monospace, Consolas, monospace'; const bw = ctx.measureText(badge).width + 6; ctx.fillStyle = 'rgba(16,21,31,.8)'; ctx.fillRect(x + w - bw - 3, cy + 2, bw, 12); ctx.fillStyle = '#ffd36b'; ctx.fillText(badge, x + w - bw, cy + 8); }
@@ -12524,12 +12596,28 @@ const SeqMap = (() => {
     }
     const locColor = (c) => ({ RED: '#e5484d', YELLOW: '#f2c14e', GREEN: '#46a758', BLUE: '#3d8bff', CYAN: '#4cc9d6', MAGENTA: '#d65cc7', WHITE: '#e8e8e8', BLACK: '#222' })[String(c).toUpperCase()] || '#e5484d';
     const baseName = (p) => String(p || '').split(/[\\/]/).pop();
+    // Kutuda görünen ad: sahne/take. Kurgucunun verdiği subclip adı (ör. "5/13-1B+") varsa o; yoksa sahne/take; o da yoksa ham ad
+    const isRaw = (c) => !c.name || c.name === c.master || c.name === c.source || c.name === c.fileMob || c.name === baseName(c.file).replace(/\.[^.]+$/, '') || /^[A-Z]_?\d{3,4}C\d{3}/i.test(c.name);
+    function label(c) {
+        if (c.fxOnly) return c.name;
+        if (c.scene && !c.stFrom) return c.take ? `${c.scene} / ${c.take}` : c.scene;
+        if (!isRaw(c)) return c.name;
+        if (c.scene) return c.take ? `${c.scene} / ${c.take}` : c.scene;
+        return c.name;
+    }
     function clipAt(f, videoOnly) {
         const hits = CLIPS.filter(c => f >= c.ri && f < c.ro && !HIDDEN.has(c.tk) && (isV(c.tk) || (!videoOnly && $('audio').checked)) && !c.fxOnly);
         return hits.sort((a, b) => trackOrder(a.tk, b.tk))[0] || null;
     }
     function renderInfo() {
         const box = $('info');
+        if (SHOWUN && UNMATCHED.length) {
+            box.innerHTML = `<div class="sm-title"><div class="sm-ev">⚠ ${esc(EP)}</div><div class="sm-pname">${esc(t('smUnmatchedTitle'))}</div><div class="sm-hint">${esc(t('smUnmatchedHint'))}</div></div>
+                <div class="sm-fields sm-unlist">${UNMATCHED.map(n => `<div class="sm-f sm-unitem" style="--c:${laneColor(LANES.includes(n.cat) ? n.cat : 'other')}">
+                    <span class="k">${esc(t('smLane_' + (LANES.includes(n.cat) ? n.cat : 'other')))}${n.ref ? ' · ' + esc(n.ref) : ''}</span><span class="v ui">${esc(n.text)}</span>
+                    ${App.readOnly ? '' : `<button class="ghost-btn small" type="button" data-smact="pick" data-id="${esc(n.id)}">📍 ${esc(t('smPick'))}</button>`}</div>`).join('')}</div>`;
+            return;
+        }
         const nsel = SELNOTE ? NOTES.find(x => x.n.id === SELNOTE) : null;
         if (nsel) {
             const n = nsel.n, c = nsel.clip;
@@ -12537,9 +12625,11 @@ const SeqMap = (() => {
                     <div class="sm-pname">${esc(n.ref || fToTc(nsel.frame))}</div><div class="sm-hint">${n.done ? '✓ ' + esc(t('smNoteDone')) : esc(t('smNoteUndone'))}</div></div>
                 <div class="sm-fields">
                     <div class="sm-f" style="grid-column:1/-1"><span class="k">${esc(t('modNotes'))}</span><span class="v ui sm-notetext">${esc(n.text)}</span></div>
-                    <div class="sm-f"><span class="k">${esc(t('smNoteAt'))}</span><span class="v tc">${fToTc(nsel.frame)}</span><span class="lbl">${esc(nsel.how === 'tc' ? t('smNoteByTc') : t('smNoteByName'))}</span></div>
-                    ${c ? `<div class="sm-f"><span class="k">Plan</span><span class="v ui"><a href="#" class="sm-jump" data-i="${c.idx}">${esc(c.tk)} · ${esc(c.name)}</a></span></div>` : ''}
-                    <div class="sm-f sm-actions"><button class="ghost-btn small" type="button" data-smact="openNote">📝 ${esc(t('smNoteOpen'))}</button>
+                    <div class="sm-f"><span class="k">${esc(t('smNoteAt'))}</span><span class="v tc">${fToTc(nsel.frame)}</span><span class="lbl">${esc(t({ tc: 'smNoteByTc', pick: 'smNoteByPick', scene: 'smNoteByScene' }[nsel.how] || 'smNoteByName'))}</span></div>
+                    ${c ? `<div class="sm-f"><span class="k">Plan</span><span class="v ui"><a href="#" class="sm-jump" data-i="${c.idx}">${esc(c.tk)} · ${esc(label(c))}</a></span></div>` : ''}
+                    <div class="sm-f sm-actions" style="grid-column:1/-1"><button class="ghost-btn small" type="button" data-smact="openNote">📝 ${esc(t('smNoteOpen'))}</button>
+                        ${App.readOnly ? '' : `<button class="ghost-btn small" type="button" data-smact="pick" data-id="${esc(n.id)}">📍 ${esc(t('smRePick'))}</button>`}
+                        ${App.readOnly || !n.seqTc ? '' : `<button class="ghost-btn small" type="button" data-smact="unpick" data-id="${esc(n.id)}">✕ ${esc(t('smUnpick'))}</button>`}
                         ${App.readOnly ? '' : `<button class="ghost-btn small" type="button" data-smact="toggleNote">${n.done ? '↺ ' + esc(t('smNoteUndone')) : '✓ ' + esc(t('smNoteDone'))}</button>`}</div>
                 </div>`;
             return;
@@ -12555,13 +12645,14 @@ const SeqMap = (() => {
         const hasSrc = c.si !== null && c.si !== undefined;
         const seenU = new Set();
         const under = CLIPS.filter(x => x !== c && !HIDDEN.has(x.tk) && (isV(x.tk) || $('audio').checked) && x.ri < c.ro && x.ro > c.ri).sort((a, b) => trackOrder(a.tk, b.tk))
-            .filter(x => { const k = x.tk + '|' + x.name; if (seenU.has(k)) return false; seenU.add(k); return true; });
+            .filter(x => { const k = x.tk + '|' + label(x); if (seenU.has(k)) return false; seenU.add(k); return true; });
         box.innerHTML = `
             <div class="sm-title"><div class="sm-ev">${c.num ? `#${esc(c.num)} · ` : ''}${c.tk}</div>
-                <div class="sm-pname">${esc(c.name)}</div>
+                <div class="sm-pname">${esc(label(c))}</div>
                 <div class="sm-hint">${pctV < 0.1 ? durTxt(c.len) : `%${(Math.round(pctV * 10) / 10).toLocaleString(localeStr())} · ${durTxt(c.len)}`}</div></div>
             <div class="sm-fields">
-                <div class="sm-f"><span class="k">Plan / take</span><span class="v ui">${esc(c.clip || '—')}</span>${c.master && c.master.trim() !== String(c.clip || '').trim() ? `<span class="lbl">Master: ${esc(c.master)}</span>` : ''}</div>
+                <div class="sm-f"><span class="k">${currentLang === 'tr' ? 'Sahne / take' : 'Scene / take'}</span>${c.scene || c.take ? `<span class="v ui sm-st">${esc(c.scene || '—')} <b>/</b> ${esc(c.take || '—')}</span>${c.stFrom ? `<span class="lbl" title="${esc(c.stFrom)}">${currentLang === 'tr' ? 'senkron sesten' : 'from sync sound'}: ${esc(c.stFrom)}</span>` : ''}` : `<span class="v ui">—</span>`}</div>
+                <div class="sm-f"><span class="k">${currentLang === 'tr' ? 'Klip adı' : 'Clip name'}</span><span class="v ui">${esc(c.clip || '—')}</span>${c.master && c.master.trim() !== String(c.clip || '').trim() ? `<span class="lbl">Master: ${esc(c.master)}</span>` : ''}</div>
                 <div class="sm-f"><span class="k">Source name</span><span class="v">${esc(c.source || c.reel || '—')}</span></div>
                 ${c.file ? `<div class="sm-f"><span class="k">${currentLang === 'tr' ? 'Kaynak dosya' : 'Source file'}</span><span class="v" title="${esc(c.file)}">${esc(baseName(c.file))}</span></div>` : `<div class="sm-f"><span class="k">Reel</span><span class="v">${esc(c.reel || '—')}</span></div>`}
                 <div class="sm-f"><span class="k">${currentLang === 'tr' ? 'Kaynak TC' : 'Source TC'}</span>${hasSrc ? `<span class="v tc">${fToTcAt(c.si, c.srcTcFps, c.srcTcFps ? c.srcDrop : RATE.df)} → ${fToTcAt(c.so, c.srcTcFps, c.srcTcFps ? c.srcDrop : RATE.df)}</span>` : '<span class="v ui">—</span>'}</div>
@@ -12570,7 +12661,7 @@ const SeqMap = (() => {
                 <div class="sm-f"><span class="k">${currentLang === 'tr' ? 'Geçiş · hız' : 'Transition · speed'}</span><span class="v ui">${esc(trTxt)} · ${esc(speedTxt)}</span></div>
                 ${c.effect ? `<div class="sm-f"><span class="k">${currentLang === 'tr' ? 'Efekt' : 'Effect'}</span><span class="v ui">${esc(c.effect)}</span></div>` : ''}
                 ${near.length ? `<div class="sm-f" style="grid-column:1/-1"><span class="k">${esc(t('smNotes'))}</span><span class="v ui">${near.map(x => `<a href="#" class="sm-jumpnote" data-note="${esc(x.n.id)}" style="color:${laneColor(x.lane)}">● ${esc(t('smLane_' + x.lane))}: ${esc(x.n.text.slice(0, 60))}</a>`).join('<br>')}</span></div>` : ''}
-                ${under.length ? `<div class="sm-f" style="grid-column:1/-1"><span class="k">${currentLang === 'tr' ? 'Aynı aralıkta' : 'Same range'}</span><span class="v ui">${under.slice(0, 8).map(x => `<a href="#" class="sm-jump" data-i="${x.idx}">${x.tk} · ${esc(x.name)}</a>`).join(' &nbsp; ')}</span></div>` : ''}
+                ${under.length ? `<div class="sm-f" style="grid-column:1/-1"><span class="k">${currentLang === 'tr' ? 'Aynı aralıkta' : 'Same range'}</span><span class="v ui">${under.slice(0, 8).map(x => `<a href="#" class="sm-jump" data-i="${x.idx}">${x.tk} · ${esc(label(x))}</a>`).join(' &nbsp; ')}</span></div>` : ''}
                 ${locs.length ? `<div class="sm-f" style="grid-column:1/-1"><span class="k">Locator</span><span class="v ui">${locs.map(l => `<span style="color:${locColor(l.color)}">●</span> ${esc(fToTc(l.frame))} ${esc(l.text)}`).join('<br>')}</span></div>` : ''}
             </div>`;
     }
@@ -12606,14 +12697,14 @@ const SeqMap = (() => {
     }
     function select(i) {
         const c = CLIPS.find(x => x.idx === i); if (!c) return;
-        SEL = i; SELNOTE = null; POS = c.ri;
+        SEL = i; SELNOTE = null; SHOWUN = false; POS = c.ri;
         render();
         const scroll = $('scroll'), x = (c.ri - START) * ppf;
         if (x < scroll.scrollLeft || x + c.len * ppf > scroll.scrollLeft + scroll.clientWidth) { scroll.scrollLeft = Math.max(0, x - 60); render(); }
     }
     function selectNote(id) {
         const x = NOTES.find(y => y.n.id === id); if (!x) return;
-        SELNOTE = id; SEL = null; POS = x.frame;
+        SELNOTE = id; SEL = null; SHOWUN = false; POS = x.frame;
         render();
         const scroll = $('scroll'), px = (x.frame - START) * ppf;
         if (px < scroll.scrollLeft || px > scroll.scrollLeft + scroll.clientWidth - 40) { scroll.scrollLeft = Math.max(0, px - 120); render(); }
@@ -12640,7 +12731,7 @@ const SeqMap = (() => {
         : { type: 'edl', name: x.name, text: x.text, track: x.track });
     const unpackSources = (list) => (list || []).map(x => x.type === 'aaf' ? Object.assign({}, x, { data: Object.assign({}, x.data, { sequences: x.data.sequences.map(q => Object.assign({}, q, { clips: unpackClips(q.clips) })) }) }) : x);
     function busy(msg) { const b = $('busy'); b.hidden = !msg; if (msg) b.textContent = msg; }
-    function flash(msg, bad) { const el = $('status'); el.textContent = msg; el.className = 'sm-status ' + (bad ? 'bad' : 'ok'); clearTimeout(flash.t); flash.t = setTimeout(() => { el.textContent = ''; }, bad ? 9000 : 3500); }
+    function flash(msg, bad) { const el = $('status'); el.textContent = msg; if (!msg) return; el.className = 'sm-status ' + (bad ? 'bad' : 'ok'); clearTimeout(flash.t); flash.t = setTimeout(() => { el.textContent = ''; }, bad ? 9000 : 3500); }
     async function persist() {
         if (!App.project) return;
         const pid = App.project.id, ep = EP;
@@ -12783,7 +12874,7 @@ const SeqMap = (() => {
                 <div class="sm-corner">TC1</div>
                 <div class="sm-ruler" id="sm-ruler"></div>
                 <div class="sm-heads" id="sm-heads"></div>
-                <div class="sm-stage"><canvas class="sm-gl" id="sm-gl"></canvas>
+                <div class="sm-stage" id="sm-stage"><canvas class="sm-gl" id="sm-gl"></canvas>
                 <div class="sm-scroll" id="sm-scroll"><div class="sm-canvas" id="sm-canvas"></div>
                     <button class="sm-empty" id="sm-empty" type="button" hidden><b id="sm-emptyTitle"></b><span>${esc(t('smEmptyHint'))}</span><em>⬆ ${esc(t('smDrop'))} · ${esc(t('smDropSub'))}</em></button></div></div>
             </div>
@@ -12798,6 +12889,7 @@ const SeqMap = (() => {
         $('doneNotes').checked = pref('done', '0') === '1';
         const scroll = $('scroll');
         // Olaylar
+        $('unmatched').onclick = () => { SHOWUN = !SHOWUN; SELNOTE = null; SEL = null; renderInfo(); };
         $('ep').onchange = (e) => { SEL = null; loadEp(e.target.value); };
         $('seqPick').onchange = (e) => { if (SOURCES[0] && SOURCES[0].type === 'aaf') { SOURCES[0].pick = +e.target.value; build(); persist(); } };
         $('import').onclick = () => { if (!App.readOnly) $('file').click(); };
@@ -12833,6 +12925,13 @@ const SeqMap = (() => {
         });
         $('canvas').addEventListener('click', (e) => {
             if (!SEQ) return;
+            if (PICK) {
+                const n = findNote(PICK), hcp = hitClip(e.clientX, e.clientY), id = PICK;
+                PICK = null; $('stage').classList.remove('picking'); flash('');
+                const rr = $('canvas').getBoundingClientRect();
+                if (n) { n.seqTc = fToTc(hcp ? hcp.ri : START + (e.clientX - rr.left) / ppf); n.seq = true; triggerAutoSave(); SHOWUN = false; collectNotes(); selectNote(id); }
+                return;
+            }
             const nb = e.target.closest('[data-note]'); if (nb) return selectNote(nb.dataset.note);
             const hc = hitClip(e.clientX, e.clientY); if (hc) return select(hc.idx);
             const r = $('canvas').getBoundingClientRect();
@@ -12846,7 +12945,7 @@ const SeqMap = (() => {
                 hoverRaf = 0; if (!SEQ || !hoverEv || hoverEv.target.closest('[data-note]')) return;
                 const c = hitClip(hoverEv.clientX, hoverEv.clientY);
                 $('canvas').style.cursor = c ? 'pointer' : 'text';
-                $('canvas').title = c ? `${c.name} · ${c.tk} · ${durTxt(c.len)}` : '';
+                $('canvas').title = c ? `${label(c)} · ${c.tk} · ${durTxt(c.len)}${label(c) !== c.name ? '\n' + c.name : ''}` : '';
             });
         });
         let scrub = false;
@@ -12864,13 +12963,19 @@ const SeqMap = (() => {
             const a = e.target.closest('.sm-jump'); if (a) { e.preventDefault(); return select(+a.dataset.i); }
             const nn = e.target.closest('.sm-jumpnote'); if (nn) { e.preventDefault(); return selectNote(nn.dataset.note); }
             const b = e.target.closest('[data-smact]'); if (!b) return;
+            if (b.dataset.smact === 'pick' && !App.readOnly) { PICK = b.dataset.id; $('stage').classList.add('picking'); flash('📍 ' + t('smPickHint')); clearTimeout(flash.t); return; }
+            if (b.dataset.smact === 'unpick' && !App.readOnly) { const n = findNote(b.dataset.id); if (n) { delete n.seqTc; triggerAutoSave(); collectNotes(); render(); } return; }
             const x = NOTES.find(y => y.n.id === SELNOTE); if (!x) return;
             if (b.dataset.smact === 'openNote') { EpisodeNotes.select && EpisodeNotes.select(NOTEKEY.get(x.n.id) || EP); showModule('notes'); }
             if (b.dataset.smact === 'toggleNote' && !App.readOnly) { x.n.done = !x.n.done; triggerAutoSave(); collectNotes(); render(); }
         });
         document.addEventListener('keydown', (e) => {
             if (App.module !== 'seqmap' || App.view !== 'workspace' || !SEQ) return;
-            if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || document.querySelector('.modal:not([hidden]), .rep-modal')) return;
+            const ae = document.activeElement;
+            // Yazı alanındayken tuşlar yazıya gitsin; kaydırıcı / kutucuk / düğmede odak varsa harita alsın
+            if (ae && (ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT' || ae.isContentEditable || (ae.tagName === 'INPUT' && !/^(range|checkbox|button|file)$/i.test(ae.type)))) return;
+            if ([...document.querySelectorAll('.modal-overlay, .rep-modal')].some(m => m.offsetParent !== null)) return;
+            if (/^Arrow/.test(e.key) && ae && ae !== document.body) ae.blur();
             const curTk = SEL !== null ? CLIPS.find(x => x.idx === SEL).tk : (shownTracks().filter(isV).pop() || TRACKS[0]);
             const row = (BYTRACK.get(curTk) || []).slice().sort((a, b) => a.ri - b.ri);
             if (e.key === '+' || e.key === '=') { setPpf(ppf * 1.6); e.preventDefault(); }
@@ -12884,9 +12989,9 @@ const SeqMap = (() => {
                 e.preventDefault();
             } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                 const ax = Math.max(0, Math.min(scroll.clientWidth, (POS - START) * ppf - scroll.scrollLeft));
-                setPpf(e.key === 'ArrowUp' ? ppf / 1.4 : ppf * 1.4, ax);
+                setPpf(e.key === 'ArrowUp' ? ppf * 1.4 : ppf / 1.4, ax);
                 e.preventDefault();
-            } else if (e.key === 'Escape') { SEL = null; SELNOTE = null; render(); }
+            } else if (e.key === 'Escape') { if (PICK) { PICK = null; $('stage').classList.remove('picking'); flash(''); return; } SEL = null; SELNOTE = null; SHOWUN = false; render(); }
         });
         // Sürükle-bırak: sadece bu sekmedeyken
         let depth = 0;
