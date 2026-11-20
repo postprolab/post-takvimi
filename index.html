@@ -6322,12 +6322,12 @@ window.onLanguageChange = function () {
 //   not = { id, cat, ref, text, done, createdAt }
 // ---------------------------------------------------------------------
 Object.assign(I18N.en, {
-    cat_sound: "Sound / Dubbing", cat_edit: "Edit", cat_cuts: "Cuts", cat_color: "Color", cat_send: "Send",
+    cat_sound: "Sound / Dubbing", cat_ai: "AI", cat_edit: "Edit", cat_cuts: "Cuts", cat_color: "Color", cat_send: "Send",
     episodeNotesTitle: "Episode notes", refPlaceholderEp: "Scene / TC / page",
     epNoteHint: "Enter adds the note, Shift+Enter starts a new line. Department and scene stay filled for the next note."
 });
 Object.assign(I18N.tr, {
-    cat_sound: "Ses / Dublaj", cat_edit: "Edit", cat_cuts: "Cuts", cat_color: "Color", cat_send: "Send",
+    cat_sound: "Ses / Dublaj", cat_ai: "AI", cat_edit: "Edit", cat_cuts: "Cuts", cat_color: "Color", cat_send: "Send",
     episodeNotesTitle: "Bölüm notları", refPlaceholderEp: "Sahne / TC / sayfa",
     epNoteHint: "Enter notu ekler, Shift+Enter yeni satır açar. Departman ve sahne bir sonraki not için dolu kalır."
 });
@@ -6418,6 +6418,7 @@ const DEPT_CATS = [
     { key: 'sound', color: deptColors.sound },
     { key: 'music', color: deptColors.music },
     { key: 'send',  color: deptColors.send },
+    { key: 'ai',    color: '#2dd4bf' },
     { key: 'other', color: '#8a8f99' }
 ];
 
@@ -12123,7 +12124,7 @@ const AAF = (() => {
 // ---------------------------------------------------------------------
 // 15) SEKANS HARİTASI — her bölümün master sekansı (Avid AAF / EDL) Avid timeline'ı gibi:
 // V katları üstte, A track'leri altta. Bölüm Notları'nda "Sekansa işle" seçilen notlar
-// track'lerin üstündeki departman katlarında (alttan üste: Ses, Müzik, VFX, Color, Edit, Cuts, Send)
+// track'lerin üstündeki departman katlarında (alttan üste: Ses, Müzik, VFX, AI, Color, Edit, Cuts, Send)
 // TC'den ya da plan/sahne adından inen oklarla gösterilir.
 // Kayıt: workspaces/{pid}/seqmap/{EPxx} (bilgi) + {EPxx}__0..n (JSON parçaları — 1 MB belge sınırı)
 //        project.seqMaps.{EPxx} = { rev, name, at, by, clips, kind }  (liste + canlı güncelleme)
@@ -12139,7 +12140,7 @@ Object.assign(I18N.tr, {
     smBy: "{name} yükledi · {d}", smUpdatedRemote: "{name} bu bölümün haritasını güncelledi.",
     smUnmatched: "{n} not haritada yer bulamadı", smUnmatchedHint: "Notun “Sahne / TC” alanına time kod (01:02:03:04) ya da sahne (37-8, Sahne 37) yaz, ya da aşağıdan “Haritada yer seç” de.",
     smNoteOpen: "Notlarda aç", smPick: "Haritada yer seç", smRePick: "Yerini değiştir", smUnpick: "Elle seçilen yeri kaldır", smPickHint: "Şimdi haritada notun ait olduğu plana ya da yere tıkla (Esc: vazgeç)", smNoteByPick: "elle seçildi", smNoteByScene: "sahne", smUnmatchedTitle: "Haritada yer bulamayan notlar", smUnmatchedClick: "listele", smNoteDone: "Çözüldü", smNoteUndone: "Açık", smNoteAt: "Bağlandığı yer", smNoteByTc: "time kod", smNoteByName: "plan adı",
-    smLane_sound: "Ses", smLane_music: "Müzik", smLane_vfx: "VFX", smLane_color: "Color", smLane_edit: "Edit", smLane_cuts: "Cuts", smLane_send: "Send", smLane_other: "Diğer",
+    smLane_sound: "Ses", smLane_music: "Müzik", smLane_vfx: "VFX", smLane_ai: "AI", smLane_color: "Color", smLane_edit: "Edit", smLane_cuts: "Cuts", smLane_send: "Send", smLane_other: "Diğer",
     smMixed: "{n} plan farklı fps: {r} (sekans {s})", smNoMain: "Ana sekans bulunamadı; AAF'teki en büyük parça gösteriliyor.",
     seqToMap: "Sekansa işle", seqToMapHint: "Bu not Sekans Haritası'nda, “Sahne / TC” alanındaki time koddan ya da plan adından inen okla gösterilir.",
     seqAllOn: "Bu bölümün notlarını sekansa işle", seqAllOff: "Sekanstan çıkar (tümü)"
@@ -12155,7 +12156,7 @@ Object.assign(I18N.en, {
     smBy: "Uploaded by {name} · {d}", smUpdatedRemote: "{name} updated this episode's map.",
     smUnmatched: "{n} notes found no place on the map", smUnmatchedHint: "Put a timecode (01:02:03:04) or a scene (37-8, Scene 37) in the note's “Scene / TC” field, or use “Pick a place on the map” below.",
     smNoteOpen: "Open in notes", smPick: "Pick a place on the map", smRePick: "Change place", smUnpick: "Remove picked place", smPickHint: "Now click the shot or spot this note belongs to (Esc: cancel)", smNoteByPick: "picked by hand", smNoteByScene: "scene", smUnmatchedTitle: "Notes with no place on the map", smUnmatchedClick: "list", smNoteDone: "Resolved", smNoteUndone: "Open", smNoteAt: "Placed at", smNoteByTc: "timecode", smNoteByName: "shot name",
-    smLane_sound: "Sound", smLane_music: "Music", smLane_vfx: "VFX", smLane_color: "Color", smLane_edit: "Edit", smLane_cuts: "Cuts", smLane_send: "Send", smLane_other: "Other",
+    smLane_sound: "Sound", smLane_music: "Music", smLane_vfx: "VFX", smLane_ai: "AI", smLane_color: "Color", smLane_edit: "Edit", smLane_cuts: "Cuts", smLane_send: "Send", smLane_other: "Other",
     smMixed: "{n} shots at a different fps: {r} (sequence {s})", smNoMain: "Main sequence not found; showing the largest part of the AAF.",
     seqToMap: "Show on sequence", seqToMapHint: "This note is shown on the Sequence Map with an arrow from the timecode or shot name in “Scene / TC”.",
     seqAllOn: "Show this episode's notes on the sequence", seqAllOff: "Remove all from sequence"
@@ -12165,7 +12166,7 @@ const SeqMap = (() => {
     const root = () => document.getElementById('seqmapModule');
     const $ = (id) => document.getElementById('sm-' + id);
     // Not katları: alttan üste (track'lere en yakın olan Ses)
-    const LANES = ['sound', 'music', 'vfx', 'color', 'edit', 'cuts', 'send', 'other'];
+    const LANES = ['sound', 'music', 'vfx', 'ai', 'color', 'edit', 'cuts', 'send', 'other'];
     const laneColor = (k) => (DEPT_CATS.find(c => c.key === k) || { color: '#8a8f99' }).color;
 
     // ---------- Durum ----------
