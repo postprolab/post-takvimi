@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="2026.10.24-5">
+<meta name="app-version" content="2026.11.20-1">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostPro Lab</title>
 <style>
@@ -1457,6 +1457,116 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 .sh-toast.working { background: #2b3a55; }
 .sh-frame { padding: 6px; background: #1a1d24; box-sizing: border-box; } .sh-frame iframe { border-radius: 6px; }
 
+
+/* ===== Sekans Haritası (Avid timeline görünümü) — sadece #seqmapModule içinde ===== */
+#seqmapModule { flex-direction: column; min-height: 0; flex: 1; --sm-bg: #17181a; --sm-panel: #26282b; --sm-panel2: #303236; --sm-line: #3b3e43; --sm-text: #d9dbde; --sm-muted: #8c9097;
+  --sm-clip: #7f97c4; --sm-clip-edge: #a9bde3; --sm-pos: #3d8bff; --sm-sel: #f2c14e; --sm-tc: "IBM Plex Mono", ui-monospace, Consolas, monospace; }
+#seqmapModule .sm-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; height: 100%; background: var(--sm-bg); color: var(--sm-text); position: relative; }
+#seqmapModule .sm-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 10px 14px; background: var(--sm-panel); border-bottom: 1px solid var(--sm-line); }
+#seqmapModule .sm-seq { display: flex; flex-direction: column; min-width: 180px; max-width: 46ch; flex: 1 1 260px; }
+#seqmapModule .sm-seq h2 { margin: 0; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#seqmapModule .sm-seq small { color: var(--sm-muted); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#seqmapModule .sm-seq .sm-warn { color: #ffb15c; font-weight: 700; cursor: help; }
+#seqmapModule .sm-seq .sm-warn[hidden] { display: none; }
+#seqmapModule .sm-lbl { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--sm-muted); }
+#seqmapModule select, #seqmapModule input[type=search] { background: #111214; border: 1px solid var(--sm-line); color: var(--sm-text); border-radius: 6px; padding: 5px 8px; font: inherit; font-size: 12.5px; }
+#seqmapModule input[type=search] { width: 130px; }
+#seqmapModule .sm-zoom { display: flex; align-items: center; gap: 4px; }
+#seqmapModule .sm-zoom input { width: 110px; accent-color: var(--sm-pos); }
+#seqmapModule .sm-chk { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--sm-muted); cursor: pointer; white-space: nowrap; }
+#seqmapModule .sm-chk[hidden] { display: none; }
+#seqmapModule .sm-tc { font: 600 14px var(--sm-tc); background: #111214; border: 1px solid var(--sm-line); border-radius: 6px; padding: 4px 9px; color: #8fc1ff; font-variant-numeric: tabular-nums; }
+#seqmapModule .sm-fpsnote { font-size: 10.5px; font-weight: 700; border-radius: 4px; padding: 2px 6px; cursor: help; }
+#seqmapModule .sm-fpsnote:empty { display: none; }
+#seqmapModule .sm-fpsnote.aaf, #seqmapModule .sm-fpsnote.sure { background: #1f3a28; color: #8fe0a7; }
+#seqmapModule .sm-fpsnote.guess { background: #3a3014; color: #ffd36b; }
+#seqmapModule .sm-fpsnote.manual { background: #2c3340; color: #b9c6dc; }
+#seqmapModule #sm-clear.arm { background: #5a2323; border-color: #a33; color: #fff; }
+#seqmapModule .sm-status { font-size: 12px; font-weight: 700; white-space: pre-line; }
+#seqmapModule .sm-status.ok { color: #8fe0a7; }
+#seqmapModule .sm-status.bad { color: #ff8f8f; }
+#seqmapModule .sm-tl { flex: 1; min-height: 0; display: grid; grid-template-columns: 74px 1fr; grid-template-rows: 44px 1fr; }
+#seqmapModule .sm-corner { background: var(--sm-panel); border-right: 1px solid var(--sm-line); border-bottom: 1px solid var(--sm-line); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; font: 500 11px var(--sm-tc); color: var(--sm-muted); }
+#seqmapModule .sm-ruler { overflow: hidden; background: #202225; border-bottom: 1px solid var(--sm-line); position: relative; cursor: text; }
+#seqmapModule .sm-heads { background: var(--sm-panel); border-right: 1px solid var(--sm-line); overflow: hidden; }
+#seqmapModule .sm-head { width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px; border: 0; border-bottom: 1px solid var(--sm-line); background: #2c2f33; color: #c6cad1; cursor: pointer; padding: 0; font: 700 12.5px inherit; }
+#seqmapModule .sm-head span { background: #3c4a63; border-radius: 4px; padding: 1px 7px; }
+#seqmapModule .sm-head i { font-style: normal; font: 500 10px var(--sm-tc); color: var(--sm-muted); }
+#seqmapModule .sm-head.aud span { background: #3f5a44; }
+#seqmapModule .sm-head.off span { background: #3a3c40; color: #6c7077; text-decoration: line-through; }
+#seqmapModule .sm-head.first-a, #seqmapModule .sm-track.first-a { box-shadow: inset 0 2px 0 #4a5d4c; }
+#seqmapModule .sm-lanehead-wrap { padding-top: 4px; box-sizing: border-box; border-bottom: 1px solid var(--sm-line); background: #1f2124; }
+#seqmapModule .sm-lanehead { display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--c); box-sizing: border-box; }
+#seqmapModule .sm-scroll { overflow: auto; position: relative; background: var(--sm-bg); }
+#seqmapModule .sm-canvas { position: relative; }
+#seqmapModule .sm-track { position: absolute; left: 0; border-bottom: 1px solid #26282b; }
+#seqmapModule .sm-track.aud { background: #151916; }
+#seqmapModule .sm-lane { position: absolute; left: 0; border-bottom: 1px dashed color-mix(in srgb, var(--c) 35%, transparent); background: color-mix(in srgb, var(--c) 6%, transparent); }
+#seqmapModule .sm-clip { position: absolute; background: var(--sm-clip); border: 1px solid var(--sm-clip-edge); border-radius: 2px; color: #10151f; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; justify-content: center; padding: 0 5px; box-sizing: border-box; }
+#seqmapModule .sm-clip:hover { filter: brightness(1.12); }
+#seqmapModule .sm-clip.aud { background: #7fae86; border-color: #a7cfac; }
+#seqmapModule .sm-clip.fxonly { background: repeating-linear-gradient(135deg, #6d5a8f 0 6px, #64538a 6px 12px); border-color: #9a86c2; color: #f0eaff; }
+#seqmapModule .sm-clip.mix { background: repeating-linear-gradient(135deg, #e0a35b 0 8px, #d4974e 8px 16px); border-color: #ffc78a; }
+#seqmapModule .sm-clip.sel { outline: 2px solid var(--sm-sel); outline-offset: -1px; z-index: 3; }
+#seqmapModule .sm-clip.match { box-shadow: 0 0 0 3px #f2c14e88; }
+#seqmapModule .sm-clip.dim { opacity: .35; }
+#seqmapModule .sm-clip .nm { font-weight: 700; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#seqmapModule .sm-clip .du { font: 500 10px var(--sm-tc); opacity: .75; white-space: nowrap; }
+#seqmapModule .sm-clip .fx { position: absolute; top: 2px; right: 3px; font: 700 9px var(--sm-tc); background: #10151fcc; color: #ffd36b; border-radius: 2px; padding: 0 3px; }
+#seqmapModule .sm-clip .fpsb { position: absolute; top: 2px; left: 3px; font: 700 9px var(--sm-tc); background: #10151fdd; color: #ffb15c; border-radius: 2px; padding: 0 3px; }
+#seqmapModule .sm-clip .diss { position: absolute; top: 0; bottom: 0; left: 0; background: linear-gradient(90deg, rgba(0,0,0,.45), transparent); pointer-events: none; }
+#seqmapModule .sm-pos { position: absolute; top: 0; width: 1px; background: var(--sm-pos); pointer-events: none; z-index: 6; }
+#seqmapModule .sm-tick { position: absolute; bottom: 0; width: 1px; background: #4a4e55; }
+#seqmapModule .sm-tick.big { height: 14px; background: #7d828a; }
+#seqmapModule .sm-tick.sm { height: 6px; }
+#seqmapModule .sm-tlab { position: absolute; top: 4px; font: 500 11px var(--sm-tc); color: #aeb3ba; white-space: nowrap; transform: translateX(3px); }
+#seqmapModule .sm-loc { position: absolute; bottom: 2px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; border: 1px solid #00000088; cursor: pointer; z-index: 4; }
+#seqmapModule .sm-posr { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--sm-pos); pointer-events: none; }
+/* Not okları: departman katında etiket, plana inen ok */
+#seqmapModule .sm-note { position: absolute; transform: translateX(-1px); height: 20px; padding: 0 7px 0 8px; border: 0; border-left: 3px solid var(--c); border-radius: 0 5px 5px 0; background: color-mix(in srgb, var(--c) 28%, #1b1d20); color: #fff; font: 600 11.5px inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; z-index: 5; text-align: left; box-sizing: border-box; }
+#seqmapModule .sm-note:hover, #seqmapModule .sm-note.sel { background: var(--c); color: #111; z-index: 7; max-width: 340px !important; }
+#seqmapModule .sm-note.dot { width: 14px; padding: 0; border-radius: 0 50% 50% 0; }
+#seqmapModule .sm-note.done { opacity: .45; text-decoration: line-through; }
+#seqmapModule .sm-arrow { position: absolute; width: 2px; margin-left: -1px; background: var(--c); z-index: 4; pointer-events: none; }
+#seqmapModule .sm-arrow::after { content: ""; position: absolute; bottom: -1px; left: -4px; border: 5px solid transparent; border-top: 7px solid var(--c); border-bottom: 0; }
+#seqmapModule .sm-arrow.done { opacity: .45; }
+#seqmapModule .sm-guide { position: absolute; width: 0; border-left: 1px dashed color-mix(in srgb, var(--c) 45%, transparent); z-index: 2; pointer-events: none; }
+/* Bilgi paneli */
+#seqmapModule .sm-info { background: var(--sm-panel); border-top: 1px solid var(--sm-line); padding: 10px 14px 12px; display: grid; grid-template-columns: minmax(170px, 250px) 1fr; gap: 10px 22px; min-height: 110px; max-height: 34vh; overflow: auto; }
+#seqmapModule .sm-info:empty { display: none; }
+#seqmapModule .sm-title { display: flex; flex-direction: column; gap: 3px; }
+#seqmapModule .sm-ev { font: 500 11.5px var(--sm-tc); color: var(--sm-muted); }
+#seqmapModule .sm-pname { font-size: 18px; font-weight: 700; word-break: break-word; }
+#seqmapModule .sm-hint { color: var(--sm-muted); font-size: 12.5px; }
+#seqmapModule .sm-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px 18px; align-content: start; }
+#seqmapModule .sm-f { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+#seqmapModule .sm-f .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--sm-muted); font-weight: 600; }
+#seqmapModule .sm-f .v { font: 500 13px var(--sm-tc); overflow-wrap: anywhere; }
+#seqmapModule .sm-f .v.tc { white-space: nowrap; }
+#seqmapModule .sm-f .v.ui { font-family: inherit; }
+#seqmapModule .sm-f .lbl { font-size: 11px; color: var(--sm-muted); }
+#seqmapModule .sm-f.warnf .v { color: #ffb15c; font-weight: 700; }
+#seqmapModule .sm-notetext { white-space: pre-wrap; font-size: 14px; }
+#seqmapModule .sm-actions { flex-direction: row; gap: 8px; align-items: center; flex-wrap: wrap; }
+#seqmapModule .sm-jump, #seqmapModule .sm-jumpnote { color: #8fc1ff; text-decoration: none; }
+#seqmapModule .sm-jump:hover, #seqmapModule .sm-jumpnote:hover { text-decoration: underline; }
+#seqmapModule .sm-empty { position: absolute; inset: 22px; border: 2px dashed #4a5260; border-radius: 12px; background: transparent; color: var(--sm-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font: inherit; font-size: 14px; padding: 20px; text-align: center; }
+#seqmapModule .sm-empty b { color: var(--sm-text); font-size: 18px; }
+#seqmapModule .sm-empty span { max-width: 60ch; line-height: 1.5; }
+#seqmapModule .sm-empty em { font-style: normal; color: #8fc1ff; font-weight: 700; }
+#seqmapModule .sm-empty:hover { border-color: var(--sm-pos); background: #1a2232; }
+#seqmapModule .sm-empty[hidden] { display: none; }
+#seqmapModule .sm-busy { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); background: var(--sm-panel); border: 1px solid var(--sm-line); border-radius: 10px; padding: 12px 20px; font-weight: 700; z-index: 20; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+#seqmapModule .sm-busy[hidden], #seqmapModule .sm-dragall[hidden] { display: none; }
+#seqmapModule .sm-dragall { position: absolute; inset: 0; z-index: 30; background: rgba(29,42,64,.85); border: 3px dashed var(--sm-pos); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: #fff; pointer-events: none; }
+@media (max-width: 760px) { #seqmapModule .sm-info { grid-template-columns: 1fr; } #seqmapModule .sm-tl { grid-template-columns: 54px 1fr; } }
+/* Bölüm notlarında "Sekansa işle" */
+.note-add.has-seq { grid-template-columns: 150px 130px auto 1fr auto; }
+@media (max-width: 1100px) { .note-add.has-seq { grid-template-columns: 130px 110px auto 1fr auto; } }
+@media (max-width: 760px) { .note-add.has-seq { grid-template-columns: 1fr; } }
+.note-add .seq-chk { align-self: center;  display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #c9d3e2; white-space: nowrap; cursor: pointer; }
+.sn-seq { border: 1px solid #3a4250; background: transparent; color: #8c95a5; border-radius: 6px; padding: 2px 7px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.sn-seq.on { background: #20304a; border-color: #3d8bff; color: #cfe2ff; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
@@ -1590,6 +1700,7 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 
         <!-- BÖLÜM NOTLARI (workspace.js çizer) -->
         <div id="notesModule" class="ws-module"></div>
+        <div id="seqmapModule" class="ws-module"></div>
 
         <!-- SENARYO (workspace.js çizer) -->
         <div id="scriptModule" class="ws-module"></div>
@@ -3960,7 +4071,7 @@ function setPath(obj, path, val) {
 
 // Offline mod için bellekte çalışan, FB ile aynı arayüze sahip depo
 const MemFB = (() => {
-    const ws = {}, vers = {}, rems = {}, imgs = { th: {}, fr: {}, cbs: {} };
+    const ws = {}, vers = {}, rems = {}, imgs = { th: {}, fr: {}, cbs: {} }, seqm = {};
     let n = 0;
     const newId = (p) => `${p}-${Date.now().toString(36)}-${++n}`;
     const now = () => new Date().toISOString();
@@ -3989,6 +4100,9 @@ const MemFB = (() => {
             return { id: pid, data: clone(ws[pid]) };
         },
         async getProject(pid) { return ws[pid] ? clone(ws[pid]) : null; },
+        async saveSeqMap(pid, ep, info, json) { (seqm[pid] = seqm[pid] || {})[ep] = { meta: clone(info), json }; },
+        async getSeqMap(pid, ep) { const x = seqm[pid] && seqm[pid][ep]; return x ? { meta: clone(x.meta), json: x.json } : null; },
+        async deleteSeqMap(pid, ep) { if (seqm[pid]) delete seqm[pid][ep]; },
         async updateProject(pid, upd) { Object.entries(upd).forEach(([k, v]) => setPath(ws[pid], k, v)); },
         async renameProject(pid, name) { if (ws[pid]) ws[pid].projectName = name; },
         async deleteProject(pid) { delete ws[pid]; delete vers[pid]; },
@@ -4774,7 +4888,8 @@ async function openProject(id, data) {
         createdAt: data.createdAt || new Date().toISOString(),
         ownerUid: data.ownerUid, ownerEmail: data.ownerEmail, ownerName: data.ownerName,
         members: clone(data.members || {}),
-        gsheet: data.gsheet ? clone(data.gsheet) : null
+        gsheet: data.gsheet ? clone(data.gsheet) : null,
+        seqMaps: isPlainObject(data.seqMaps) ? clone(data.seqMaps) : {}
     });
     currentProjectId = id;
     App.versions = [];
@@ -5057,6 +5172,8 @@ function onRemoteProject(d, reason) {
     if (!role) { onRemoteProject(null, 'denied'); return; }
     App.project.members = clone(d.members || {});
     App.project.gsheet = d.gsheet ? clone(d.gsheet) : null;      // Sheets bağlantısı (lider bilgisi dahil) — durum mesajı göstermeden
+    App.project.seqMaps = isPlainObject(d.seqMaps) ? clone(d.seqMaps) : {};   // Sekans haritaları (bölüm başına)
+    window.SeqMap && SeqMap.onRemote();
     if (role !== App.role) {
         App.role = role;
         setReadOnlyUI({ readOnly: role === 'viewer', offline: window.isOfflineMode });
@@ -5091,6 +5208,7 @@ function onRemoteProject(d, reason) {
 
     if (changedKeys.length) {
         if (App.module === 'notes' && changedKeys.some(k => k.startsWith('episodeNotes.'))) EpisodeNotes.render();
+        if (changedKeys.some(k => k.startsWith('episodeNotes.'))) SeqMap.refreshNotes();
         if (App.module === 'script' && changedKeys.some(k => k.startsWith('scripts.'))) ScriptNotes.render();
         if (App.module === 'meetings' && changedKeys.includes('meetings')) refreshMeetingsSafely();
         if (App.module === 'vfx' && changedKeys.some(k => k.startsWith('vfxShots.') || k.startsWith('vfxRounds.') || k === 'vfxLayout')) refreshVfxSafely();
@@ -6122,6 +6240,7 @@ async function runMigration() {
 const MODULES = [
     { key: 'calendar', icon: '📅', label: 'modCalendar' },
     { key: 'notes', icon: '📝', label: 'modNotes' },
+    { key: 'seqmap', icon: '🎞', label: 'modSeqMap', private: true },
     { key: 'script', icon: '🎬', label: 'modScript', private: true },
     { key: 'sheets', icon: '📊', label: 'modSheets', private: true },
     { key: 'vfx', icon: '✨', label: 'modVfx', private: true, hidden: true },
@@ -6149,6 +6268,7 @@ function showModule(key) {
     App.module = key;
     $('calendarModule').style.display = key === 'calendar' ? 'flex' : 'none';
     $('notesModule').style.display = key === 'notes' ? 'flex' : 'none';
+    $('seqmapModule').style.display = key === 'seqmap' ? 'flex' : 'none';
     $('scriptModule').style.display = key === 'script' ? 'flex' : 'none';
     $('meetingsModule').style.display = key === 'meetings' ? 'flex' : 'none';
     $('todosModule').style.display = key === 'todos' ? 'flex' : 'none';
@@ -6161,6 +6281,7 @@ function showModule(key) {
     if (key === 'todos') renderTodosModule();
     if (key === 'vfx') renderVfxModule();
     if (key === 'sheets') renderSheetsModule();
+    if (key === 'seqmap') SeqMap.show();
     renderModuleNav();
 }
 window.showModule = showModule;
@@ -6311,7 +6432,8 @@ function notesGridToEpisodeNotes(grid) {
 }
 
 function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey }) {
-    const st = { sel: 'GENEL', filter: 'all', lastCat: cats[0].key };
+    const st = { sel: 'GENEL', filter: 'all', lastCat: cats[0].key, lastSeq: false };
+    const SEQ = dataKey === 'episodeNotes';     // Bölüm notları: "Sekansa işle" seçeneği
     const catInfo = (key) => cats.find(c => c.key === key) || cats[cats.length - 1];
     const catLabel = (key) => t('cat_' + catInfo(key).key);
     const store = () => {
@@ -6391,16 +6513,18 @@ function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey 
                 <h2>${icon} ${escapeHtml(noteKeyLabel(st.sel))} — ${escapeHtml(t(titleKey))}</h2>
                 <div class="detail-tools">
                     <span class="muted">${openCount} ${escapeHtml(t('openNotes'))} · ${all.length - openCount} ${escapeHtml(t('resolved'))}</span>
+                    ${SEQ && !ro && all.length && st.sel !== 'GENEL' ? `<button class="ghost-btn" data-act="seqall" title="${escapeHtml(t('seqToMapHint'))}">🎞 ${escapeHtml(all.every(n => n.seq) ? t('seqAllOff') : t('seqAllOn'))}</button>` : ''}
                     <button class="ghost-btn" data-act="pdf" data-help="help_pdf">📄 ${escapeHtml(t('exportPdf'))}</button>
                 </div>
             </div>
 
             ${ro ? '' : `
-            <form class="note-add">
+            <form class="note-add${SEQ && st.sel !== 'GENEL' ? ' has-seq' : ''}">
                 <select data-role="cat" data-help="help_noteCat">
                     ${cats.map(c => `<option value="${c.key}" ${c.key === st.lastCat ? 'selected' : ''}>${escapeHtml(catLabel(c.key))}</option>`).join('')}
                 </select>
                 <input data-role="ref" data-help="help_noteRef" type="text" maxlength="40" placeholder="${escapeHtml(t(refKey))}">
+                ${SEQ && st.sel !== 'GENEL' ? `<label class="seq-chk" title="${escapeHtml(t('seqToMapHint'))}"><input type="checkbox" data-role="seqchk" ${st.lastSeq ? 'checked' : ''}> 🎞 ${escapeHtml(t('seqToMap'))}</label>` : ''}
                 <textarea data-role="text" rows="2" placeholder="${escapeHtml(t('notePlaceholder'))}"></textarea>
                 <button class="primary-btn small" type="submit">${escapeHtml(t('add'))}</button>
             </form>
@@ -6425,6 +6549,7 @@ function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey 
                             <span class="sn-text">${escapeHtml(n.text)}</span>
                             <small>${escapeHtml(formatDate(n.createdAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</small>
                         </div>
+                        ${SEQ && st.sel !== 'GENEL' && (!ro || n.seq) ? `<button class="sn-seq ${n.seq ? 'on' : ''}" data-act="seq" ${ro ? 'disabled' : ''} title="${escapeHtml(t('seqToMapHint'))}">🎞${n.seq ? ' ' + escapeHtml(t('seqToMap')) : ''}</button>` : ''}
                         ${ro ? '' : `<button class="icon-btn" data-act="edit" title="${escapeHtml(t('rename'))}">✏️</button>
                         <button class="icon-btn" data-act="del" title="${escapeHtml(t('delete'))}">🗑</button>`}
                     </div>`;
@@ -6442,13 +6567,21 @@ function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey 
         const act = e.target.closest('[data-act]');
         if (act && act.dataset.act === 'pdf') { showPdfMenu(act); return; }
         if (App.readOnly) return;
+        if (act && act.dataset.act === 'seqall') {
+            const entry = writeEntry(st.sel), on = !entry.notes.every(n => n.seq);
+            entry.notes.forEach(n => { n.seq = on; });
+            triggerAutoSave(); render();
+            return;
+        }
         if (!act || act.dataset.act === 'toggle') return;
         const id = act.closest('.sn-item') && act.closest('.sn-item').dataset.id;
         const entry = writeEntry(st.sel);
         const note = entry.notes.find(n => n.id === id);
         if (!note) return;
 
-        if (act.dataset.act === 'edit') {
+        if (act.dataset.act === 'seq') {
+            note.seq = !note.seq;
+        } else if (act.dataset.act === 'edit') {
             const text = prompt(t('editNote'), note.text);
             if (text === null || !text.trim()) return;
             note.text = text.trim();
@@ -6463,6 +6596,7 @@ function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey 
     el.addEventListener('change', (e) => {
         if (App.readOnly) return;
         if (e.target.dataset.role === 'cat') { st.lastCat = e.target.value; return; }
+        if (e.target.dataset.role === 'seqchk') { st.lastSeq = e.target.checked; return; }
         if (e.target.dataset.act !== 'toggle') return;
         const id = e.target.closest('.sn-item').dataset.id;
         const note = writeEntry(st.sel).notes.find(n => n.id === id);
@@ -6485,7 +6619,10 @@ function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey 
         if (!text) return;
         const ref = q('[data-role="ref"]').value.trim();
         st.lastCat = q('[data-role="cat"]').value;
-        writeEntry(st.sel).notes.push({ id: uid(), cat: st.lastCat, ref, text, done: false, createdAt: new Date().toISOString() });
+        const seqBox = q('[data-role="seqchk"]');
+        const note = { id: uid(), cat: st.lastCat, ref, text, done: false, createdAt: new Date().toISOString() };
+        if (SEQ && seqBox && seqBox.checked) note.seq = true;
+        writeEntry(st.sel).notes.push(note);
         q('[data-role="text"]').value = '';
         triggerAutoSave();
         render();
@@ -6531,6 +6668,7 @@ function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey 
     return {
         render,
         reset() { st.sel = 'GENEL'; st.filter = 'all'; el.innerHTML = ''; },
+        select(key) { st.sel = key; st.filter = 'all'; },
         countAll(project) {
             const s = project && project[dataKey];
             return s && typeof s === 'object' ? Object.values(s).reduce((n, x) => n + ((x && Array.isArray(x.notes)) ? x.notes.length : 0), 0) : 0;
@@ -11489,6 +11627,1221 @@ function shToast(msg, working) {
     if (!working) setTimeout(() => d.remove(), 6500);
 }
 
+// =====================================================================
+// AAF OKUYUCU — tarayıcıda, kütüphanesiz
+// 1) Compound File Binary (CFB / "structured storage") kapsayıcısını açar
+// 2) AAF nesne modelini okur: Header → ContentStorage → Mob'lar
+// 3) Üst seviye CompositionMob'un (sekansın) V/A track'lerini, klipleri,
+//    kaynak zincirini (MasterMob → dosya SourceMob → tape/import SourceMob + timecode)
+//    ve Avid locator'larını çıkarır.
+// =====================================================================
+const AAF = (() => {
+  // ---------- CFB ----------
+  function openCFB(buf) {
+    const u8 = new Uint8Array(buf), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    const sig = [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
+    if (sig.some((b, i) => u8[i] !== b)) throw new Error('Bu dosya bir AAF (Compound File) değil.');
+    const u16 = (o) => dv.getUint16(o, true), u32 = (o) => dv.getUint32(o, true);
+    const ssz = 1 << u16(0x1E), mssz = 1 << u16(0x20);
+    const nFat = u32(0x2C), dirStart = u32(0x30), cutoff = u32(0x38) || 4096;
+    const miniFatStart = u32(0x3C), nMiniFat = u32(0x40);
+    let difatSec = u32(0x44), nDifat = u32(0x48);
+    const secOff = (id) => (id + 1) * ssz;
+    // FAT sektör listesi (DIFAT)
+    const fatSecs = [];
+    for (let i = 0; i < 109 && fatSecs.length < nFat; i++) { const v = u32(0x4C + i * 4); if (v < 0xFFFFFFFA) fatSecs.push(v); }
+    const per = ssz / 4;
+    let guard = 0;
+    while (difatSec < 0xFFFFFFFA && nDifat-- > 0 && guard++ < 1e6) {
+      const o = secOff(difatSec);
+      for (let i = 0; i < per - 1 && fatSecs.length < nFat; i++) { const v = u32(o + i * 4); if (v < 0xFFFFFFFA) fatSecs.push(v); }
+      difatSec = u32(o + (per - 1) * 4);
+    }
+    const fat = new Uint32Array(fatSecs.length * per);
+    fatSecs.forEach((s, k) => { const o = secOff(s); for (let i = 0; i < per; i++) fat[k * per + i] = u32(o + i * 4); });
+    const chain = (start, table) => {
+      const out = []; let s = start, n = 0;
+      while (s < 0xFFFFFFFA && s < table.length && n++ < 1e7) { out.push(s); s = table[s]; }
+      return out;
+    };
+    const readBig = (start, size) => {
+      const secs = chain(start, fat), out = new Uint8Array(size === undefined ? secs.length * ssz : size);
+      let p = 0;
+      for (const s of secs) { if (p >= out.length) break; const o = secOff(s), n = Math.min(ssz, out.length - p); out.set(u8.subarray(o, o + n), p); p += n; }
+      return out;
+    };
+    // Dizin
+    const dirBytes = readBig(dirStart);
+    const entries = [];
+    for (let o = 0; o + 128 <= dirBytes.length; o += 128) {
+      const d = new DataView(dirBytes.buffer, dirBytes.byteOffset + o, 128);
+      const nameLen = d.getUint16(64, true), type = d.getUint8(66);
+      let name = '';
+      for (let i = 0; i < Math.max(0, nameLen / 2 - 1); i++) name += String.fromCharCode(d.getUint16(i * 2, true));
+      entries.push({ name, type, left: d.getUint32(68, true), right: d.getUint32(72, true), child: d.getUint32(76, true),
+        clsid: dirBytes.slice(o + 80, o + 96), start: d.getUint32(116, true), size: d.getUint32(120, true) });
+    }
+    const root = entries[0];
+    const miniFat = nMiniFat ? (() => { const b = readBig(miniFatStart); const t = new Uint32Array(b.length / 4); const v = new DataView(b.buffer); for (let i = 0; i < t.length; i++) t[i] = v.getUint32(i * 4, true); return t; })() : new Uint32Array(0);
+    let miniStream = null;
+    const readStream = (e) => {
+      if (e.size < cutoff && e !== root) {
+        if (!miniStream) miniStream = readBig(root.start, root.size);
+        const secs = chain(e.start, miniFat), out = new Uint8Array(e.size);
+        let p = 0;
+        for (const s of secs) { if (p >= e.size) break; const o = s * mssz, n = Math.min(mssz, e.size - p); out.set(miniStream.subarray(o, o + n), p); p += n; }
+        return out;
+      }
+      return readBig(e.start, e.size);
+    };
+    // Bir storage'ın çocukları (kırmızı-siyah ağaç)
+    const kidsCache = new Map();
+    const children = (e) => {
+      if (kidsCache.has(e)) return kidsCache.get(e);
+      const map = new Map(), stack = [e.child]; let n = 0;
+      while (stack.length && n++ < 1e6) {
+        const i = stack.pop();
+        if (i >= entries.length || i === 0xFFFFFFFF) continue;
+        const c = entries[i];
+        map.set(c.name, c);
+        stack.push(c.left, c.right);
+      }
+      kidsCache.set(e, map);
+      return map;
+    };
+    return { root, children, readStream };
+  }
+
+  // ---------- Yardımcılar ----------
+  const hex = (b) => Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+  // AUID bytes_le → "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  function auid(b) {
+    if (!b || b.length < 16) return '';
+    const h = (i) => b[i].toString(16).padStart(2, '0');
+    return `${h(3)}${h(2)}${h(1)}${h(0)}-${h(5)}${h(4)}-${h(7)}${h(6)}-${h(8)}${h(9)}-${h(10)}${h(11)}${h(12)}${h(13)}${h(14)}${h(15)}`;
+  }
+  const utf16 = (b) => { let s = ''; for (let i = 0; i + 1 < b.length; i += 2) { const c = b[i] | (b[i + 1] << 8); if (!c) break; s += String.fromCharCode(c); } return s; };
+  const dvOf = (b) => new DataView(b.buffer, b.byteOffset, b.byteLength);
+  const i64 = (b) => { if (!b) return null; const d = dvOf(b); if (b.length >= 8) return Number(d.getBigInt64(0, true)); if (b.length >= 4) return d.getInt32(0, true); return null; };
+  const i32 = (b) => b && b.length >= 4 ? dvOf(b).getInt32(0, true) : null;
+  const u16v = (b) => b && b.length >= 2 ? dvOf(b).getUint16(0, true) : null;
+  const rat = (b) => { if (!b || b.length < 8) return null; const d = dvOf(b); const n = d.getInt32(0, true), den = d.getInt32(4, true); return den ? n / den : null; };
+
+  const CLS = {
+    '0d010101-0101-3500-060e-2b3402060101': 'CompositionMob', '0d010101-0101-3600-060e-2b3402060101': 'MasterMob', '0d010101-0101-3700-060e-2b3402060101': 'SourceMob',
+    '0d010101-0101-0f00-060e-2b3402060101': 'Sequence', '0d010101-0101-1100-060e-2b3402060101': 'SourceClip', '0d010101-0101-0900-060e-2b3402060101': 'Filler',
+    '0d010101-0101-1700-060e-2b3402060101': 'Transition', '0d010101-0101-0a00-060e-2b3402060101': 'OperationGroup', '0d010101-0101-1400-060e-2b3402060101': 'Timecode',
+    '0d010101-0101-0e00-060e-2b3402060101': 'Selector', '0d010101-0101-0500-060e-2b3402060101': 'EssenceGroup', '0d010101-0101-0b00-060e-2b3402060101': 'NestedScope',
+    '0d010101-0101-0d00-060e-2b3402060101': 'ScopeReference', '0d010101-0101-0800-060e-2b3402060101': 'CommentMarker', '0d010101-0101-4100-060e-2b3402060101': 'DescriptiveMarker',
+    '0d010101-0101-0600-060e-2b3402060101': 'Event', '0d010101-0101-3b00-060e-2b3402060101': 'TimelineMobSlot', '0d010101-0101-3900-060e-2b3402060101': 'EventMobSlot',
+    '0d010101-0101-3a00-060e-2b3402060101': 'StaticMobSlot', '0d010101-0101-4000-060e-2b3402060101': 'Pulldown',
+    '0d010101-0101-3200-060e-2b3402060101': 'NetworkLocator', '0d010101-0101-3300-060e-2b3402060101': 'TextLocator'
+  };
+  const DATA = {
+    '01030202-0100-0000-060e-2b3404010101': 'picture', '6f3c8ce1-6cef-11d2-807d-006008143e6f': 'picture', '05cba731-1daa-11d3-80ad-006008143e6f': 'picture', '05cba732-1daa-11d3-80ad-006008143e6f': 'picture',
+    '01030202-0300-0000-060e-2b3404010101': 'picture', '01030202-0400-0000-060e-2b3404010101': 'picture',   // Matte, PictureWithMatte
+    '01030202-0200-0000-060e-2b3404010101': 'sound', '78e1ebe1-6cef-11d2-807d-006008143e6f': 'sound',
+    '01030201-0100-0000-060e-2b3404010101': 'timecode', '7f275e81-77e5-11d2-807f-006008143e6f': 'timecode',
+    '01030201-1000-0000-060e-2b3404010101': 'descriptive', '01030201-0300-0000-060e-2b3404010101': 'edgecode', '01030201-0200-0000-060e-2b3404010101': 'edgecode'
+  };
+  const USAGE = { '0d010102-0101-0700-060e-2b3404010101': 'top', '0d010102-0101-0800-060e-2b3404010101': 'lower', '0d010102-0101-0500-060e-2b3404010101': 'subclip' };
+
+  // ---------- AAF nesneleri ----------
+  function reader(cfb) {
+    const cache = new Map();
+    function obj(entry) {
+      if (!entry) return null;
+      if (cache.has(entry)) return cache.get(entry);
+      const o = { entry, cls: CLS[auid(entry.clsid)] || auid(entry.clsid), props: new Map() };
+      cache.set(entry, o);
+      const ps = cfb.children(entry).get('properties');
+      if (ps) {
+        const b = cfb.readStream(ps), d = dvOf(b);
+        if (b.length >= 4 && b[0] === 0x4c) {
+          const n = d.getUint16(2, true);
+          let p = 4 + n * 6;
+          for (let i = 0; i < n; i++) {
+            const pid = d.getUint16(4 + i * 6, true), form = d.getUint16(6 + i * 6, true), size = d.getUint16(8 + i * 6, true);
+            o.props.set(pid, { form, data: b.subarray(p, p + size) });
+            p += size;
+          }
+        }
+      }
+      return o;
+    }
+    const raw = (o, pid) => { const p = o && o.props.get(pid); return p ? p.data : null; };
+    const str = (o, pid) => { const b = raw(o, pid); return b ? utf16(b) : ''; };
+    const ref = (o, pid) => { const b = raw(o, pid); if (!b) return null; return obj(cfb.children(o.entry).get(utf16(b))); };
+    function vec(o, pid) {
+      const b = raw(o, pid); if (!b) return [];
+      const name = utf16(b), kids = cfb.children(o.entry), idx = kids.get(name + ' index');
+      if (!idx) return [];
+      const ib = cfb.readStream(idx), d = dvOf(ib), count = d.getUint32(0, true), out = [];
+      const p = o.props.get(pid);
+      if (p.form === 0x3A) {                       // strong ref set: (local key, ref count, key)
+        const ks = d.getUint8(14);
+        for (let i = 0, q = 15; i < count; i++, q += 8 + ks) out.push(obj(kids.get(`${name}{${d.getUint32(q, true).toString(16)}}`)));
+      } else {                                     // strong ref vector: local keys
+        for (let i = 0; i < count; i++) out.push(obj(kids.get(`${name}{${d.getUint32(12 + i * 4, true).toString(16)}}`)));
+      }
+      return out.filter(Boolean);
+    }
+    const weakKey = (o, pid) => { const b = raw(o, pid); if (!b || b.length < 5) return null; const ks = b[4]; return b.subarray(5, 5 + ks); };
+    return { obj, raw, str, ref, vec, weakKey };
+  }
+
+  // TaggedValue: Indirect değer (0x4c + tip AUID + veri)
+  function taggedValues(R, o, pid) {
+    const out = {};
+    for (const tv of R.vec(o, pid)) {
+      const name = R.str(tv, 0x5001), v = R.raw(tv, 0x5003);
+      if (!name || !v) continue;
+      const data = v.subarray(17), type = auid(v.subarray(1, 17));
+      if (type === '01100200-0000-0000-060e-2b3401040101' || (data.length >= 2 && data.length % 2 === 0 && data[1] === 0 && data[0] !== 0)) out[name] = utf16(data);
+      else if (data.length === 4) out[name] = dvOf(data).getInt32(0, true);
+      else if (data.length === 8) out[name] = Number(dvOf(data).getBigInt64(0, true));
+      else out[name] = utf16(data);
+    }
+    return out;
+  }
+
+  // ---------- Ana çözümleme ----------
+  function parse(buf) {
+    const cfb = openCFB(buf), R = reader(cfb);
+    const rootObj = R.obj(cfb.root);
+    const header = R.ref(rootObj, 0x02);
+    if (!header) throw new Error('AAF Header bulunamadı.');
+    const opNames = new Map();
+    const dict = R.ref(header, 0x3b04);
+    if (dict) for (const od of R.vec(dict, 0x2603)) { const id = R.raw(od, 0x1b01); if (id) opNames.set(auid(id), R.str(od, 0x1b02)); }
+    const opName = (c) => { const k = R.weakKey(c, 0x0b01); return (k && opNames.get(auid(k))) || 'Efekt'; };
+    const content = R.ref(header, 0x3b03);
+    if (!content) throw new Error('AAF ContentStorage bulunamadı.');
+    const mobList = R.vec(content, 0x1901);
+    const mobs = new Map();
+    for (const m of mobList) {
+      const idb = R.raw(m, 0x4401); if (!idb) continue;
+      const kind = m.cls === 'CompositionMob' ? 'comp' : m.cls === 'MasterMob' ? 'master' : m.cls === 'SourceMob' ? 'source' : (R.raw(m, 0x4701) ? 'source' : 'comp');
+      mobs.set(hex(idb), { o: m, id: hex(idb), name: R.str(m, 0x4402), kind, usage: USAGE[auid(R.raw(m, 0x4408))] || '', _slots: null });
+    }
+    const dataId = (c) => { const k = R.weakKey(c, 0x0201); return k ? auid(k) : ''; };
+    const dataKind = (c) => { const k = dataId(c); return k ? (DATA[k] || 'other') : 'other'; };
+    const len = (c) => i64(R.raw(c, 0x0202)) || 0;
+    const slotsOf = (mob) => {
+      if (mob._slots) return mob._slots;
+      mob._slots = R.vec(mob.o, 0x4403).map(s => {
+        const seg = R.ref(s, 0x4803);
+        return { o: s, cls: s.cls, id: i32(R.raw(s, 0x4801)), name: R.str(s, 0x4802), phys: i32(R.raw(s, 0x4804)),
+          rate: rat(R.raw(s, 0x4b01)) || rat(R.raw(s, 0x4901)) || null, origin: i64(R.raw(s, 0x4b02)) || 0, seg, kind: seg ? dataKind(seg) : 'other', dd: seg ? dataId(seg) : '' };
+      }).map(sl => {
+        // Yedek: veri türü okunamadıysa slot adından (V1/A1) ya da içerikten tahmin et
+        if (sl.kind === 'other' && sl.seg && sl.cls !== 'EventMobSlot') {
+          const nm = String(sl.name || '').trim().toUpperCase();
+          if (/^V\d*/.test(nm)) sl.kind = 'picture';
+          else if (/^A\d*/.test(nm)) sl.kind = 'sound';
+          else if (/^(TC|TIMECODE)/.test(nm) || sl.seg.cls === 'Timecode') sl.kind = 'timecode';
+          else if (findClip(sl.seg)) sl.kind = 'picture';
+        }
+        return sl;
+      });
+      return mob._slots;
+    };
+    // Segment içinde SourceClip var mı (derin arama)
+    function findClip(c, depth = 0) {
+      if (!c || depth > 8) return false;
+      if (c.cls === 'SourceClip' || R.raw(c, 0x1101)) return true;
+      for (const pid of [0x1001, 0x0b02, 0x0501, 0x0c01]) for (const x of R.vec(c, pid)) if (findClip(x, depth + 1)) return true;
+      const sel = R.ref(c, 0x0f01); if (sel && findClip(sel, depth + 1)) return true;
+      const sg = R.ref(c, 0x4803); return sg ? findClip(sg, depth + 1) : false;
+    }
+    const refOf = (c) => {
+      const b = R.raw(c, 0x1101);
+      const id = b ? hex(b) : '';
+      return { mobId: /^0+$/.test(id) ? '' : id, slotId: i32(R.raw(c, 0x1102)) || 0, start: i64(R.raw(c, 0x1201)) || 0 };
+    };
+    // Bir segmentin içinden gösterilecek SourceClip'i bul (efekt/seçici sarmalayıcılarını aç)
+    function unwrap(c, depth = 0) {
+      if (!c || depth > 12) return null;
+      switch (c.cls) {
+        case 'SourceClip': return { clip: c, pct: 100, effect: '' };
+        case 'OperationGroup': {
+          // Avid katlarında plan efektin (Animatte, SBlend, Mask…) girişlerinde durur;
+          // ScopeReference girişi "alttaki kat" demektir, plan değildir.
+          const ins = R.vec(c, 0x0b02);
+          const name = opName(c);
+          for (const x of ins) {
+            if (!x || x.cls === 'ScopeReference') continue;
+            const inner = unwrap(x, depth + 1);
+            if (!inner || !inner.clip) continue;
+            const L = len(c), il = len(x);
+            const pct = L > 0 && il > 0 && il !== L ? Math.round(il / L * 100) : inner.pct;
+            return Object.assign({}, inner, { pct, effect: inner.effect || name });
+          }
+          return { clip: null, pct: 100, effect: name };
+        }
+        case 'ScopeReference': return null;
+        case 'Selector': return unwrap(R.ref(c, 0x0f01), depth + 1);
+        case 'EssenceGroup': return unwrap(R.vec(c, 0x0501)[0], depth + 1);
+        case 'NestedScope': { const s = R.vec(c, 0x0c01); return unwrap(s[s.length - 1], depth + 1); }
+        case 'Sequence': { for (const x of R.vec(c, 0x1001)) { if (x.cls === 'Filler' || x.cls === 'Transition' || x.cls === 'ScopeReference') continue; const u = unwrap(x, depth + 1); if (u && u.clip) return u; } return null; }
+        default: return R.raw(c, 0x1101) ? { clip: c, pct: 100, effect: '' } : null;
+      }
+    }
+    // Sequence'i zamana yerleştir: geçişler komşularıyla örtüşür
+    function layout(seg) {
+      const out = [];
+      if (!seg) return out;
+      const comps = seg.cls === 'Sequence' ? R.vec(seg, 0x1001) : [seg];
+      let pos = 0;
+      comps.forEach((c, i) => {
+        const L = len(c);
+        if (c.cls === 'Transition') {
+          pos -= L;
+          out.push({ type: 'transition', pos, len: L, cut: i64(R.raw(c, 0x1802)) || 0 });
+          return;
+        }
+        if (c.cls === 'Sequence') { layout(c).forEach(x => out.push(Object.assign({}, x, { pos: x.pos + pos }))); pos += L; return; }
+        out.push({ type: c.cls === 'Filler' || c.cls === 'ScopeReference' ? 'filler' : 'seg', pos, len: L, c });
+        pos += L;
+      });
+      return out;
+    }
+    // Bir slot içinde `pos` anındaki SourceClip
+    function clipAt(slot, pos) {
+      const items = layout(slot.seg).filter(x => x.type === 'seg');
+      const it = items.find(x => pos >= x.pos && pos < x.pos + x.len) || items.find(x => pos === x.pos + x.len) || items[0];
+      if (!it) return null;
+      const u = unwrap(it.c); if (!u || !u.clip) return null;
+      return Object.assign(refOf(u.clip), { local: pos - it.pos, pct: u.pct });
+    }
+    // Kaynak zinciri: Master → dosya → tape/import (timecode)
+    function resolveSource(mobId, slotId, start, pictureLike) {
+      const chainMobs = [];
+      let id = mobId, sid = slotId, pos = start, rate = null, tc = null, guard = 0, file = '', srcRate = null;
+      while (id && mobs.has(id) && guard++ < 10) {
+        const mob = mobs.get(id), slots = slotsOf(mob);
+        chainMobs.push(mob);
+        const slot = slots.find(s => s.id === sid) || slots.find(s => s.kind === (pictureLike ? 'picture' : 'sound')) || slots[0];
+        if (!slot) break;
+        rate = slot.rate || rate;
+        if (mob.kind === 'source') {
+          // Malzemenin kendi fps'i: ilk (dosya) kaynağın slot edit rate'i, yoksa descriptor SampleRate
+          if (srcRate === null) {
+            const d0 = R.ref(mob.o, 0x4701);
+            srcRate = (slot.kind === 'picture' && slot.rate) || (d0 && rat(R.raw(d0, 0x3001))) || slot.rate || null;
+          }
+          const desc = R.ref(mob.o, 0x4701);
+          if (desc) for (const loc of R.vec(desc, 0x2f01)) { const u = R.str(loc, 0x4001) || R.str(loc, 0x4101); if (u) file = file || u; }
+          // Timecode slot'u olan kaynak: kaynak TC buradan
+          const tcs = slots.find(s => s.kind === 'timecode' || (s.seg && s.seg.cls === 'Timecode'));
+          if (tcs && tcs.seg) {
+            const tseg = tcs.seg.cls === 'Timecode' ? tcs.seg : R.vec(tcs.seg, 0x1001).find(x => x.cls === 'Timecode');
+            if (tseg) {
+              const fps = u16v(R.raw(tseg, 0x1502)) || Math.round(tcs.rate || slot.rate || 25);
+              const drop = !!(R.raw(tseg, 0x1503) || [0])[0];
+              const st = i64(R.raw(tseg, 0x1501)) || 0;
+              const srate = slot.rate || fps;
+              tc = { frame: st + (pos - (slot.origin || 0)) * fps / srate, fps, drop, rateRatio: fps / srate };
+            }
+          }
+        }
+        const next = clipAt(slot, pos);
+        if (!next || !next.mobId) break;
+        const nmob = mobs.get(next.mobId);
+        const nslot = nmob ? slotsOf(nmob).find(s => s.id === next.slotId) : null;
+        const nrate = nslot && nslot.rate ? nslot.rate : rate;
+        pos = next.start + next.local * (nrate && rate ? nrate / rate : 1);
+        id = next.mobId; sid = next.slotId;
+      }
+      const master = chainMobs.find(m => m.kind === 'master') || chainMobs.find(m => m.name) || null;
+      const srcs = chainMobs.filter(m => m.kind === 'source');
+      const bottom = srcs[srcs.length - 1];
+      return { chainMobs, master, tape: bottom ? bottom.name : '', fileMob: srcs[0] ? srcs[0].name : '', file, tc, srcRate };
+    }
+
+    // --- Sekans adayları: üst seviye CompositionMob'lar ---
+    const comps = [...mobs.values()].filter(m => m.kind === 'comp');
+    if (!comps.length) throw new Error('AAF\'te sekans (CompositionMob) bulunamadı.');
+    const referenced = new Set();
+    for (const c of comps) for (const s of slotsOf(c)) for (const it of layout(s.seg)) if (it.type === 'seg') { const u = unwrap(it.c); if (u && u.clip) { const r = refOf(u.clip); if (r.mobId) referenced.add(r.mobId); } }
+    // Ana sekans: Usage_TopLevel; yoksa başka bir sekansın içinde kullanılmayan ve subclip/alt seviye olmayan.
+    // Avid AAF'te her plan için ayrıca subclip / alt seviye CompositionMob olabilir — bunlar ayrı sekans DEĞİL.
+    const built = new Map();
+    const seqOf = (c) => { if (!built.has(c)) built.set(c, buildSequence(c)); return built.get(c); };
+    const helper = (c) => c.usage === 'subclip' || c.usage === 'lower' || referenced.has(c.id);
+    let pickFrom = comps.filter(c => c.usage === 'top' && seqOf(c).clips.length);
+    if (!pickFrom.length) pickFrom = comps.filter(c => !helper(c) && seqOf(c).clips.length);
+    let fallback = false;
+    if (!pickFrom.length) {
+      // Ana sekans bulunamadı: en çok planı olanı al ve uyar
+      const any = comps.filter(c => seqOf(c).clips.length).sort((x, y) => seqOf(y).clips.length - seqOf(x).clips.length);
+      pickFrom = any.slice(0, 1); fallback = true;
+    }
+    let sequences = pickFrom.map(seqOf);
+    if (fallback && sequences[0]) sequences[0].warn = 'Ana sekans bulunamadı; AAF\'teki en büyük parça gösteriliyor.';
+    sequences.sort((a, b) => b.clips.length - a.clips.length);
+    // Teşhis: hiçbir şey çıkmazsa ne bulunduğunu anlat
+    const diag = () => {
+      const cnt = { comp: 0, master: 0, source: 0 };
+      mobs.forEach(m => cnt[m.kind] = (cnt[m.kind] || 0) + 1);
+      const lines = [`Mob: ${mobs.size} (sekans ${cnt.comp}, master clip ${cnt.master}, kaynak ${cnt.source})`];
+      comps.slice(0, 6).forEach(c => {
+        const sl = slotsOf(c).map(x => `${x.name || '#' + x.id}:${x.kind}${x.seg ? '/' + x.seg.cls : ''}${x.seg ? '(' + layout(x.seg).length + ')' : ''}${x.kind === 'picture' || x.kind === 'sound' ? '' : ' {' + (x.dd || 'veri türü yok') + '}'}`).join(', ');
+        lines.push(`• ${c.name || 'isimsiz'} [${c.usage || '-'}] → ${sl || 'slot yok'}`);
+      });
+      return lines.join('\n');
+    };
+    if (!sequences.length) throw Object.assign(new Error('AAF açıldı ama sekansta zaman çizelgesine yerleşen plan bulunamadı.'), { diag: diag() });
+    return { sequences, diag: diag() };
+
+    function buildSequence(comp) {
+      const slots = slotsOf(comp);
+      const tl = slots.filter(s => s.kind === 'picture' || s.kind === 'sound');
+      const rate = (tl.find(s => s.kind === 'picture') || tl[0] || {}).rate || 25;
+      // Kayıt TC başlangıcı: sekansın timecode slot'u
+      let recStart = 0, fps = Math.round(rate), drop = false;
+      const tcs = slots.find(s => s.kind === 'timecode' || (s.seg && s.seg.cls === 'Timecode'));
+      if (tcs && tcs.seg) {
+        const t = tcs.seg.cls === 'Timecode' ? tcs.seg : R.vec(tcs.seg, 0x1001).find(x => x.cls === 'Timecode');
+        if (t) { recStart = i64(R.raw(t, 0x1501)) || 0; fps = u16v(R.raw(t, 0x1502)) || fps; drop = !!(R.raw(t, 0x1503) || [0])[0]; }
+      }
+      // Track adları: V1.., A1.. (PhysicalTrackNumber, yoksa sıra)
+      // Avid çok katlı videoyu tek slot içinde NestedScope olarak yazar: Slots[0] = V1, [1] = V2, …
+      const entries = [];
+      tl.forEach(s => {
+        if (s.seg && s.seg.cls === 'NestedScope') R.vec(s.seg, 0x0c01).forEach((layer, li) => entries.push({ s, seg: layer, layer: li }));
+        else entries.push({ s, seg: s.seg, layer: 0 });
+      });
+      const named = [];
+      ['picture', 'sound'].forEach(kind => {
+        const ss = entries.filter(e => e.s.kind === kind).sort((a, b) => (a.s.phys || 999) - (b.s.phys || 999) || a.s.id - b.s.id || a.layer - b.layer);
+        const nested = ss.some(e => e.layer > 0);
+        const used = new Set();
+        ss.forEach((e, i) => {
+          let n = nested ? i + 1 : (e.s.phys && !used.has(e.s.phys) ? e.s.phys : null);
+          if (!n || used.has(n)) { n = 1; while (used.has(n)) n++; }
+          used.add(n);
+          named.push({ s: e.s, seg: e.seg, track: (kind === 'picture' ? 'V' : 'A') + n });
+        });
+      });
+      const clips = [];
+      named.forEach(({ s, seg, track }) => {
+        const k = s.rate && s.rate !== rate ? rate / s.rate : 1;   // ses slot'u farklı edit rate'teyse kareye çevir
+        const items = layout(seg);
+        items.forEach((it, i) => {
+          if (it.type !== 'seg') return;
+          const u = unwrap(it.c);
+          if (!u || !u.clip) {
+            // Plansız efekt (ör. alttaki katlara maske/renk) ya da kaynağı olmayan bileşen: yerini efekt adıyla göster
+            if (it.len > 0) clips.push({ track, kind: s.kind, ri: recStart + Math.round(it.pos * k), ro: recStart + Math.round((it.pos + it.len) * k), si: null, so: null, pct: 100,
+              name: u && u.effect ? u.effect : `(${it.c.cls})`, clip: '', source: '', file: '', trans: 'C', transDur: 0, effect: (u && u.effect) || it.c.cls, fxOnly: true });
+            return;
+          }
+          const r = refOf(u.clip);
+          const src = resolveSource(r.mobId, r.slotId, r.start, s.kind === 'picture');
+          const ri = Math.round(it.pos * k), ro = Math.round((it.pos + it.len) * k);
+          const srcLen = it.len * k * (u.pct / 100);
+          // Kaynak TC malzemenin KENDİ time kod hızında (24p plan 25p sekansta ise 24'lük TC)
+          // Kullanılan kaynak süresi gerçek zamanlı: kayıt süresi × hız × (kaynak fps / sekans fps)
+          let si = null, so = null, srcTcFps = null, srcDrop = false;
+          const srcFps = s.kind === 'picture' ? (src.srcRate || (src.tc ? src.tc.fps / src.tc.rateRatio : null)) : null;
+          if (src.tc) {
+            srcTcFps = src.tc.fps; srcDrop = src.tc.drop;
+            si = Math.round(src.tc.frame);
+            const ratio = srcFps ? srcTcFps * (srcFps / Math.round(srcFps)) / rate : srcTcFps / rate;
+            so = Math.round(si + srcLen * (Math.abs(ratio - 1) < 0.002 ? 1 : ratio));
+          }
+          const prevT = items[i - 1] && items[i - 1].type === 'transition' ? items[i - 1] : null;
+          // Timeline'da görünen ad: sekansın doğrudan kullandığı clip/subclip (ör. "1A-1/04A+"); yoksa master clip
+          const subMob = mobs.get(r.mobId);
+          const direct = subMob && subMob.name ? subMob.name : '';
+          const name = direct || (src.master && src.master.name) || src.tape || '';
+          clips.push({ track, kind: s.kind, ri: recStart + ri, ro: recStart + ro, si, so, pct: u.pct, srcFps, srcTcFps, srcDrop,
+            name, clip: direct || (src.master ? src.master.name : ''), master: src.master && src.master.name !== direct ? src.master.name : '', source: src.tape || src.fileMob, file: src.file ? decodeURIComponent(String(src.file).replace(/^file:\/\/(localhost)?/i, '')) : '',
+            fileMob: src.fileMob, nested: subMob && subMob.kind === 'comp' ? subMob.name : '',
+            trans: prevT ? 'D' : 'C', transDur: prevT ? Math.round(prevT.len * k) : 0, effect: u.effect });
+        });
+      });
+      // Locator'lar (Avid: EventMobSlot içinde CommentMarker + _ATN_CRM_* etiketleri)
+      const locs = [];
+      slots.filter(s => s.cls === 'EventMobSlot' || s.kind === 'descriptive').forEach(s => {
+        const k = s.rate ? rate / s.rate : 1;
+        const items = s.seg ? (s.seg.cls === 'Sequence' ? R.vec(s.seg, 0x1001) : [s.seg]) : [];
+        items.forEach(m => {
+          const p = i64(R.raw(m, 0x0601)); if (p === null) return;
+          const tv = taggedValues(R, m, 0x0204);
+          locs.push({ frame: recStart + Math.round(p * k), color: String(tv._ATN_CRM_COLOR || 'Red').toUpperCase(), text: tv._ATN_CRM_COM || R.str(m, 0x0602) || '', user: tv._ATN_CRM_USER || '' });
+        });
+      });
+      return { name: comp.name || 'İsimsiz sekans', fps, drop, rate, recStart, clips, locs,
+        tracks: named.map(n => n.track) };
+    }
+  }
+  return { parse, isAAF: (u8) => u8 && u8.length > 8 && u8[0] === 0xD0 && u8[1] === 0xCF && u8[2] === 0x11 && u8[3] === 0xE0 };
+})();
+
+
+// ---------------------------------------------------------------------
+// 15) SEKANS HARİTASI — her bölümün master sekansı (Avid AAF / EDL) Avid timeline'ı gibi:
+// V katları üstte, A track'leri altta. Bölüm Notları'nda "Sekansa işle" seçilen notlar
+// track'lerin üstündeki departman katlarında (alttan üste: Ses, Müzik, VFX, Color, Edit, Cuts, Send)
+// TC'den ya da plan/sahne adından inen oklarla gösterilir.
+// Kayıt: workspaces/{pid}/seqmap/{EPxx} (bilgi) + {EPxx}__0..n (JSON parçaları — 1 MB belge sınırı)
+//        project.seqMaps.{EPxx} = { rev, name, at, by, clips, kind }  (liste + canlı güncelleme)
+// ---------------------------------------------------------------------
+Object.assign(I18N.tr, {
+    modSeqMap: "Sekans Haritası", help_mod_seqmap: "Bölümün master sekansı (Avid AAF / EDL) bir timeline gibi; Bölüm Notları'nda “Sekansa işle” seçilen notlar departman katlarında oklarla görünür.",
+    smEpisode: "Bölüm", smImport: "AAF / EDL içe aktar", smClear: "Temizle", smClearConfirm: "Emin misin? Tekrar bas", smFit: "Sığdır",
+    smByReel: "Kaynağa göre renk", smAudio: "Ses track'leri", smNotes: "Notlar", smDoneNotes: "Çözülenler", smFind: "Plan ara…",
+    smEmptyTitle: "{ep} için sekans yok", smEmptyHint: "Avid'den bu bölümün AAF'ini (Link to media) ya da EDL'ini buraya sürükle veya tıklayıp seç. Yüklenen harita projeye kaydedilir; ekipteki herkes görür.",
+    smDrop: "AAF / EDL dosyasını buraya sürükle", smDropSub: "ya da tıklayıp seç · birden fazla EDL ya da tek AAF",
+    smLoading: "Harita yükleniyor…", smSaving: "Projeye kaydediliyor…", smSaved: "Kaydedildi", smReading: "Dosya okunuyor…",
+    smSaveFail: "Harita projeye kaydedilemedi: {m}", smLoadFail: "Harita yüklenemedi: {m}",
+    smBy: "{name} yükledi · {d}", smUpdatedRemote: "{name} bu bölümün haritasını güncelledi.",
+    smUnmatched: "{n} not haritada yer bulamadı", smUnmatchedHint: "Notun “Sahne / TC” alanına time kod (01:02:03:04) ya da plan/sahne adı yaz.",
+    smNoteOpen: "Notlarda aç", smNoteDone: "Çözüldü", smNoteUndone: "Açık", smNoteAt: "Bağlandığı yer", smNoteByTc: "time kod", smNoteByName: "plan adı",
+    smLane_sound: "Ses", smLane_music: "Müzik", smLane_vfx: "VFX", smLane_color: "Color", smLane_edit: "Edit", smLane_cuts: "Cuts", smLane_send: "Send", smLane_other: "Diğer",
+    smMixed: "{n} plan farklı fps: {r} (sekans {s})", smNoMain: "Ana sekans bulunamadı; AAF'teki en büyük parça gösteriliyor.",
+    seqToMap: "Sekansa işle", seqToMapHint: "Bu not Sekans Haritası'nda, “Sahne / TC” alanındaki time koddan ya da plan adından inen okla gösterilir.",
+    seqAllOn: "Bu bölümün notlarını sekansa işle", seqAllOff: "Sekanstan çıkar (tümü)"
+});
+Object.assign(I18N.en, {
+    modSeqMap: "Sequence Map", help_mod_seqmap: "The episode's master sequence (Avid AAF / EDL) as a timeline; episode notes marked “Show on sequence” appear as arrows on department lanes.",
+    smEpisode: "Episode", smImport: "Import AAF / EDL", smClear: "Clear", smClearConfirm: "Sure? Click again", smFit: "Fit",
+    smByReel: "Colour by source", smAudio: "Audio tracks", smNotes: "Notes", smDoneNotes: "Resolved", smFind: "Find shot…",
+    smEmptyTitle: "No sequence for {ep}", smEmptyHint: "Drag this episode's AAF (Link to media) or EDL from Avid here, or click to choose. The map is saved to the project for the whole team.",
+    smDrop: "Drag the AAF / EDL file here", smDropSub: "or click to choose · several EDLs or one AAF",
+    smLoading: "Loading map…", smSaving: "Saving to project…", smSaved: "Saved", smReading: "Reading file…",
+    smSaveFail: "Could not save the map: {m}", smLoadFail: "Could not load the map: {m}",
+    smBy: "Uploaded by {name} · {d}", smUpdatedRemote: "{name} updated this episode's map.",
+    smUnmatched: "{n} notes found no place on the map", smUnmatchedHint: "Put a timecode (01:02:03:04) or a shot/scene name in the note's “Scene / TC” field.",
+    smNoteOpen: "Open in notes", smNoteDone: "Resolved", smNoteUndone: "Open", smNoteAt: "Placed at", smNoteByTc: "timecode", smNoteByName: "shot name",
+    smLane_sound: "Sound", smLane_music: "Music", smLane_vfx: "VFX", smLane_color: "Color", smLane_edit: "Edit", smLane_cuts: "Cuts", smLane_send: "Send", smLane_other: "Other",
+    smMixed: "{n} shots at a different fps: {r} (sequence {s})", smNoMain: "Main sequence not found; showing the largest part of the AAF.",
+    seqToMap: "Show on sequence", seqToMapHint: "This note is shown on the Sequence Map with an arrow from the timecode or shot name in “Scene / TC”.",
+    seqAllOn: "Show this episode's notes on the sequence", seqAllOff: "Remove all from sequence"
+});
+
+const SeqMap = (() => {
+    const root = () => document.getElementById('seqmapModule');
+    const $ = (id) => document.getElementById('sm-' + id);
+    // Not katları: alttan üste (track'lere en yakın olan Ses)
+    const LANES = ['sound', 'music', 'vfx', 'color', 'edit', 'cuts', 'send', 'other'];
+    const laneColor = (k) => (DEPT_CATS.find(c => c.key === k) || { color: '#8a8f99' }).color;
+
+    // ---------- Durum ----------
+    let mounted = false, EP = null, LOADED = null;     // LOADED: { ep, rev } — ekrandaki haritanın sürümü
+    let RATE = { nominal: 25, df: false }, FPS_MODE = 'auto';
+    let SEQ = null, CLIPS = [], TRACKS = [], BYTRACK = new Map(), START = 0, END = 1, ppf = 1, minPpf = .1, POS = 0, SEL = null, SELNOTE = null;
+    let SOURCES = [], WIN = { a: 0, b: 0 }, NOTES = [], UNMATCHED = [];
+    const HIDDEN = new Set();
+    const RATE_MAP = { '23.976': [24, false], '24': [24, false], '25': [25, false], '29.97': [30, true], '29.97nd': [30, false], '30': [30, false], '50': [50, false], '59.94': [60, true], '60': [60, false] };
+    const pref = (k, d) => { try { const v = localStorage.getItem('sm:' + k); return v === null ? d : v; } catch (e) { return d; } };
+    const setPref = (k, v) => { try { localStorage.setItem('sm:' + k, v); } catch (e) {} };
+    const esc = (s) => escapeHtml(String(s ?? ''));
+    const eps = () => noteKeys().filter(k => k !== 'GENEL');
+
+    // ---------- Time kod ----------
+    function setRate(v) { const [n, df] = RATE_MAP[v] || [25, false]; RATE = { nominal: n, df }; }
+    function tcToF(tc) {
+        const m = String(tc).trim().match(/^(\d{1,2})[:;.](\d{2})[:;.](\d{2})[:;.](\d{2,3})$/);
+        if (!m) return null;
+        const [h, mi, s, f] = m.slice(1).map(Number), n = RATE.nominal;
+        let total = ((h * 60 + mi) * 60 + s) * n + f;
+        if (RATE.df) { const tm = h * 60 + mi, d = n === 60 ? 4 : 2; total -= d * (tm - Math.floor(tm / 10)); }
+        return total;
+    }
+    function fToTcAt(fr, n, df) {
+        if (fr === null || fr === undefined || isNaN(fr)) return '—';
+        n = n || RATE.nominal;
+        let f = Math.max(0, Math.round(fr));
+        if (df) {
+            const d = n === 60 ? 4 : 2, perMin = n * 60 - d, per10 = perMin * 10 + d;
+            const tens = Math.floor(f / per10), mod = f % per10;
+            f += 9 * d * tens + (mod > d ? d * Math.floor((mod - d) / perMin) : 0);
+        }
+        const ff = f % n, s = Math.floor(f / n) % 60, m = Math.floor(f / (n * 60)) % 60, h = Math.floor(f / (n * 3600)) % 24;
+        const p = (x) => String(x).padStart(2, '0');
+        return `${p(h)}:${p(m)}:${p(s)}${df ? ';' : ':'}${p(ff)}`;
+    }
+    const fToTc = (fr) => fToTcAt(fr, RATE.nominal, RATE.df);
+    const durTxt = (fr, nn) => {
+        const n = nn || RATE.nominal, s = Math.floor(fr / n), f = Math.round(fr % n);
+        return s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}+${String(f).padStart(2, '0')}` : `${s}+${String(f).padStart(2, '0')}`;
+    };
+    const fpsLabel = (r) => !r ? '' : Math.abs(r - 23.976) < .01 ? '23.98p' : Math.abs(r - 29.97) < .01 ? '29.97p' : Math.abs(r - 59.94) < .01 ? '59.94p' : Math.round(r) + 'p';
+    function setFpsNote(kind, title) {
+        const el = $('fpsNote');
+        el.className = 'sm-fpsnote ' + kind;
+        el.textContent = { aaf: 'AAF', guess: currentLang === 'tr' ? 'tahmini' : 'guess', sure: 'EDL', manual: currentLang === 'tr' ? 'elle' : 'manual' }[kind] || '';
+        el.title = title || '';
+    }
+    function guessFps(texts, fcm) {
+        let maxF = 0, n = 0, drop = /DROP/i.test(fcm || '') && !/NON/i.test(fcm || '');
+        const re = /\b\d{2}[:;.]\d{2}[:;.]\d{2}([:;.])(\d{2,3})\b/g;
+        texts.forEach(t => { for (const m of String(t).matchAll(re)) { const f = +m[2]; if (f > maxF) maxF = f; n++; if (m[1] === ';') drop = true; } });
+        if (maxF >= 50) return { key: drop ? '59.94' : '60', sure: true, why: `${maxF}. kare var: 60 fps.` };
+        if (maxF >= 30) return { key: '50', sure: true, why: `${maxF}. kare var: 50 fps.` };
+        if (maxF >= 25) return { key: drop ? '29.97' : '30', sure: true, why: `${maxF}. kare var: ${drop ? '29.97 DF' : '30'} fps.` };
+        if (maxF === 24) return { key: '25', sure: true, why: 'Time kodlarda 24. kare var: 25 fps.' };
+        if (n >= 60) return { key: '24', sure: false, why: `${n} time kodun hiçbirinde 24. kare yok: büyük ihtimalle 24 fps.` };
+        return { key: '25', sure: false, why: `Sadece ${n} time kod var: 24 mü 25 mi kesin değil.` };
+    }
+
+    // ---------- EDL ----------
+    function parseEDL(text) {
+        const lines = String(text).replace(/\r\n?/g, '\n').split('\n');
+        const out = { title: '', fcm: '', events: [], locs: [] };
+        let last = null;
+        const TC = '(\\d{1,2}[:;.]\\d{2}[:;.]\\d{2}[:;.]\\d{2,3})';
+        const evRe = new RegExp(`^\\s*(\\d{1,6})\\s+(\\S+)\\s+(\\S+)\\s+(C|D|W\\d{3}|K\\s*[BO]?|KB|KO)\\s*(\\d{3})?\\s+${TC}\\s+${TC}\\s+${TC}\\s+${TC}`, 'i');
+        for (const raw of lines) {
+            const line = raw.replace(/\t/g, ' ');
+            let m;
+            if ((m = line.match(/^\s*TITLE:\s*(.*)$/i))) { out.title = m[1].trim(); continue; }
+            if ((m = line.match(/^\s*FCM:\s*(.*)$/i))) { out.fcm = m[1].trim(); continue; }
+            if ((m = line.match(evRe))) {
+                const [, num, reel, trk, tr, trDur, si, so, ri, ro] = m;
+                const tU = trk.toUpperCase(), vm = tU.match(/V(\d*)/), aud = [];
+                if (tU === 'B') aud.push(1);
+                else if (/^AA/.test(tU)) aud.push(1, 2);
+                else { const am = tU.match(/A(\d*)/); if (am) aud.push(am[1] ? parseInt(am[1]) : 1); }
+                last = { num, reel, hasV: /V/.test(tU) || tU === 'B', vExplicit: !!(vm && vm[1]), vnum: vm && vm[1] ? parseInt(vm[1]) : 1, aud,
+                    trans: tr.toUpperCase().replace(/\s+/g, ''), transDur: trDur ? parseInt(trDur) : 0, srcIn: si, srcOut: so, recIn: ri, recOut: ro, clip: '', source: '', speed: null };
+                out.events.push(last);
+                continue;
+            }
+            if ((m = line.match(/^\s*M2\s+(\S+)\s+(-?\d+(?:\.\d+)?)\s+(\S+)/i))) { const tg = [...out.events].reverse().find(e => e.reel === m[1]) || last; if (tg) tg.speed = parseFloat(m[2]); continue; }
+            if ((m = line.match(/^\s*\*\s*LOC:\s*(\d{1,2}[:;.]\d{2}[:;.]\d{2}[:;.]\d{2,3})\s+(\S+)\s*(.*)$/i))) { out.locs.push({ tc: m[1], color: m[2].toUpperCase(), text: m[3].trim() }); continue; }
+            if (last && (m = line.match(/^\s*\*\s*(FROM CLIP NAME|CLIP NAME|TO CLIP NAME|SOURCE FILE|SOURCE FILE NAME)\s*:\s*(.*)$/i))) {
+                const k = m[1].toUpperCase(), v = m[2].trim(), same = out.events.filter(e => e.num === last.num);
+                if (k === 'TO CLIP NAME') last.clip = v;
+                else if (k === 'FROM CLIP NAME' || k === 'CLIP NAME') { if (same.length > 1) same[0].clip = same[0].clip || v; else last.clip = last.clip || v; }
+                else last.source = v;
+            }
+        }
+        if (!out.events.length) throw new Error('EDL\'de olay satırı bulunamadı ("001  REEL  V  C  ..." biçiminde olmalı).');
+        return out;
+    }
+    function trackHint(str) {
+        const m = String(str || '').match(/(?:^|[^A-Za-z0-9])V\s*0*(\d{1,2})(?![0-9A-Za-z])/);
+        return m && +m[1] >= 1 && +m[1] <= 24 ? parseInt(m[1]) : null;
+    }
+    function splitPasted(text) {
+        const parts = String(text).replace(/\r\n?/g, '\n').split(/\n(?=\s*TITLE:)/i).map(x => x.trim()).filter(Boolean);
+        return parts.length > 1 ? parts : [String(text)];
+    }
+    function seqFromEDL(sources) {
+        if (FPS_MODE === 'auto') {
+            const fcm = (sources.map(x => (String(x.text).match(/^\s*FCM:\s*(.*)$/im) || [])[1]).find(Boolean)) || '';
+            const g = guessFps(sources.map(x => x.text), fcm);
+            $('fps').value = g.key; setRate(g.key); setFpsNote(g.sure ? 'sure' : 'guess', g.why);
+        }
+        const parsed = sources.map(src => ({ src, edl: parseEDL(src.text) }));
+        const used = new Set();
+        parsed.forEach(p => {
+            p.auto = null;
+            if (p.src.track !== 'auto') p.auto = +p.src.track;
+            else if (!p.edl.events.some(e => e.hasV && !e.vExplicit)) p.auto = 0;
+            else p.auto = sources.length > 1 ? (trackHint(p.src.name) || trackHint(p.edl.title)) : null;
+            if (p.auto) used.add(p.auto);
+            p.edl.events.forEach(e => { if (e.hasV && e.vExplicit) used.add(e.vnum); });
+        });
+        let next = 1;
+        parsed.forEach(p => { if (p.auto === null) { while (used.has(next)) next++; p.auto = next; used.add(next); } p.src.resolved = p.auto; });
+        const clips = [], locs = [], seen = new Set();
+        let title = '', fcm = '';
+        parsed.forEach(p => {
+            title = title || p.edl.title; fcm = fcm || p.edl.fcm;
+            p.edl.events.forEach(e => {
+                const ri = tcToF(e.recIn), ro = tcToF(e.recOut), si = tcToF(e.srcIn), so = tcToF(e.srcOut);
+                const len = ro - ri, sl = so - si;
+                if (!(len > 0)) return;
+                const pct = sl > 0 && sl !== len ? Math.round(sl / len * 100) : (e.speed && Math.abs(e.speed - RATE.nominal) > .01 ? Math.round(e.speed / RATE.nominal * 100) : 100);
+                const base = { num: e.num, reel: e.reel, ri, ro, si, so, pct, name: e.clip || e.reel, clip: e.clip, source: e.source || e.reel, file: '', trans: e.trans, transDur: e.transDur, origin: p.src.name };
+                if (e.hasV) clips.push(Object.assign({ tk: 'V' + (p.src.track !== 'auto' ? +p.src.track : (e.vExplicit ? e.vnum : (p.auto || 1))), kind: 'picture' }, base));
+                e.aud.forEach(a => clips.push(Object.assign({ tk: 'A' + a, kind: 'sound' }, base)));
+            });
+            p.edl.locs.forEach(l => { const f = tcToF(l.tc), k = f + '|' + l.text; if (f !== null && !seen.has(k)) { seen.add(k); locs.push({ frame: f, color: l.color, text: l.text }); } });
+        });
+        return { title: title || '—', meta: fcm || 'EDL', clips, locs, kind: 'edl', rate: null };
+    }
+    // ---------- AAF ----------
+    function rateKey(rate, drop) {
+        if (Math.abs(rate - 23.976) < .01) return '23.976';
+        if (Math.abs(rate - 29.97) < .01) return drop ? '29.97' : '29.97nd';
+        if (Math.abs(rate - 59.94) < .01) return '59.94';
+        const r = Math.round(rate);
+        return RATE_MAP[String(r)] ? String(r) : '25';
+    }
+    function seqFromAAF(src) {
+        const all = src.data.sequences, s = all[Math.min(src.pick || 0, all.length - 1)];
+        const key = rateKey(s.rate, s.drop);
+        if (FPS_MODE === 'auto') { $('fps').value = key; setRate(key); setFpsNote('aaf', fpsLabel(s.rate)); }
+        const clips = s.clips.map(c => Object.assign({}, c, { tk: c.track, origin: src.name, reel: c.source, mixed: c.kind === 'picture' && c.srcFps && Math.abs(c.srcFps - s.rate) > 0.01 }));
+        return { title: s.name, meta: `AAF · ${fpsLabel(s.rate)}`, clips, locs: s.locs.slice(), kind: 'aaf', rate: s.rate, warn: s.warn ? t('smNoMain') : '' };
+    }
+
+    // ---------- Kurulum ----------
+    const isV = (tk) => tk[0] === 'V';
+    const tkNum = (tk) => parseInt(tk.slice(1));
+    const trackOrder = (a, b) => (isV(a) === isV(b) ? (isV(a) ? tkNum(b) - tkNum(a) : tkNum(a) - tkNum(b)) : (isV(a) ? -1 : 1));
+    function build() {
+        SEQ = SOURCES[0].type === 'aaf' ? seqFromAAF(SOURCES[0]) : seqFromEDL(SOURCES);
+        CLIPS = SEQ.clips.filter(c => c.ro > c.ri).map((c, i) => Object.assign(c, { idx: i, len: c.ro - c.ri }));
+        if (!CLIPS.length) throw new Error('Zaman çizelgesine yerleşen plan bulunamadı.');
+        TRACKS = [...new Set(CLIPS.map(c => c.tk))].sort(trackOrder);
+        BYTRACK = new Map(TRACKS.map(tk => [tk, CLIPS.filter(c => c.tk === tk)]));
+        [...HIDDEN].forEach(tk => { if (!TRACKS.includes(tk)) HIDDEN.delete(tk); });
+        const vis = CLIPS.filter(c => isV(c.tk) || $('audio').checked);
+        START = Math.min(...(vis.length ? vis : CLIPS).map(c => c.ri));
+        END = Math.max(...(vis.length ? vis : CLIPS).map(c => c.ro));
+        POS = START; SEL = null; SELNOTE = null;
+        $('title').textContent = SEQ.title;
+        const vt = TRACKS.filter(isV), at = TRACKS.filter(tk => !isV(tk));
+        const perV = [...vt].reverse().map(tk => `${tk}: ${BYTRACK.get(tk).length}`).join(' · ');
+        $('meta').textContent = `${fToTc(START)} – ${fToTc(END)} · ${durTxt(END - START)} · ${CLIPS.filter(c => isV(c.tk)).length} video plan (${perV || '—'})${at.length ? ` · ${at.length} ses track'i` : ''} · ${SEQ.meta}`;
+        const mixed = CLIPS.filter(c => c.mixed), warns = [];
+        if (mixed.length) warns.push('⚠ ' + tf('smMixed', { n: mixed.length, r: [...new Set(mixed.map(c => fpsLabel(c.srcFps)))].join(', '), s: fpsLabel(SEQ.rate) }));
+        if (SEQ.warn) warns.push('⚠ ' + SEQ.warn);
+        $('warn').hidden = !warns.length; $('warn').textContent = warns.join(' · ');
+        $('audioWrap').hidden = !at.length;
+        $('empty').hidden = true;
+        $('seqPick').hidden = !(SOURCES[0].type === 'aaf' && SOURCES[0].data.sequences.length > 1);
+        if (!$('seqPick').hidden) $('seqPick').innerHTML = SOURCES[0].data.sequences.map((q, i) => `<option value="${i}" ${i === (SOURCES[0].pick || 0) ? 'selected' : ''}>${esc(q.name)}</option>`).join('');
+        collectNotes();
+        fit();
+    }
+
+    // ---------- Notlar: "Sekansa işle" seçilenler ----------
+    const normName = (s) => String(s || '').toLocaleUpperCase('tr-TR').replace(/\s+/g, '');
+    function noteTarget(n) {
+        const txt = `${n.ref || ''} ${n.text || ''}`;
+        let m = txt.match(/(\d{1,2})[:;.](\d{2})[:;.](\d{2})(?:[:;.](\d{2,3}))?/);
+        if (m) {
+            const [h, mi, s] = [+m[1], +m[2], +m[3]], ff = m[4] ? +m[4] : 0;
+            let f = tcToF(`${h}:${String(mi).padStart(2, '0')}:${String(s).padStart(2, '0')}:${String(Math.min(ff, RATE.nominal - 1)).padStart(2, '0')}`);
+            // Sekansın saatinden küçükse göreli yazılmış olabilir (00:12:30 = başlangıçtan 12 dk 30 sn sonra)
+            if (f !== null && f < START) f = START + f;
+            if (f !== null && f >= START && f <= END) return { frame: f, how: 'tc', clip: clipAt(f, true) };
+        }
+        m = (n.ref || '').match(/^\s*(\d{1,3})[:.](\d{2})\s*$/);
+        if (m) { const f = START + (+m[1] * 60 + +m[2]) * RATE.nominal; if (f <= END) return { frame: f, how: 'tc', clip: clipAt(f, true) }; }
+        const ref = normName(n.ref);
+        if (ref.length >= 2) {
+            const hit = CLIPS.filter(c => isV(c.tk) && !c.fxOnly && (normName(c.name).includes(ref) || normName(c.clip).includes(ref) || normName(c.source).startsWith(ref)))
+                .sort((a, b) => a.ri - b.ri || trackOrder(a.tk, b.tk))[0];
+            if (hit) return { frame: hit.ri, how: 'name', clip: hit };
+        }
+        return null;
+    }
+    function collectNotes() {
+        NOTES = []; UNMATCHED = [];
+        if (!SEQ || !App.project) return;
+        const entry = (App.project.episodeNotes || {})[EP];
+        const list = entry && Array.isArray(entry.notes) ? entry.notes.filter(n => n.seq) : [];
+        list.forEach(n => {
+            const lane = LANES.includes(n.cat) ? n.cat : 'other';
+            const tg = noteTarget(n);
+            if (tg) NOTES.push({ n, lane, frame: tg.frame, how: tg.how, clip: tg.clip });
+            else UNMATCHED.push(n);
+        });
+        $('unmatched').hidden = !UNMATCHED.length;
+        $('unmatched').textContent = UNMATCHED.length ? '⚠ ' + tf('smUnmatched', { n: UNMATCHED.length }) : '';
+        $('unmatched').title = UNMATCHED.length ? t('smUnmatchedHint') + '\n\n' + UNMATCHED.map(n => `• ${n.ref || '—'}: ${n.text}`).join('\n') : '';
+    }
+    const shownNotes = () => !$('notes').checked ? [] : NOTES.filter(x => $('doneNotes').checked || !x.n.done);
+
+    // ---------- Çizim ----------
+    const REEL_COLORS = ['#7f97c4', '#8fbf9a', '#c9a77c', '#b48fc4', '#7cbcc4', '#c48f9b', '#a8b86f', '#9aa2c9'];
+    function reelColor(c) {
+        const key = String(c.source || c.reel || '').replace(/_.*$/, '').replace(/C\d+$/i, '');
+        let h = 0; for (const ch of key) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+        return REEL_COLORS[h % REEL_COLORS.length];
+    }
+    const shownTracks = () => TRACKS.filter(tk => isV(tk) || $('audio').checked);
+    const LANE_H = 26;
+    function render() {
+        if (!SEQ) return;
+        const scroll = $('scroll'), canvas = $('canvas');
+        const notes = shownNotes();
+        const lanes = LANES.filter(l => notes.some(x => x.lane === l)).reverse();     // en üstte Send … en altta Ses
+        const NH = lanes.length ? lanes.length * LANE_H + 10 : 0;
+        const tracks = shownTracks();
+        const nv = tracks.filter(isV).length, na = tracks.length - nv;
+        const avail = scroll.clientHeight - 2 - NH;
+        const hV = Math.max(34, Math.min(76, Math.floor(avail / Math.max(1, nv + 0.55 * na))));
+        const hA = Math.max(22, Math.min(60, Math.round(hV * 0.55)));
+        const TH = tracks.map(tk => isV(tk) ? hV : hA), TOP = [];
+        TH.reduce((acc, h, i) => (TOP[i] = acc, acc + h), NH);
+        const totalH = NH + TH.reduce((a, b) => a + b, 0);
+        const W = Math.max(Math.ceil((END - START) * ppf) + 120, scroll.clientWidth);
+        canvas.style.width = W + 'px'; canvas.style.height = totalH + 'px';
+        // Sol başlıklar: not katları + track'ler
+        $('heads').innerHTML = (NH ? `<div class="sm-lanehead-wrap" style="height:${NH}px">${lanes.map(l => `<div class="sm-lanehead" style="height:${LANE_H}px;--c:${laneColor(l)}">${esc(t('smLane_' + l))}</div>`).join('')}</div>` : '') +
+            tracks.map((tk, i) => `<button class="sm-head ${isV(tk) ? '' : 'aud'} ${HIDDEN.has(tk) ? 'off' : ''} ${!isV(tk) && i > 0 && isV(tracks[i - 1]) ? 'first-a' : ''}" data-t="${tk}" type="button" style="height:${TH[i]}px" title="${tk} · ${(BYTRACK.get(tk) || []).length}"><span>${tk}</span><i>${(BYTRACK.get(tk) || []).length}</i></button>`).join('');
+        const q = $('find').value.trim().toLocaleUpperCase('tr-TR'), byReel = $('byReel').checked;
+        const vw = scroll.clientWidth, wa = (scroll.scrollLeft - vw) / ppf + START, wb = (scroll.scrollLeft + 2 * vw) / ppf + START;
+        WIN = { a: scroll.scrollLeft - vw / 2, b: scroll.scrollLeft + vw / 2 };
+        let html = '';
+        // Not katları ve oklar
+        lanes.forEach((l, li) => {
+            const y = li * LANE_H + 4;
+            html += `<div class="sm-lane" style="top:${y}px;height:${LANE_H}px;width:${W}px;--c:${laneColor(l)}"></div>`;
+            const ln = notes.filter(x => x.lane === l).sort((a, b) => a.frame - b.frame);
+            ln.forEach((x, k) => {
+                const px = (x.frame - START) * ppf;
+                const nx = ln[k + 1] ? (ln[k + 1].frame - START) * ppf : Infinity;
+                const w = Math.max(14, Math.min(230, nx - px - 4));
+                const label = `${x.n.ref ? x.n.ref + ' · ' : ''}${x.n.text}`;
+                html += `<div class="sm-arrow ${x.n.done ? 'done' : ''}" style="left:${px}px;top:${y + LANE_H - 4}px;height:${NH - (y + LANE_H - 4)}px;--c:${laneColor(l)}"></div>
+                    <div class="sm-guide" style="left:${px}px;top:${NH}px;height:${totalH - NH}px;--c:${laneColor(l)}"></div>
+                    <button class="sm-note ${x.n.done ? 'done' : ''} ${SELNOTE === x.n.id ? 'sel' : ''} ${w < 40 ? 'dot' : ''}" type="button" data-note="${esc(x.n.id)}"
+                        style="left:${px}px;top:${y + 2}px;max-width:${w}px;--c:${laneColor(l)}" title="${esc(t('smLane_' + l) + ' · ' + fToTc(x.frame) + '\n' + label)}">${w < 40 ? '' : esc(label)}</button>`;
+            });
+        });
+        tracks.forEach((tk, ti) => {
+            html += `<div class="sm-track ${isV(tk) ? '' : 'aud'} ${!isV(tk) && ti > 0 && isV(tracks[ti - 1]) ? 'first-a' : ''}" style="top:${TOP[ti]}px;width:${W}px;height:${TH[ti]}px"></div>`;
+            if (HIDDEN.has(tk)) return;
+            const tall = TH[ti] >= 50;
+            (BYTRACK.get(tk) || []).forEach(c => {
+                if (c.ro < wa || c.ri > wb) return;
+                const x = (c.ri - START) * ppf, w = Math.max(1, c.len * ppf);
+                const hit = q && (c.name + ' ' + c.source + ' ' + (c.reel || '')).toLocaleUpperCase('tr-TR').includes(q);
+                const cls = ['sm-clip', isV(tk) ? '' : 'aud', c.fxOnly ? 'fxonly' : '', c.mixed ? 'mix' : '', SEL === c.idx ? 'sel' : '', hit ? 'match' : '', q && !hit ? 'dim' : ''].join(' ');
+                const bg = byReel && isV(tk) && !c.fxOnly && !c.mixed ? `background:${reelColor(c)};` : '';
+                const fx = (c.mixed ? `<span class="fpsb">${fpsLabel(c.srcFps)}</span>` : '') + (c.pct !== 100 ? `<span class="fx">${c.pct}%</span>` : '');
+                const diss = c.trans && c.trans[0] === 'D' && c.transDur ? `<span class="diss" style="width:${Math.min(w, c.transDur * ppf)}px"></span>` : '';
+                html += `<div class="${cls}" data-i="${c.idx}" style="left:${x}px;width:${w}px;top:${TOP[ti] + 3}px;height:${TH[ti] - 7}px;${bg}" title="${esc(c.name)} · ${tk} · ${durTxt(c.len)}">
+                    ${diss}${w > 34 ? `<div class="nm">${esc(c.name)}</div>` : ''}${tall && w > 70 ? `<div class="du">${durTxt(c.len)}</div>` : ''}${w > 30 ? fx : ''}</div>`;
+            });
+        });
+        html += `<div class="sm-pos" id="sm-posLine" style="left:${(POS - START) * ppf}px;height:${totalH}px"></div>`;
+        canvas.innerHTML = html;
+        drawRuler();
+        $('posTc').textContent = fToTc(POS);
+        renderInfo();
+    }
+    function drawRuler() {
+        if (!SEQ) return;
+        const scroll = $('scroll'), sl = scroll.scrollLeft, vw = scroll.clientWidth, n = RATE.nominal;
+        const steps = [1, 2, 5, 10, n / 2, n, 2 * n, 5 * n, 10 * n, 15 * n, 30 * n, 60 * n, 120 * n, 300 * n, 600 * n, 1800 * n].map(Math.round);
+        const step = steps.find(s => s * ppf >= 90) || steps[steps.length - 1];
+        const minor = Math.max(1, Math.round(step / 5));
+        const a0 = Math.floor((START + sl / ppf) / minor) * minor, a1 = START + (sl + vw) / ppf + minor;
+        let html = '';
+        for (let a = a0; a <= a1; a += minor) {
+            const x = (a - START) * ppf - sl, big = a % step === 0;
+            html += `<div class="sm-tick ${big ? 'big' : 'sm'}" style="left:${x}px"></div>`;
+            if (big) html += `<div class="sm-tlab" style="left:${x}px">${fToTc(a)}</div>`;
+        }
+        (SEQ.locs || []).forEach(l => {
+            const x = (l.frame - START) * ppf - sl;
+            if (x < -10 || x > vw + 10) return;
+            html += `<div class="sm-loc" style="left:${x}px;background:${locColor(l.color)}" title="${esc(fToTc(l.frame) + ' · ' + l.text)}" data-f="${l.frame}"></div>`;
+        });
+        html += `<div class="sm-posr" style="left:${(POS - START) * ppf - sl}px"></div>`;
+        $('ruler').innerHTML = html;
+    }
+    const locColor = (c) => ({ RED: '#e5484d', YELLOW: '#f2c14e', GREEN: '#46a758', BLUE: '#3d8bff', CYAN: '#4cc9d6', MAGENTA: '#d65cc7', WHITE: '#e8e8e8', BLACK: '#222' })[String(c).toUpperCase()] || '#e5484d';
+    const baseName = (p) => String(p || '').split(/[\\/]/).pop();
+    function clipAt(f, videoOnly) {
+        const hits = CLIPS.filter(c => f >= c.ri && f < c.ro && !HIDDEN.has(c.tk) && (isV(c.tk) || (!videoOnly && $('audio').checked)) && !c.fxOnly);
+        return hits.sort((a, b) => trackOrder(a.tk, b.tk))[0] || null;
+    }
+    function renderInfo() {
+        const box = $('info');
+        const nsel = SELNOTE ? NOTES.find(x => x.n.id === SELNOTE) : null;
+        if (nsel) {
+            const n = nsel.n, c = nsel.clip;
+            box.innerHTML = `<div class="sm-title"><div class="sm-ev" style="color:${laneColor(nsel.lane)}">● ${esc(t('smLane_' + nsel.lane))} · ${esc(EP)}</div>
+                    <div class="sm-pname">${esc(n.ref || fToTc(nsel.frame))}</div><div class="sm-hint">${n.done ? '✓ ' + esc(t('smNoteDone')) : esc(t('smNoteUndone'))}</div></div>
+                <div class="sm-fields">
+                    <div class="sm-f" style="grid-column:1/-1"><span class="k">${esc(t('modNotes'))}</span><span class="v ui sm-notetext">${esc(n.text)}</span></div>
+                    <div class="sm-f"><span class="k">${esc(t('smNoteAt'))}</span><span class="v tc">${fToTc(nsel.frame)}</span><span class="lbl">${esc(nsel.how === 'tc' ? t('smNoteByTc') : t('smNoteByName'))}</span></div>
+                    ${c ? `<div class="sm-f"><span class="k">Plan</span><span class="v ui"><a href="#" class="sm-jump" data-i="${c.idx}">${esc(c.tk)} · ${esc(c.name)}</a></span></div>` : ''}
+                    <div class="sm-f sm-actions"><button class="ghost-btn small" type="button" data-smact="openNote">📝 ${esc(t('smNoteOpen'))}</button>
+                        ${App.readOnly ? '' : `<button class="ghost-btn small" type="button" data-smact="toggleNote">${n.done ? '↺ ' + esc(t('smNoteUndone')) : '✓ ' + esc(t('smNoteDone'))}</button>`}</div>
+                </div>`;
+            return;
+        }
+        const c = SEL !== null ? CLIPS.find(x => x.idx === SEL) : clipAt(POS);
+        if (!c) { box.innerHTML = `<div class="sm-title"><div class="sm-ev">${fToTc(POS)}</div><div class="sm-pname">—</div></div><div class="sm-hint"></div>`; return; }
+        const locs = (SEQ.locs || []).filter(l => l.frame >= c.ri && l.frame < c.ro);
+        const near = NOTES.filter(x => x.frame >= c.ri && x.frame < c.ro);
+        const pctV = c.len / (END - START) * 100;
+        const speedTxt = c.pct !== 100 ? `%${c.pct}` : 'Normal';
+        const tr = c.trans || 'C';
+        const trTxt = tr === 'C' ? (currentLang === 'tr' ? 'Kesme' : 'Cut') : tr[0] === 'D' ? `Dissolve · ${c.transDur}f` : tr;
+        const hasSrc = c.si !== null && c.si !== undefined;
+        const seenU = new Set();
+        const under = CLIPS.filter(x => x !== c && !HIDDEN.has(x.tk) && (isV(x.tk) || $('audio').checked) && x.ri < c.ro && x.ro > c.ri).sort((a, b) => trackOrder(a.tk, b.tk))
+            .filter(x => { const k = x.tk + '|' + x.name; if (seenU.has(k)) return false; seenU.add(k); return true; });
+        box.innerHTML = `
+            <div class="sm-title"><div class="sm-ev">${c.num ? `#${esc(c.num)} · ` : ''}${c.tk}</div>
+                <div class="sm-pname">${esc(c.name)}</div>
+                <div class="sm-hint">${pctV < 0.1 ? durTxt(c.len) : `%${(Math.round(pctV * 10) / 10).toLocaleString(localeStr())} · ${durTxt(c.len)}`}</div></div>
+            <div class="sm-fields">
+                <div class="sm-f"><span class="k">Plan / take</span><span class="v ui">${esc(c.clip || '—')}</span>${c.master && c.master.trim() !== String(c.clip || '').trim() ? `<span class="lbl">Master: ${esc(c.master)}</span>` : ''}</div>
+                <div class="sm-f"><span class="k">Source name</span><span class="v">${esc(c.source || c.reel || '—')}</span></div>
+                ${c.file ? `<div class="sm-f"><span class="k">${currentLang === 'tr' ? 'Kaynak dosya' : 'Source file'}</span><span class="v" title="${esc(c.file)}">${esc(baseName(c.file))}</span></div>` : `<div class="sm-f"><span class="k">Reel</span><span class="v">${esc(c.reel || '—')}</span></div>`}
+                <div class="sm-f"><span class="k">${currentLang === 'tr' ? 'Kaynak TC' : 'Source TC'}</span>${hasSrc ? `<span class="v tc">${fToTcAt(c.si, c.srcTcFps, c.srcTcFps ? c.srcDrop : RATE.df)} → ${fToTcAt(c.so, c.srcTcFps, c.srcTcFps ? c.srcDrop : RATE.df)}</span>` : '<span class="v ui">—</span>'}</div>
+                <div class="sm-f"><span class="k">${currentLang === 'tr' ? 'Kayıt TC (master)' : 'Record TC'}</span><span class="v tc">${fToTc(c.ri)} → ${fToTc(c.ro)}</span></div>
+                ${c.srcFps ? `<div class="sm-f ${c.mixed ? 'warnf' : ''}"><span class="k">FPS</span><span class="v ui">${fpsLabel(c.srcFps)}${c.mixed ? ` ≠ ${fpsLabel(SEQ.rate)}` : ''}</span></div>` : ''}
+                <div class="sm-f"><span class="k">${currentLang === 'tr' ? 'Geçiş · hız' : 'Transition · speed'}</span><span class="v ui">${esc(trTxt)} · ${esc(speedTxt)}</span></div>
+                ${c.effect ? `<div class="sm-f"><span class="k">${currentLang === 'tr' ? 'Efekt' : 'Effect'}</span><span class="v ui">${esc(c.effect)}</span></div>` : ''}
+                ${near.length ? `<div class="sm-f" style="grid-column:1/-1"><span class="k">${esc(t('smNotes'))}</span><span class="v ui">${near.map(x => `<a href="#" class="sm-jumpnote" data-note="${esc(x.n.id)}" style="color:${laneColor(x.lane)}">● ${esc(t('smLane_' + x.lane))}: ${esc(x.n.text.slice(0, 60))}</a>`).join('<br>')}</span></div>` : ''}
+                ${under.length ? `<div class="sm-f" style="grid-column:1/-1"><span class="k">${currentLang === 'tr' ? 'Aynı aralıkta' : 'Same range'}</span><span class="v ui">${under.slice(0, 8).map(x => `<a href="#" class="sm-jump" data-i="${x.idx}">${x.tk} · ${esc(x.name)}</a>`).join(' &nbsp; ')}</span></div>` : ''}
+                ${locs.length ? `<div class="sm-f" style="grid-column:1/-1"><span class="k">Locator</span><span class="v ui">${locs.map(l => `<span style="color:${locColor(l.color)}">●</span> ${esc(fToTc(l.frame))} ${esc(l.text)}`).join('<br>')}</span></div>` : ''}
+            </div>`;
+    }
+
+    // ---------- Yakınlaştırma ----------
+    const MAX_PPF = 40;
+    const sliderToPpf = (v) => minPpf * Math.pow(MAX_PPF / minPpf, v / 1000);
+    const ppfToSlider = (p) => Math.round(Math.log(p / minPpf) / Math.log(MAX_PPF / minPpf) * 1000);
+    function setPpf(p, anchorX) {
+        const scroll = $('scroll'), old = ppf;
+        ppf = Math.max(minPpf, Math.min(MAX_PPF, p));
+        const ax = anchorX ?? scroll.clientWidth / 2;
+        const fAt = (scroll.scrollLeft + ax) / old;
+        render();
+        scroll.scrollLeft = fAt * ppf - ax;
+        $('zoom').value = ppfToSlider(ppf);
+        drawRuler();
+    }
+    function fit() {
+        if (!SEQ) return;
+        const scroll = $('scroll');
+        minPpf = Math.max(0.005, (scroll.clientWidth - 40) / (END - START));
+        ppf = minPpf; $('zoom').value = 0;
+        render(); scroll.scrollLeft = 0;
+    }
+    function setPos(f) {
+        if (!SEQ) return;
+        POS = Math.max(START, Math.min(END - 1, Math.round(f)));
+        SEL = null; SELNOTE = null;
+        const pl = document.getElementById('sm-posLine'); if (pl) pl.style.left = (POS - START) * ppf + 'px';
+        $('posTc').textContent = fToTc(POS);
+        drawRuler(); renderInfo();
+    }
+    function select(i) {
+        const c = CLIPS.find(x => x.idx === i); if (!c) return;
+        SEL = i; SELNOTE = null; POS = c.ri;
+        render();
+        const scroll = $('scroll'), x = (c.ri - START) * ppf;
+        if (x < scroll.scrollLeft || x + c.len * ppf > scroll.scrollLeft + scroll.clientWidth) { scroll.scrollLeft = Math.max(0, x - 60); render(); }
+    }
+    function selectNote(id) {
+        const x = NOTES.find(y => y.n.id === id); if (!x) return;
+        SELNOTE = id; SEL = null; POS = x.frame;
+        render();
+        const scroll = $('scroll'), px = (x.frame - START) * ppf;
+        if (px < scroll.scrollLeft || px > scroll.scrollLeft + scroll.clientWidth - 40) { scroll.scrollLeft = Math.max(0, px - 120); render(); }
+    }
+
+    // ---------- Kayıt (projeye) ----------
+    // Planları yer kaplamasın diye sütun + metin tablosu olarak saklar (5 MB → ~1 MB)
+    function packClips(clips) {
+        const K = [...new Set(clips.flatMap(c => Object.keys(c)))];
+        const T = K.map(k => { const ts = new Set(clips.map(c => c[k]).filter(v => v !== undefined && v !== null).map(v => typeof v)); return ts.size === 1 ? [...ts][0][0] : 'j'; });
+        const S = [], SI = new Map();
+        const str = (v) => { let i = SI.get(v); if (i === undefined) { i = S.length; S.push(v); SI.set(v, i); } return i; };
+        const R = clips.map(c => K.map((k, i) => { const v = c[k]; if (v === undefined || v === null) return null; return T[i] === 's' ? str(v) : T[i] === 'b' ? (v ? 1 : 0) : v; }));
+        return { packed: 1, K, T, S, R };
+    }
+    function unpackClips(p) {
+        if (!p || !p.packed) return p || [];
+        return p.R.map(r => { const o = {}; p.K.forEach((k, i) => { const v = r[i]; if (v === null || v === undefined) return; o[k] = p.T[i] === 's' ? p.S[v] : p.T[i] === 'b' ? !!v : v; }); return o; });
+    }
+
+    const slimAAF = (data) => ({ diag: data.diag || '', sequences: data.sequences.map(s => ({ name: s.name, fps: s.fps, drop: s.drop, rate: s.rate, recStart: s.recStart, clips: s.clips, locs: s.locs, warn: s.warn || '' })) });
+    const packSources = () => SOURCES.map(x => x.type === 'aaf'
+        ? { type: 'aaf', name: x.name, pick: x.pick || 0, data: Object.assign({}, x.data, { sequences: x.data.sequences.map(q => Object.assign({}, q, { clips: packClips(q.clips) })) }) }
+        : { type: 'edl', name: x.name, text: x.text, track: x.track });
+    const unpackSources = (list) => (list || []).map(x => x.type === 'aaf' ? Object.assign({}, x, { data: Object.assign({}, x.data, { sequences: x.data.sequences.map(q => Object.assign({}, q, { clips: unpackClips(q.clips) })) }) }) : x);
+    function busy(msg) { const b = $('busy'); b.hidden = !msg; if (msg) b.textContent = msg; }
+    function flash(msg, bad) { const el = $('status'); el.textContent = msg; el.className = 'sm-status ' + (bad ? 'bad' : 'ok'); clearTimeout(flash.t); flash.t = setTimeout(() => { el.textContent = ''; }, bad ? 9000 : 3500); }
+    async function persist() {
+        if (!App.project) return;
+        const pid = App.project.id, ep = EP;
+        const payload = { v: 2, sources: packSources(), fps: { mode: FPS_MODE, key: $('fps').value } };
+        const info = { rev: Date.now(), name: SEQ ? SEQ.title : '', file: SOURCES.map(x => x.name).join(', ').slice(0, 200), kind: SOURCES[0] ? SOURCES[0].type : '',
+            clips: CLIPS.length, at: new Date().toISOString(), by: { name: (App.user && (App.user.displayName || App.user.email)) || '', email: myEmail() } };
+        busy(t('smSaving'));
+        try {
+            await api().saveSeqMap(pid, ep, info, JSON.stringify(payload));
+            await api().updateProject(pid, { ['seqMaps.' + ep]: info });
+            if (!isPlainObject(App.project.seqMaps)) App.project.seqMaps = {};
+            App.project.seqMaps[ep] = info;
+            LOADED = { ep, rev: info.rev };
+            flash('✓ ' + t('smSaved'));
+        } catch (e) { console.error(e); flash(tf('smSaveFail', { m: e.message || e }), true); }
+        busy('');
+        renderEpSelect();
+    }
+    async function loadEp(ep, force) {
+        EP = ep;
+        const info = (App.project.seqMaps || {})[ep];
+        if (!force && LOADED && LOADED.ep === ep && info && LOADED.rev === info.rev) { render(); return; }
+        SOURCES = []; SEQ = null; CLIPS = []; LOADED = null;
+        if (!info) { showEmpty(); LOADED = { ep, rev: null }; return; }
+        showEmpty(true);
+        busy(t('smLoading'));
+        try {
+            const got = await api().getSeqMap(App.project.id, ep);
+            if (EP !== ep) return;
+            if (!got) { showEmpty(); return; }
+            const payload = JSON.parse(got.json);
+            SOURCES = unpackSources(payload.sources);
+            FPS_MODE = (payload.fps && payload.fps.mode) || 'auto';
+            if (FPS_MODE === 'manual' && payload.fps.key) { $('fps').value = payload.fps.key; setRate(payload.fps.key); setFpsNote('manual'); }
+            build();
+            LOADED = { ep, rev: (got.meta && got.meta.rev) || info.rev };
+            $('by').textContent = info.by ? tf('smBy', { name: info.by.name || info.by.email, d: formatDate(info.at, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) }) : '';
+        } catch (e) { console.error(e); showEmpty(); flash(tf('smLoadFail', { m: e.message || e }), true); }
+        busy('');
+    }
+    function showEmpty(loading) {
+        SEQ = null; CLIPS = []; TRACKS = []; SEL = null; SELNOTE = null;
+        $('canvas').innerHTML = ''; $('heads').innerHTML = ''; $('ruler').innerHTML = '';
+        $('canvas').style.width = '100%'; $('canvas').style.height = '0px';
+        $('title').textContent = t('modSeqMap'); $('meta').textContent = ''; $('by').textContent = '';
+        $('warn').hidden = true; $('unmatched').hidden = true; $('seqPick').hidden = true; $('fpsNote').textContent = '';
+        $('posTc').textContent = '--:--:--:--';
+        $('empty').hidden = !!loading;
+        $('emptyTitle').textContent = tf('smEmptyTitle', { ep: EP });
+        $('info').innerHTML = '';
+    }
+
+    // ---------- İçe aktarma ----------
+    function loadEDL(items, mode) {
+        const prev = SOURCES.slice();
+        if (mode !== 'add') FPS_MODE = 'auto';
+        const add = items.flatMap(it => splitPasted(it.text).map((tx, k, arr) => ({ type: 'edl', name: arr.length > 1 ? `${it.name} #${k + 1}` : it.name, text: tx, track: 'auto' })));
+        SOURCES = mode === 'add' && prev.length && prev[0].type === 'edl' ? prev.concat(add) : add;
+        try { build(); persist(); }
+        catch (err) { SOURCES = prev; if (prev.length) { try { build(); } catch (e) {} } else showEmpty(); flash(err.message, true); }
+    }
+    function loadAAF(name, buf) {
+        const prev = SOURCES.slice();
+        FPS_MODE = 'auto';
+        try {
+            const data = AAF.parse(buf);
+            if (!data.sequences.length) throw new Error('AAF\'te plan bulunamadı.');
+            if (data.sequences.some(s => s.clips.some(c => c.kind === 'sound'))) $('audio').checked = pref('audio', '1') !== '0';
+            SOURCES = [{ type: 'aaf', name, data: slimAAF(data), pick: 0 }];
+            build(); persist();
+        } catch (err) {
+            console.error(err, err.diag || '');
+            SOURCES = prev; if (prev.length) { try { build(); } catch (e) {} } else showEmpty();
+            flash('AAF: ' + err.message + (err.diag ? '\n' + err.diag.split('\n').slice(0, 3).join(' | ') : ''), true);
+        }
+    }
+    function readFiles(list, mode) {
+        if (App.readOnly) return;
+        const files = [...(list || [])];
+        if (!files.length) return;
+        const aaf = files.find(f => /\.aaf$/i.test(f.name));
+        if (aaf) {
+            if (aaf.size > 800 * 1024 * 1024) return flash('AAF çok büyük (medya gömülü olabilir). Avid\'den "Link to media" ile al.', true);
+            busy(t('smReading'));
+            aaf.arrayBuffer().then(b => { busy(''); loadAAF(aaf.name, new Uint8Array(b)); }).catch(() => { busy(''); flash(aaf.name + ' okunamadı.', true); });
+            return;
+        }
+        const edls = files.filter(f => f.size < 20 * 1024 * 1024)
+            .sort((a, b) => (trackHint(a.name) || 99) - (trackHint(b.name) || 99) || a.name.localeCompare(b.name, 'tr', { numeric: true }));
+        Promise.all(edls.map(f => f.arrayBuffer().then(b => ({ name: f.name, bytes: new Uint8Array(b) }))))
+            .then(items => {
+                const bin = items.find(it => AAF.isAAF(it.bytes));
+                if (bin) return loadAAF(bin.name, bin.bytes);
+                loadEDL(items.map(it => ({ name: it.name, text: new TextDecoder('utf-8').decode(it.bytes) })), mode);
+            }).catch(err => flash(err.message, true));
+    }
+    async function clearEp() {
+        if (!App.project || App.readOnly) return;
+        const pid = App.project.id, ep = EP;
+        busy(t('smSaving'));
+        try {
+            await api().deleteSeqMap(pid, ep);
+            await api().updateProject(pid, { ['seqMaps.' + ep]: window.DEL_FIELD });
+            if (App.project.seqMaps) delete App.project.seqMaps[ep];
+        } catch (e) { flash(e.message || String(e), true); }
+        busy('');
+        SOURCES = []; LOADED = { ep, rev: null }; HIDDEN.clear();
+        showEmpty(); renderEpSelect();
+    }
+
+    // ---------- Arayüz ----------
+    function renderEpSelect() {
+        const sel = $('ep'); if (!sel || !App.project) return;
+        const maps = App.project.seqMaps || {};
+        sel.innerHTML = eps().map(k => `<option value="${k}" ${k === EP ? 'selected' : ''}>${k}${maps[k] ? ' 🎞' : ''}</option>`).join('');
+    }
+    function mount() {
+        if (mounted) return;
+        mounted = true;
+        root().innerHTML = `
+        <div class="sm-wrap">
+            <div class="sm-bar">
+                <div class="sm-seq"><h2 id="sm-title">${esc(t('modSeqMap'))}</h2><small id="sm-meta"></small><small id="sm-warn" class="sm-warn" hidden></small><small id="sm-unmatched" class="sm-warn" hidden></small><small id="sm-by" class="sm-by"></small></div>
+                <label class="sm-lbl">${esc(t('smEpisode'))} <select id="sm-ep" data-help="help_mod_seqmap"></select></label>
+                <select id="sm-seqPick" hidden></select>
+                <button class="primary-btn small" id="sm-import" type="button">⬆ ${esc(t('smImport'))}</button>
+                <button class="ghost-btn small" id="sm-clear" type="button">${esc(t('smClear'))}</button>
+                <label class="sm-lbl">FPS <select id="sm-fps">${Object.keys(RATE_MAP).map(k => `<option value="${k}">${k.replace('nd', ' NDF')}${k === '29.97' || k === '59.94' ? ' DF' : ''}</option>`).join('')}</select><span id="sm-fpsNote" class="sm-fpsnote"></span></label>
+                <div class="sm-zoom"><button class="ghost-btn small" id="sm-zoomOut" type="button">−</button><input type="range" id="sm-zoom" min="0" max="1000" value="0" aria-label="Zoom"><button class="ghost-btn small" id="sm-zoomIn" type="button">+</button><button class="ghost-btn small" id="sm-fit" type="button">${esc(t('smFit'))}</button></div>
+                <label class="sm-chk"><input type="checkbox" id="sm-notes" checked> ${esc(t('smNotes'))}</label>
+                <label class="sm-chk"><input type="checkbox" id="sm-doneNotes"> ${esc(t('smDoneNotes'))}</label>
+                <label class="sm-chk"><input type="checkbox" id="sm-byReel"> ${esc(t('smByReel'))}</label>
+                <label class="sm-chk" id="sm-audioWrap"><input type="checkbox" id="sm-audio" checked> ${esc(t('smAudio'))}</label>
+                <input id="sm-find" type="search" placeholder="${esc(t('smFind'))}">
+                <div class="sm-tc" id="sm-posTc">--:--:--:--</div>
+                <span id="sm-status" class="sm-status"></span>
+            </div>
+            <div class="sm-tl">
+                <div class="sm-corner">TC1</div>
+                <div class="sm-ruler" id="sm-ruler"></div>
+                <div class="sm-heads" id="sm-heads"></div>
+                <div class="sm-scroll" id="sm-scroll"><div class="sm-canvas" id="sm-canvas"></div>
+                    <button class="sm-empty" id="sm-empty" type="button" hidden><b id="sm-emptyTitle"></b><span>${esc(t('smEmptyHint'))}</span><em>⬆ ${esc(t('smDrop'))} · ${esc(t('smDropSub'))}</em></button></div>
+            </div>
+            <div class="sm-info" id="sm-info"></div>
+            <input type="file" id="sm-file" accept=".edl,.txt,.aaf,text/plain" multiple hidden>
+            <div class="sm-busy" id="sm-busy" hidden></div>
+            <div class="sm-dragall" id="sm-dragall" hidden>⬆ ${esc(t('smDrop'))}</div>
+        </div>`;
+        setRate('25');
+        $('audio').checked = pref('audio', '1') !== '0';
+        $('notes').checked = pref('notes', '1') !== '0';
+        $('doneNotes').checked = pref('done', '0') === '1';
+        const scroll = $('scroll');
+        // Olaylar
+        $('ep').onchange = (e) => { SEL = null; loadEp(e.target.value); };
+        $('seqPick').onchange = (e) => { if (SOURCES[0] && SOURCES[0].type === 'aaf') { SOURCES[0].pick = +e.target.value; build(); persist(); } };
+        $('import').onclick = () => { if (!App.readOnly) $('file').click(); };
+        $('empty').onclick = () => { if (!App.readOnly) $('file').click(); };
+        $('file').onchange = (e) => { readFiles(e.target.files, e.shiftKey ? 'add' : 'replace'); e.target.value = ''; };
+        let clearT = 0;
+        $('clear').onclick = () => {
+            const b = $('clear');
+            if (!SEQ || App.readOnly) return;
+            if (!b.classList.contains('arm')) { b.classList.add('arm'); b.textContent = t('smClearConfirm'); clearTimeout(clearT); clearT = setTimeout(() => { b.classList.remove('arm'); b.textContent = t('smClear'); }, 3500); return; }
+            clearTimeout(clearT); b.classList.remove('arm'); b.textContent = t('smClear'); clearEp();
+        };
+        $('fps').onchange = (e) => { setRate(e.target.value); if (!SOURCES.length) return; FPS_MODE = 'manual'; setFpsNote('manual'); try { build(); persist(); } catch (err) {} };
+        $('zoom').oninput = (e) => setPpf(sliderToPpf(+e.target.value));
+        $('zoomIn').onclick = () => setPpf(ppf * 1.6);
+        $('zoomOut').onclick = () => setPpf(ppf / 1.6);
+        $('fit').onclick = fit;
+        $('find').oninput = () => SEQ && render();
+        $('byReel').onchange = () => SEQ && render();
+        $('audio').onchange = () => { setPref('audio', $('audio').checked ? '1' : '0'); if (SOURCES.length) build(); };
+        $('notes').onchange = () => { setPref('notes', $('notes').checked ? '1' : '0'); SEQ && render(); };
+        $('doneNotes').onchange = () => { setPref('done', $('doneNotes').checked ? '1' : '0'); SEQ && render(); };
+        scroll.addEventListener('wheel', (e) => {
+            if (!(e.ctrlKey || e.metaKey) || !SEQ) return;
+            e.preventDefault();
+            const r = scroll.getBoundingClientRect();
+            setPpf(ppf * (e.deltaY < 0 ? 1.25 : 0.8), e.clientX - r.left);
+        }, { passive: false });
+        let raf = 0;
+        scroll.addEventListener('scroll', () => {
+            drawRuler(); $('heads').scrollTop = scroll.scrollTop;
+            if (SEQ && (scroll.scrollLeft < WIN.a || scroll.scrollLeft > WIN.b) && !raf) raf = requestAnimationFrame(() => { raf = 0; const sl = scroll.scrollLeft, st = scroll.scrollTop; render(); scroll.scrollLeft = sl; scroll.scrollTop = st; });
+        });
+        $('canvas').addEventListener('click', (e) => {
+            if (!SEQ) return;
+            const nb = e.target.closest('[data-note]'); if (nb) return selectNote(nb.dataset.note);
+            const el = e.target.closest('.sm-clip'); if (el) return select(+el.dataset.i);
+            const r = $('canvas').getBoundingClientRect();
+            setPos(START + (e.clientX - r.left) / ppf);
+        });
+        let scrub = false;
+        const scrubTo = (e) => { if (!SEQ) return; const r = $('ruler').getBoundingClientRect(); setPos(START + (e.clientX - r.left + scroll.scrollLeft) / ppf); };
+        $('ruler').addEventListener('mousedown', (e) => { const l = e.target.closest('.sm-loc'); if (l) { setPos(+l.dataset.f); return; } scrub = true; scrubTo(e); });
+        window.addEventListener('mousemove', (e) => { if (scrub) scrubTo(e); });
+        window.addEventListener('mouseup', () => { scrub = false; });
+        $('heads').addEventListener('click', (e) => {
+            const h = e.target.closest('.sm-head'); if (!h) return;
+            const tk = h.dataset.t;
+            if (HIDDEN.has(tk)) HIDDEN.delete(tk); else HIDDEN.add(tk);
+            render();
+        });
+        $('info').addEventListener('click', (e) => {
+            const a = e.target.closest('.sm-jump'); if (a) { e.preventDefault(); return select(+a.dataset.i); }
+            const nn = e.target.closest('.sm-jumpnote'); if (nn) { e.preventDefault(); return selectNote(nn.dataset.note); }
+            const b = e.target.closest('[data-smact]'); if (!b) return;
+            const x = NOTES.find(y => y.n.id === SELNOTE); if (!x) return;
+            if (b.dataset.smact === 'openNote') { EpisodeNotes.select && EpisodeNotes.select(EP); showModule('notes'); }
+            if (b.dataset.smact === 'toggleNote' && !App.readOnly) { x.n.done = !x.n.done; triggerAutoSave(); collectNotes(); render(); }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (App.module !== 'seqmap' || App.view !== 'workspace' || !SEQ) return;
+            if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || document.querySelector('.modal:not([hidden]), .rep-modal')) return;
+            const curTk = SEL !== null ? CLIPS.find(x => x.idx === SEL).tk : (shownTracks().filter(isV).pop() || TRACKS[0]);
+            const row = (BYTRACK.get(curTk) || []).slice().sort((a, b) => a.ri - b.ri);
+            if (e.key === '+' || e.key === '=') { setPpf(ppf * 1.6); e.preventDefault(); }
+            else if (e.key === '-') { setPpf(ppf / 1.6); e.preventDefault(); }
+            else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                const dir = e.key === 'ArrowRight' ? 1 : -1;
+                let j = row.findIndex(c => c.idx === SEL);
+                if (j < 0) j = dir > 0 ? row.findIndex(c => c.ri > POS) - 1 : row.findIndex(c => c.ri >= POS);
+                const nx = row[Math.max(0, Math.min(row.length - 1, j + dir))];
+                if (nx) select(nx.idx);
+                e.preventDefault();
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                const ax = Math.max(0, Math.min(scroll.clientWidth, (POS - START) * ppf - scroll.scrollLeft));
+                setPpf(e.key === 'ArrowUp' ? ppf / 1.4 : ppf * 1.4, ax);
+                e.preventDefault();
+            } else if (e.key === 'Escape') { SEL = null; SELNOTE = null; render(); }
+        });
+        // Sürükle-bırak: sadece bu sekmedeyken
+        let depth = 0;
+        const hasFiles = (e) => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+        const here = () => App.module === 'seqmap' && App.view === 'workspace' && !App.readOnly;
+        window.addEventListener('dragenter', (e) => { if (!here() || !hasFiles(e)) return; depth++; $('dragall').hidden = false; });
+        window.addEventListener('dragleave', () => { if (!here()) return; depth = Math.max(0, depth - 1); if (!depth) $('dragall').hidden = true; });
+        window.addEventListener('dragover', (e) => { if (here() && hasFiles(e)) e.preventDefault(); });
+        window.addEventListener('drop', (e) => {
+            if (!here() || !hasFiles(e)) return;
+            e.preventDefault(); depth = 0; $('dragall').hidden = true;
+            readFiles(e.dataTransfer.files, e.shiftKey ? 'add' : 'replace');
+        });
+        window.addEventListener('resize', () => { if (App.module === 'seqmap' && SEQ) { const atFit = ppf === minPpf; minPpf = Math.max(0.005, (scroll.clientWidth - 40) / (END - START)); if (atFit || ppf < minPpf) fit(); else render(); } });
+    }
+
+    // ---------- Dışarıya açık ----------
+    async function show() {
+        if (!App.project) return;
+        mount();
+        if (App.project.id !== (show.pid || null)) { show.pid = App.project.id; LOADED = null; EP = null; }
+        if (!EP || !eps().includes(EP)) {
+            const maps = App.project.seqMaps || {};
+            EP = eps().find(k => maps[k]) || eps()[0];
+        }
+        $('import').hidden = $('clear').hidden = !!App.readOnly;
+        renderEpSelect();
+        await loadEp(EP);
+        if (SEQ) { collectNotes(); render(); }
+    }
+    // Başka biri haritayı güncelledi / not değişti
+    function onRemote() {
+        if (!mounted || App.module !== 'seqmap' || !App.project) return;
+        renderEpSelect();
+        const info = (App.project.seqMaps || {})[EP];
+        const rev = info ? info.rev : null;
+        if (LOADED && LOADED.ep === EP && LOADED.rev !== rev) {
+            if (info && info.by && info.by.email !== myEmail()) flash(tf('smUpdatedRemote', { name: info.by.name || info.by.email }));
+            loadEp(EP, true);
+        }
+    }
+    function refreshNotes() { if (mounted && SEQ && App.module === 'seqmap') { collectNotes(); render(); } }
+    function reset() { LOADED = null; EP = null; show.pid = null; SEQ = null; SOURCES = []; }
+    return { show, onRemote, refreshNotes, reset, _state: () => ({ EP, CLIPS, NOTES, UNMATCHED, SEQ, TRACKS }) };
+})();
+window.SeqMap = SeqMap;
+
 // ---------------------------------------------------------------------
 // 12) BAŞLANGIÇ — bu dosyadaki çeviriler eklendikten sonra dili yeniden uygula
 // ---------------------------------------------------------------------
@@ -11740,6 +13093,34 @@ const FB = {
     async getSharedVfxFrame(shareId, sid) {
         const s = await getDoc(doc(db, "sharedProjects", shareId, "vfxFrames", sid));
         return s.exists() ? s.data() : null;
+    },
+
+    // ---------- Sekans haritası (workspaces/{pid}/seqmap) ----------
+    // {EP} = bilgi + parça sayısı; {EP}__0..n = JSON parçaları (Firestore 1 MB belge sınırı yüzünden)
+    async saveSeqMap(pid, ep, info, json) {
+        const CH = 300000, parts = [];
+        for (let i = 0; i < json.length; i += CH) parts.push(json.slice(i, i + CH));
+        const col = collection(db, "workspaces", pid, "seqmap");
+        const old = await getDoc(doc(col, ep));
+        const oldN = old.exists() ? (old.data().n || 0) : 0;
+        for (let i = 0; i < parts.length; i++) await setDoc(doc(col, `${ep}__${i}`), { d: parts[i] });
+        await setDoc(doc(col, ep), Object.assign({}, info, { n: parts.length }));
+        for (let i = parts.length; i < oldN; i++) await deleteDoc(doc(col, `${ep}__${i}`));
+    },
+    async getSeqMap(pid, ep) {
+        const col = collection(db, "workspaces", pid, "seqmap");
+        const m = await getDoc(doc(col, ep));
+        if (!m.exists()) return null;
+        const meta = m.data();
+        const parts = await Promise.all(Array.from({ length: meta.n || 0 }, (_, i) => getDoc(doc(col, `${ep}__${i}`))));
+        return { meta, json: parts.map(p => p.exists() ? p.data().d : '').join('') };
+    },
+    async deleteSeqMap(pid, ep) {
+        const col = collection(db, "workspaces", pid, "seqmap");
+        const m = await getDoc(doc(col, ep));
+        const n = m.exists() ? (m.data().n || 0) : 0;
+        for (let i = 0; i < n; i++) await deleteDoc(doc(col, `${ep}__${i}`));
+        if (m.exists()) await deleteDoc(doc(col, ep));
     },
 
     // ---------- Kullanıcı tercihleri (users/{uid}/prefs/main) — ör. öğretici tur görüldü mü ----------
