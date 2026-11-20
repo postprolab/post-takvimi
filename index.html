@@ -1497,7 +1497,9 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 #seqmapModule .sm-head.first-a, #seqmapModule .sm-track.first-a { box-shadow: inset 0 2px 0 #4a5d4c; }
 #seqmapModule .sm-lanehead-wrap { padding-top: 4px; box-sizing: border-box; border-bottom: 1px solid var(--sm-line); background: #1f2124; }
 #seqmapModule .sm-lanehead { display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--c); box-sizing: border-box; }
-#seqmapModule .sm-scroll { overflow: auto; position: relative; background: var(--sm-bg); }
+#seqmapModule .sm-stage { position: relative; min-height: 0; min-width: 0; background: var(--sm-bg); overflow: hidden; }
+#seqmapModule .sm-gl { position: absolute; left: 0; top: 0; pointer-events: none; }
+#seqmapModule .sm-scroll { overflow: auto; position: absolute; inset: 0; background: transparent; }
 #seqmapModule .sm-canvas { position: relative; }
 #seqmapModule .sm-track { position: absolute; left: 0; border-bottom: 1px solid #26282b; }
 #seqmapModule .sm-track.aud { background: #151916; }
@@ -1562,9 +1564,10 @@ label.rep-note-edit.general textarea { font-family: inherit; font-size: 13px; re
 @media (max-width: 760px) { #seqmapModule .sm-info { grid-template-columns: 1fr; } #seqmapModule .sm-tl { grid-template-columns: 54px 1fr; } }
 /* Bölüm notlarında "Sekansa işle" */
 .note-add.has-seq { grid-template-columns: 150px 130px auto 1fr auto; }
+.note-add .seq-chk input { width: 16px; height: 16px; padding: 0; margin: 0; flex: none; accent-color: #3d8bff; }
 @media (max-width: 1100px) { .note-add.has-seq { grid-template-columns: 130px 110px auto 1fr auto; } }
 @media (max-width: 760px) { .note-add.has-seq { grid-template-columns: 1fr; } }
-.note-add .seq-chk { align-self: center;  display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #c9d3e2; white-space: nowrap; cursor: pointer; }
+.note-add .seq-chk { align-self: center; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #cfe2ff; border: 1px solid #3d8bff; background: #16233a; border-radius: 8px; padding: 9px 12px; white-space: nowrap; cursor: pointer; }
 .sn-seq { border: 1px solid #3a4250; background: transparent; color: #8c95a5; border-radius: 6px; padding: 2px 7px; font-size: 12px; cursor: pointer; white-space: nowrap; }
 .sn-seq.on { background: #20304a; border-color: #3d8bff; color: #cfe2ff; }
 </style>
@@ -6513,18 +6516,18 @@ function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey 
                 <h2>${icon} ${escapeHtml(noteKeyLabel(st.sel))} — ${escapeHtml(t(titleKey))}</h2>
                 <div class="detail-tools">
                     <span class="muted">${openCount} ${escapeHtml(t('openNotes'))} · ${all.length - openCount} ${escapeHtml(t('resolved'))}</span>
-                    ${SEQ && !ro && all.length && st.sel !== 'GENEL' ? `<button class="ghost-btn" data-act="seqall" title="${escapeHtml(t('seqToMapHint'))}">🎞 ${escapeHtml(all.every(n => n.seq) ? t('seqAllOff') : t('seqAllOn'))}</button>` : ''}
+                    ${SEQ && !ro && all.length ? `<button class="ghost-btn" data-act="seqall" title="${escapeHtml(t('seqToMapHint'))}">🎞 ${escapeHtml(all.every(n => n.seq) ? t('seqAllOff') : t('seqAllOn'))}</button>` : ''}
                     <button class="ghost-btn" data-act="pdf" data-help="help_pdf">📄 ${escapeHtml(t('exportPdf'))}</button>
                 </div>
             </div>
 
             ${ro ? '' : `
-            <form class="note-add${SEQ && st.sel !== 'GENEL' ? ' has-seq' : ''}">
+            <form class="note-add${SEQ ? ' has-seq' : ''}">
                 <select data-role="cat" data-help="help_noteCat">
                     ${cats.map(c => `<option value="${c.key}" ${c.key === st.lastCat ? 'selected' : ''}>${escapeHtml(catLabel(c.key))}</option>`).join('')}
                 </select>
                 <input data-role="ref" data-help="help_noteRef" type="text" maxlength="40" placeholder="${escapeHtml(t(refKey))}">
-                ${SEQ && st.sel !== 'GENEL' ? `<label class="seq-chk" title="${escapeHtml(t('seqToMapHint'))}"><input type="checkbox" data-role="seqchk" ${st.lastSeq ? 'checked' : ''}> 🎞 ${escapeHtml(t('seqToMap'))}</label>` : ''}
+                ${SEQ ? `<label class="seq-chk" title="${escapeHtml(t(st.sel === 'GENEL' ? 'seqToMapHintAll' : 'seqToMapHint'))}"><input type="checkbox" data-role="seqchk" ${st.lastSeq ? 'checked' : ''}> 🎞 ${escapeHtml(t('seqToMap'))}</label>` : ''}
                 <textarea data-role="text" rows="2" placeholder="${escapeHtml(t('notePlaceholder'))}"></textarea>
                 <button class="primary-btn small" type="submit">${escapeHtml(t('add'))}</button>
             </form>
@@ -6549,7 +6552,7 @@ function createNotesModule({ el, dataKey, cats, icon, titleKey, refKey, hintKey 
                             <span class="sn-text">${escapeHtml(n.text)}</span>
                             <small>${escapeHtml(formatDate(n.createdAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</small>
                         </div>
-                        ${SEQ && st.sel !== 'GENEL' && (!ro || n.seq) ? `<button class="sn-seq ${n.seq ? 'on' : ''}" data-act="seq" ${ro ? 'disabled' : ''} title="${escapeHtml(t('seqToMapHint'))}">🎞${n.seq ? ' ' + escapeHtml(t('seqToMap')) : ''}</button>` : ''}
+                        ${SEQ && (!ro || n.seq) ? `<button class="sn-seq ${n.seq ? 'on' : ''}" data-act="seq" ${ro ? 'disabled' : ''} title="${escapeHtml(t('seqToMapHint'))}">🎞${n.seq ? ' ' + escapeHtml(t('seqToMap')) : ''}</button>` : ''}
                         ${ro ? '' : `<button class="icon-btn" data-act="edit" title="${escapeHtml(t('rename'))}">✏️</button>
                         <button class="icon-btn" data-act="del" title="${escapeHtml(t('delete'))}">🗑</button>`}
                     </div>`;
@@ -12103,7 +12106,7 @@ Object.assign(I18N.tr, {
     smLane_sound: "Ses", smLane_music: "Müzik", smLane_vfx: "VFX", smLane_color: "Color", smLane_edit: "Edit", smLane_cuts: "Cuts", smLane_send: "Send", smLane_other: "Diğer",
     smMixed: "{n} plan farklı fps: {r} (sekans {s})", smNoMain: "Ana sekans bulunamadı; AAF'teki en büyük parça gösteriliyor.",
     seqToMap: "Sekansa işle", seqToMapHint: "Bu not Sekans Haritası'nda, “Sahne / TC” alanındaki time koddan ya da plan adından inen okla gösterilir.",
-    seqAllOn: "Bu bölümün notlarını sekansa işle", seqAllOff: "Sekanstan çıkar (tümü)"
+    seqAllOn: "Bu bölümün notlarını sekansa işle", seqToMapHintAll: "Genel notlar her bölümün Sekans Haritası'nda gösterilir (Sahne / TC alanındaki time koda ya da plan adına göre).", seqAllOff: "Sekanstan çıkar (tümü)"
 });
 Object.assign(I18N.en, {
     modSeqMap: "Sequence Map", help_mod_seqmap: "The episode's master sequence (Avid AAF / EDL) as a timeline; episode notes marked “Show on sequence” appear as arrows on department lanes.",
@@ -12119,7 +12122,7 @@ Object.assign(I18N.en, {
     smLane_sound: "Sound", smLane_music: "Music", smLane_vfx: "VFX", smLane_color: "Color", smLane_edit: "Edit", smLane_cuts: "Cuts", smLane_send: "Send", smLane_other: "Other",
     smMixed: "{n} shots at a different fps: {r} (sequence {s})", smNoMain: "Main sequence not found; showing the largest part of the AAF.",
     seqToMap: "Show on sequence", seqToMapHint: "This note is shown on the Sequence Map with an arrow from the timecode or shot name in “Scene / TC”.",
-    seqAllOn: "Show this episode's notes on the sequence", seqAllOff: "Remove all from sequence"
+    seqAllOn: "Show this episode's notes on the sequence", seqToMapHintAll: "General notes are shown on every episode's Sequence Map (by the timecode or shot name in Scene / TC).", seqAllOff: "Remove all from sequence"
 });
 
 const SeqMap = (() => {
@@ -12133,7 +12136,8 @@ const SeqMap = (() => {
     let mounted = false, EP = null, LOADED = null;     // LOADED: { ep, rev } — ekrandaki haritanın sürümü
     let RATE = { nominal: 25, df: false }, FPS_MODE = 'auto';
     let SEQ = null, CLIPS = [], TRACKS = [], BYTRACK = new Map(), START = 0, END = 1, ppf = 1, minPpf = .1, POS = 0, SEL = null, SELNOTE = null;
-    let SOURCES = [], WIN = { a: 0, b: 0 }, NOTES = [], UNMATCHED = [];
+    let SOURCES = [], NOTES = [], UNMATCHED = [];
+    const NOTEKEY = new Map();
     const HIDDEN = new Set();
     const RATE_MAP = { '23.976': [24, false], '24': [24, false], '25': [25, false], '29.97': [30, true], '29.97nd': [30, false], '30': [30, false], '50': [50, false], '59.94': [60, true], '60': [60, false] };
     const pref = (k, d) => { try { const v = localStorage.getItem('sm:' + k); return v === null ? d : v; } catch (e) { return d; } };
@@ -12291,7 +12295,8 @@ const SeqMap = (() => {
         CLIPS = SEQ.clips.filter(c => c.ro > c.ri).map((c, i) => Object.assign(c, { idx: i, len: c.ro - c.ri }));
         if (!CLIPS.length) throw new Error('Zaman çizelgesine yerleşen plan bulunamadı.');
         TRACKS = [...new Set(CLIPS.map(c => c.tk))].sort(trackOrder);
-        BYTRACK = new Map(TRACKS.map(tk => [tk, CLIPS.filter(c => c.tk === tk)]));
+        BYTRACK = new Map(TRACKS.map(tk => { const row = CLIPS.filter(c => c.tk === tk).sort((a, b) => a.ri - b.ri); row.maxLen = Math.max(0, ...row.map(c => c.len)); return [tk, row]; }));
+        MATCH = { q: null, set: null };
         [...HIDDEN].forEach(tk => { if (!TRACKS.includes(tk)) HIDDEN.delete(tk); });
         const vis = CLIPS.filter(c => isV(c.tk) || $('audio').checked);
         START = Math.min(...(vis.length ? vis : CLIPS).map(c => c.ri));
@@ -12338,8 +12343,10 @@ const SeqMap = (() => {
     function collectNotes() {
         NOTES = []; UNMATCHED = [];
         if (!SEQ || !App.project) return;
-        const entry = (App.project.episodeNotes || {})[EP];
-        const list = entry && Array.isArray(entry.notes) ? entry.notes.filter(n => n.seq) : [];
+        const all = App.project.episodeNotes || {};
+        const pick = (k) => (all[k] && Array.isArray(all[k].notes) ? all[k].notes : []).filter(n => n.seq).map(n => (NOTEKEY.set(n.id, k), n));
+        NOTEKEY.clear();
+        const list = pick(EP).concat(pick('GENEL'));        // Genel notlar her bölümün haritasında
         list.forEach(n => {
             const lane = LANES.includes(n.cat) ? n.cat : 'other';
             const tg = noteTarget(n);
@@ -12376,15 +12383,16 @@ const SeqMap = (() => {
         TH.reduce((acc, h, i) => (TOP[i] = acc, acc + h), NH);
         const totalH = NH + TH.reduce((a, b) => a + b, 0);
         const W = Math.max(Math.ceil((END - START) * ppf) + 120, scroll.clientWidth);
+        LAYOUT = { tracks, TH, TOP, NH, totalH, W };
+        const q = $('find').value.trim().toLocaleUpperCase('tr-TR');
+        if (q !== MATCH.q) { MATCH = { q, set: q ? new Set(CLIPS.filter(c => (c.name + ' ' + c.source + ' ' + (c.reel || '')).toLocaleUpperCase('tr-TR').includes(q)).map(c => c.idx)) : null }; }
         canvas.style.width = W + 'px'; canvas.style.height = totalH + 'px';
         // Sol başlıklar: not katları + track'ler
         $('heads').innerHTML = (NH ? `<div class="sm-lanehead-wrap" style="height:${NH}px">${lanes.map(l => `<div class="sm-lanehead" style="height:${LANE_H}px;--c:${laneColor(l)}">${esc(t('smLane_' + l))}</div>`).join('')}</div>` : '') +
-            tracks.map((tk, i) => `<button class="sm-head ${isV(tk) ? '' : 'aud'} ${HIDDEN.has(tk) ? 'off' : ''} ${!isV(tk) && i > 0 && isV(tracks[i - 1]) ? 'first-a' : ''}" data-t="${tk}" type="button" style="height:${TH[i]}px" title="${tk} · ${(BYTRACK.get(tk) || []).length}"><span>${tk}</span><i>${(BYTRACK.get(tk) || []).length}</i></button>`).join('');
-        const q = $('find').value.trim().toLocaleUpperCase('tr-TR'), byReel = $('byReel').checked;
-        const vw = scroll.clientWidth, wa = (scroll.scrollLeft - vw) / ppf + START, wb = (scroll.scrollLeft + 2 * vw) / ppf + START;
-        WIN = { a: scroll.scrollLeft - vw / 2, b: scroll.scrollLeft + vw / 2 };
+            tracks.map((tk, i) => `<button class="sm-head ${isV(tk) ? '' : 'aud'} ${HIDDEN.has(tk) ? 'off' : ''} ${!isV(tk) && i > 0 && isV(tracks[i - 1]) ? 'first-a' : ''}" data-t="${tk}" type="button" style="height:${TH[i]}px" title="${tk} · ${(BYTRACK.get(tk) || []).length}"><span>${tk}</span><i>${(BYTRACK.get(tk) || []).length}</i></button>`).join('') +
+            '<div style="height:40px"></div>';
+        // Planlar <canvas>'a çizilir (binlerce kutu DOM'a girmez); burada sadece notlar ve oynatma çizgisi var
         let html = '';
-        // Not katları ve oklar
         lanes.forEach((l, li) => {
             const y = li * LANE_H + 4;
             html += `<div class="sm-lane" style="top:${y}px;height:${LANE_H}px;width:${W}px;--c:${laneColor(l)}"></div>`;
@@ -12400,27 +12408,98 @@ const SeqMap = (() => {
                         style="left:${px}px;top:${y + 2}px;max-width:${w}px;--c:${laneColor(l)}" title="${esc(t('smLane_' + l) + ' · ' + fToTc(x.frame) + '\n' + label)}">${w < 40 ? '' : esc(label)}</button>`;
             });
         });
-        tracks.forEach((tk, ti) => {
-            html += `<div class="sm-track ${isV(tk) ? '' : 'aud'} ${!isV(tk) && ti > 0 && isV(tracks[ti - 1]) ? 'first-a' : ''}" style="top:${TOP[ti]}px;width:${W}px;height:${TH[ti]}px"></div>`;
-            if (HIDDEN.has(tk)) return;
-            const tall = TH[ti] >= 50;
-            (BYTRACK.get(tk) || []).forEach(c => {
-                if (c.ro < wa || c.ri > wb) return;
-                const x = (c.ri - START) * ppf, w = Math.max(1, c.len * ppf);
-                const hit = q && (c.name + ' ' + c.source + ' ' + (c.reel || '')).toLocaleUpperCase('tr-TR').includes(q);
-                const cls = ['sm-clip', isV(tk) ? '' : 'aud', c.fxOnly ? 'fxonly' : '', c.mixed ? 'mix' : '', SEL === c.idx ? 'sel' : '', hit ? 'match' : '', q && !hit ? 'dim' : ''].join(' ');
-                const bg = byReel && isV(tk) && !c.fxOnly && !c.mixed ? `background:${reelColor(c)};` : '';
-                const fx = (c.mixed ? `<span class="fpsb">${fpsLabel(c.srcFps)}</span>` : '') + (c.pct !== 100 ? `<span class="fx">${c.pct}%</span>` : '');
-                const diss = c.trans && c.trans[0] === 'D' && c.transDur ? `<span class="diss" style="width:${Math.min(w, c.transDur * ppf)}px"></span>` : '';
-                html += `<div class="${cls}" data-i="${c.idx}" style="left:${x}px;width:${w}px;top:${TOP[ti] + 3}px;height:${TH[ti] - 7}px;${bg}" title="${esc(c.name)} · ${tk} · ${durTxt(c.len)}">
-                    ${diss}${w > 34 ? `<div class="nm">${esc(c.name)}</div>` : ''}${tall && w > 70 ? `<div class="du">${durTxt(c.len)}</div>` : ''}${w > 30 ? fx : ''}</div>`;
-            });
-        });
         html += `<div class="sm-pos" id="sm-posLine" style="left:${(POS - START) * ppf}px;height:${totalH}px"></div>`;
         canvas.innerHTML = html;
+        paint();
         drawRuler();
         $('posTc').textContent = fToTc(POS);
         renderInfo();
+    }
+    // ---------- Canvas çizimi (sadece ekranda görünen kısım) ----------
+    let LAYOUT = null, MATCH = { q: '', set: null }, paintRaf = 0;
+    const schedulePaint = () => { if (!paintRaf) paintRaf = requestAnimationFrame(() => { paintRaf = 0; paint(); }); };
+    function firstIdx(row, f) { let lo = 0, hi = row.length; while (lo < hi) { const m = (lo + hi) >> 1; if (row[m].ri < f) lo = m + 1; else hi = m; } return lo; }
+    function fitText(ctx, s, w) {
+        s = String(s || '');
+        if (ctx.measureText(s).width <= w) return s;
+        let n = Math.max(1, Math.floor(w / 6.3));
+        while (n > 1 && ctx.measureText(s.slice(0, n) + '…').width > w) n--;
+        return n > 1 ? s.slice(0, n) + '…' : '';
+    }
+    function paint() {
+        const cv = $('gl'), scroll = $('scroll');
+        if (!cv || !SEQ || !LAYOUT) return;
+        const dpr = window.devicePixelRatio || 1, vw = scroll.clientWidth, vh = scroll.clientHeight;
+        if (cv.width !== Math.round(vw * dpr) || cv.height !== Math.round(vh * dpr)) { cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr); cv.style.width = vw + 'px'; cv.style.height = vh + 'px'; }
+        const ctx = cv.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, vw, vh);
+        const sl = scroll.scrollLeft, st = scroll.scrollTop;
+        const fa = START + sl / ppf, fb = START + (sl + vw) / ppf;
+        const byReel = $('byReel').checked, ms = MATCH.set;
+        const { tracks, TH, TOP } = LAYOUT;
+        ctx.font = '700 12px system-ui, -apple-system, "Segoe UI", sans-serif';
+        ctx.textBaseline = 'middle';
+        tracks.forEach((tk, ti) => {
+            const y0 = TOP[ti] - st, h = TH[ti];
+            if (y0 > vh || y0 + h < 0) return;
+            const vid = isV(tk);
+            ctx.fillStyle = vid ? '#17181a' : '#151916'; ctx.fillRect(0, y0, vw, h);
+            ctx.fillStyle = (!vid && ti > 0 && isV(tracks[ti - 1])) ? '#4a5d4c' : '#26282b';
+            ctx.fillRect(0, y0 + h - 1, vw, 1);
+            if (HIDDEN.has(tk)) return;
+            const row = BYTRACK.get(tk) || [], cy = y0 + 3, ch = h - 7, tall = h >= 50;
+            let i = firstIdx(row, fa - (row.maxLen || 0));
+            let lastPx = -1;
+            for (; i < row.length; i++) {
+                const c = row[i];
+                if (c.ri > fb) break;
+                if (c.ro < fa) continue;
+                const x = (c.ri - START) * ppf - sl, w = Math.max(1, c.len * ppf);
+                // Çok küçük planlar aynı piksele düşüyorsa bir kere çiz
+                if (w < 2 && Math.floor(x) === lastPx && SEL !== c.idx) continue;
+                lastPx = Math.floor(x);
+                const dim = ms && !ms.has(c.idx);
+                ctx.globalAlpha = dim ? 0.3 : 1;
+                let fill = vid ? '#7f97c4' : '#7fae86', edge = vid ? '#a9bde3' : '#a7cfac', txt = '#10151f';
+                if (c.fxOnly) { fill = '#6a578d'; edge = '#9a86c2'; txt = '#f0eaff'; }
+                else if (c.mixed) { fill = '#dc9f55'; edge = '#ffc78a'; }
+                else if (byReel && vid) fill = reelColor(c);
+                ctx.fillStyle = fill; ctx.fillRect(x, cy, w, ch);
+                if (w >= 3) { ctx.strokeStyle = edge; ctx.lineWidth = 1; ctx.strokeRect(x + .5, cy + .5, w - 1, ch - 1); }
+                if (c.trans && c.trans[0] === 'D' && c.transDur && w > 6) { ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(x, cy, Math.min(w, c.transDur * ppf), ch); }
+                if (w > 34) {
+                    ctx.fillStyle = txt;
+                    const tx = x < 0 && x + w > 60 ? 0 : x;          // uzun planın adı ekranın solunda kalmasın
+                    const tw = x + w - tx - 10;
+                    ctx.font = '700 12px system-ui, -apple-system, "Segoe UI", sans-serif';
+                    ctx.fillText(fitText(ctx, c.name, tw), tx + 5, tall && w > 70 ? cy + ch / 2 - 7 : cy + ch / 2);
+                    if (tall && w > 70) { ctx.font = '500 10px ui-monospace, Consolas, monospace'; ctx.globalAlpha *= .75; ctx.fillText(fitText(ctx, durTxt(c.len), tw), tx + 5, cy + ch / 2 + 8); ctx.globalAlpha = dim ? 0.3 : 1; }
+                    const badge = c.pct !== 100 ? c.pct + '%' : '';
+                    if (badge && w > 60) { ctx.font = '700 9px ui-monospace, Consolas, monospace'; const bw = ctx.measureText(badge).width + 6; ctx.fillStyle = 'rgba(16,21,31,.8)'; ctx.fillRect(x + w - bw - 3, cy + 2, bw, 12); ctx.fillStyle = '#ffd36b'; ctx.fillText(badge, x + w - bw, cy + 8); }
+                    if (c.mixed && w > 60) { ctx.font = '700 9px ui-monospace, Consolas, monospace'; const b2 = fpsLabel(c.srcFps), bw = ctx.measureText(b2).width + 6; ctx.fillStyle = 'rgba(16,21,31,.85)'; ctx.fillRect(x + 3, cy + 2, bw, 12); ctx.fillStyle = '#ffb15c'; ctx.fillText(b2, x + 6, cy + 8); }
+                }
+                if (ms && ms.has(c.idx)) { ctx.strokeStyle = 'rgba(242,193,78,.8)'; ctx.lineWidth = 3; ctx.strokeRect(x - 1, cy - 1, w + 2, ch + 2); }
+                if (SEL === c.idx) { ctx.globalAlpha = 1; ctx.strokeStyle = '#f2c14e'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, cy + 1, Math.max(1, w - 2), ch - 2); }
+                ctx.globalAlpha = 1;
+            }
+        });
+    }
+    // Tıklanan / üzerine gelinen yerdeki plan
+    function hitClip(clientX, clientY) {
+        if (!LAYOUT) return null;
+        const scroll = $('scroll'), r = scroll.getBoundingClientRect();
+        const y = clientY - r.top + scroll.scrollTop, f = START + (clientX - r.left + scroll.scrollLeft) / ppf;
+        const ti = LAYOUT.tracks.findIndex((tk, i) => y >= LAYOUT.TOP[i] && y < LAYOUT.TOP[i] + LAYOUT.TH[i]);
+        if (ti < 0) return null;
+        const tk = LAYOUT.tracks[ti]; if (HIDDEN.has(tk)) return null;
+        const row = BYTRACK.get(tk) || [], tol = 2 / ppf;
+        let best = null;
+        for (let i = firstIdx(row, f - (row.maxLen || 0) - tol); i < row.length && row[i].ri <= f + tol; i++) {
+            const c = row[i];
+            if (f >= c.ri - tol && f < c.ro + tol && (!best || Math.abs(f - (c.ri + c.ro) / 2) < Math.abs(f - (best.ri + best.ro) / 2))) best = c;
+        }
+        return best;
     }
     function drawRuler() {
         if (!SEQ) return;
@@ -12454,7 +12533,7 @@ const SeqMap = (() => {
         const nsel = SELNOTE ? NOTES.find(x => x.n.id === SELNOTE) : null;
         if (nsel) {
             const n = nsel.n, c = nsel.clip;
-            box.innerHTML = `<div class="sm-title"><div class="sm-ev" style="color:${laneColor(nsel.lane)}">● ${esc(t('smLane_' + nsel.lane))} · ${esc(EP)}</div>
+            box.innerHTML = `<div class="sm-title"><div class="sm-ev" style="color:${laneColor(nsel.lane)}">● ${esc(t('smLane_' + nsel.lane))} · ${esc(NOTEKEY.get(n.id) === 'GENEL' ? t('general') : EP)}</div>
                     <div class="sm-pname">${esc(n.ref || fToTc(nsel.frame))}</div><div class="sm-hint">${n.done ? '✓ ' + esc(t('smNoteDone')) : esc(t('smNoteUndone'))}</div></div>
                 <div class="sm-fields">
                     <div class="sm-f" style="grid-column:1/-1"><span class="k">${esc(t('modNotes'))}</span><span class="v ui sm-notetext">${esc(n.text)}</span></div>
@@ -12604,7 +12683,8 @@ const SeqMap = (() => {
     }
     function showEmpty(loading) {
         SEQ = null; CLIPS = []; TRACKS = []; SEL = null; SELNOTE = null;
-        $('canvas').innerHTML = ''; $('heads').innerHTML = ''; $('ruler').innerHTML = '';
+        $('canvas').innerHTML = ''; $('heads').innerHTML = ''; $('ruler').innerHTML = ''; LAYOUT = null;
+        { const g = $('gl'); if (g) g.getContext('2d').clearRect(0, 0, g.width, g.height); }
         $('canvas').style.width = '100%'; $('canvas').style.height = '0px';
         $('title').textContent = t('modSeqMap'); $('meta').textContent = ''; $('by').textContent = '';
         $('warn').hidden = true; $('unmatched').hidden = true; $('seqPick').hidden = true; $('fpsNote').textContent = '';
@@ -12703,8 +12783,9 @@ const SeqMap = (() => {
                 <div class="sm-corner">TC1</div>
                 <div class="sm-ruler" id="sm-ruler"></div>
                 <div class="sm-heads" id="sm-heads"></div>
+                <div class="sm-stage"><canvas class="sm-gl" id="sm-gl"></canvas>
                 <div class="sm-scroll" id="sm-scroll"><div class="sm-canvas" id="sm-canvas"></div>
-                    <button class="sm-empty" id="sm-empty" type="button" hidden><b id="sm-emptyTitle"></b><span>${esc(t('smEmptyHint'))}</span><em>⬆ ${esc(t('smDrop'))} · ${esc(t('smDropSub'))}</em></button></div>
+                    <button class="sm-empty" id="sm-empty" type="button" hidden><b id="sm-emptyTitle"></b><span>${esc(t('smEmptyHint'))}</span><em>⬆ ${esc(t('smDrop'))} · ${esc(t('smDropSub'))}</em></button></div></div>
             </div>
             <div class="sm-info" id="sm-info"></div>
             <input type="file" id="sm-file" accept=".edl,.txt,.aaf,text/plain" multiple hidden>
@@ -12747,15 +12828,26 @@ const SeqMap = (() => {
         }, { passive: false });
         let raf = 0;
         scroll.addEventListener('scroll', () => {
-            drawRuler(); $('heads').scrollTop = scroll.scrollTop;
-            if (SEQ && (scroll.scrollLeft < WIN.a || scroll.scrollLeft > WIN.b) && !raf) raf = requestAnimationFrame(() => { raf = 0; const sl = scroll.scrollLeft, st = scroll.scrollTop; render(); scroll.scrollLeft = sl; scroll.scrollTop = st; });
+            $('heads').scrollTop = scroll.scrollTop;
+            if (SEQ && !raf) raf = requestAnimationFrame(() => { raf = 0; paint(); drawRuler(); });
         });
         $('canvas').addEventListener('click', (e) => {
             if (!SEQ) return;
             const nb = e.target.closest('[data-note]'); if (nb) return selectNote(nb.dataset.note);
-            const el = e.target.closest('.sm-clip'); if (el) return select(+el.dataset.i);
+            const hc = hitClip(e.clientX, e.clientY); if (hc) return select(hc.idx);
             const r = $('canvas').getBoundingClientRect();
             setPos(START + (e.clientX - r.left) / ppf);
+        });
+        let hoverRaf = 0, hoverEv = null;
+        $('canvas').addEventListener('mousemove', (e) => {
+            hoverEv = e;
+            if (hoverRaf) return;
+            hoverRaf = requestAnimationFrame(() => {
+                hoverRaf = 0; if (!SEQ || !hoverEv || hoverEv.target.closest('[data-note]')) return;
+                const c = hitClip(hoverEv.clientX, hoverEv.clientY);
+                $('canvas').style.cursor = c ? 'pointer' : 'text';
+                $('canvas').title = c ? `${c.name} · ${c.tk} · ${durTxt(c.len)}` : '';
+            });
         });
         let scrub = false;
         const scrubTo = (e) => { if (!SEQ) return; const r = $('ruler').getBoundingClientRect(); setPos(START + (e.clientX - r.left + scroll.scrollLeft) / ppf); };
@@ -12773,7 +12865,7 @@ const SeqMap = (() => {
             const nn = e.target.closest('.sm-jumpnote'); if (nn) { e.preventDefault(); return selectNote(nn.dataset.note); }
             const b = e.target.closest('[data-smact]'); if (!b) return;
             const x = NOTES.find(y => y.n.id === SELNOTE); if (!x) return;
-            if (b.dataset.smact === 'openNote') { EpisodeNotes.select && EpisodeNotes.select(EP); showModule('notes'); }
+            if (b.dataset.smact === 'openNote') { EpisodeNotes.select && EpisodeNotes.select(NOTEKEY.get(x.n.id) || EP); showModule('notes'); }
             if (b.dataset.smact === 'toggleNote' && !App.readOnly) { x.n.done = !x.n.done; triggerAutoSave(); collectNotes(); render(); }
         });
         document.addEventListener('keydown', (e) => {
